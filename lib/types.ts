@@ -1,29 +1,69 @@
-enum environmentEnum {
-  "Interno",
-  "Externo",
-  "Interno e Externo"
-}
+import { z } from "zod";
 
-enum styleEnum {
-  "Moderno",
-  "Clássico",
-  "Rústico",
-  "Industrial",
-  "Outro"
-}
+const environmentEnum = ["Interno", "Externo", "Interno e Externo"] as const;
+const styleEnum = ["Moderno", "Clássico", "Rústico", "Industrial", "Outro"] as const;
 
-type Person = {
-  //user: User;
-  //birth_date: string;
-  phone: Contact;
-}
+const contactSchema = z.object({
+  name: z.string(),
+  detail: z.string(),
+  phone: z.string().optional(),
+  telephone: z.string().optional(),
+});
 
-type Contact = {
-  name: string;
-  detail: string;
-  phone: string;
-  telephone: string;
-}
+const infoSchema = z.object({
+  name: z.string(),
+  surname: z.string(),
+  cpf: z.string(),
+  rg: z.string(),
+  tax_address: z.object({
+    state: z.string(),
+    cep: z.string(),
+    city: z.string(),
+    address_name: z.string(),
+    number: z.string(),
+    complement: z.string(),
+  }),
+  shipping_address: z.object({
+    state: z.string(),
+    cep: z.string(),
+    city: z.string(),
+    address_name: z.string(),
+    number: z.string(),
+    complement: z.string(),
+  }),
+  info_email: z.string(),
+  fantasy_name: z.string(),
+  cnpj: z.string(),
+  tax_payer: z.enum(["0", "1"]),
+  municipal_register: z.string(),
+  state_register: z.string(),
+});
+
+const personSchema = z.object({
+  id: z.string(),
+  phone: contactSchema,
+  info: infoSchema,
+});
+
+
+const factorySchema = z.object({
+  id: z.string(),
+  person: personSchema,
+  //representative, 
+  direct_sale: z.number().optional(),
+  pricing: z.number().positive().int().lte(5),
+  environment: z.enum(environmentEnum),
+  style: z.enum(styleEnum),
+  link_table: z.string().optional(),
+  link_catalog: z.string().optional(),
+  site: z.string().optional(),
+});
+
+type Person = z.infer<typeof personSchema>;
+
+type Contact = z.infer<typeof contactSchema>;
+
+export type Factory = z.infer<typeof factorySchema>;
 
 type Payment = {
   pix: string;
@@ -54,16 +94,4 @@ type Address = {
   address_name: string;
   number: string;
   complement: string;
-}
-
-export type Factory = {
-  person: Person;
-  //representative: Representative;
-  direct_sale: number;
-  pricing: 1 | 2 | 3 | 4 | 5;
-  environment: environmentEnum;
-  style: styleEnum;
-  link_table: string;
-  link_catalog: string;
-  site: string;
 }
