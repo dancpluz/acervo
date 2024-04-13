@@ -7,6 +7,8 @@ import Header from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState } from "react";
 import { Icon } from "@/components/Header";
+import { columns } from "./columns"
+import { DataTable } from "@/components/DataTable"
 
 async function fetchFactory(param?: string) {
 
@@ -42,6 +44,12 @@ export default function Cadastros() {
           </TabsList>
 
           <TabsContent value="factory">
+            <div className="flex flex-col gap-4">
+              <div className="h-9">
+
+              </div>
+              <DataTable columns={columns} data={Array(5).fill({ name: "Butzke", pricing: 5, style: "Contemporâneo", environment: "Interno", representative: "Punto", direct_sale: 0.08, discount: 0.05, link_table: "*", link_catalog: "*" })} />
+            </div>
             
           </TabsContent>
           <TabsContent value="client">Change your password here.</TabsContent>
