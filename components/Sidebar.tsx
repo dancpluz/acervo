@@ -48,9 +48,12 @@ export default function SideBar() {
       <button className={`absolute flex justify-center items-center transition-all cursor-pointer w-5 h-5 top-32 -right-2.5 bg-secondary rounded-full ${expanded ? 'rotate-180' : ""}`} onClick={() => setExpanded(curr => !curr)}>
         <Image alt={'Expandir Aba'} src={'/icons/chevron.svg'} width={16} height={16} />
       </button>
-      <div className="flex justify-center">
-        Acervo
-      </div>
+      <Link href='/'>
+        <div className='flex py-4 justify-center items-center'>
+          <Image className={`transition-opacity ${expanded ? 'opacity-0' : ''}`} alt={'Acervo'} src={'/acervo-sm.svg'} width={52} height={52} />
+          <Image className={`transition-opacity absolute ${expanded ? '' : 'opacity-0'}`} alt={'Acervo'} src={'/acervo-bg.svg'} width={150} height={52} />
+        </div>
+      </Link>
       <nav className="flex flex-col px-5 gap-6">
         <SidebarItem icon={'/icons/desktop.svg'} title={'Atividades'} slug={'atividades'} />
         <SidebarItem icon={'/icons/users.svg'} title={'Cadastros'} slug={'cadastros'}  />
