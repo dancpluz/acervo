@@ -17,13 +17,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt">
       <body className={`${poppins.className}`}>
         <NextTopLoader color="#465613" />
         <SideBar />
-        <div className="bg-background ml-24">
+        <main className="bg-background ml-24 h-dvh">
           {children}
-        </div>
+        </main>
       </body>
     </html>
   );
