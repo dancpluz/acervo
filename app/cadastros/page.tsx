@@ -47,7 +47,7 @@ export default function Cadastros() {
               <div className="h-9">
 
               </div>
-              <DataTable columns={columns} data={Array(12).fill({ name: "Butzke", pricing: 5, style: "Contemporâneo", environment: "Interno", representative: "Punto", direct_sale: 0.08, discount: 0.05, link_table: "*", link_catalog: "*" })} />
+              <DataTable columns={columns} data={Array(12).fill({ name: "Butzke", pricing: 5, style: "Contemporâneo", environment: "Interno", representative: "Punto", direct_sale: 0.0835, discount: 0.05, link_table: "*", link_catalog: "*" })} />
             </div>
           </TabsContent>
           <TabsContent value="client">client</TabsContent>
