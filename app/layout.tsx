@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import SideBar from "@/components/Sidebar";
 import "./globals.css";
 import NextTopLoader from 'nextjs-toploader';
+import { Toaster } from "@/components/ui/toaster";
 
 const poppins = Poppins({ weight: ['400','500','600'], subsets: ['latin'] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
         <SideBar />
         <main className="bg-background ml-24 h-dvh">
           {children}
+          <Toaster />
         </main>
       </body>
     </html>

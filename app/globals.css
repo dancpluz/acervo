@@ -7,8 +7,8 @@
     --background: 32 45% 94%;
     --foreground: 0 0% 20%;
     
-    --primary: 75 34% 33%;
-    --secondary: 74 11% 71%;
+    --primary: 74 64% 21%;
+    --secondary: 74 15% 71%;
 
     --tertiary: 0 0% 42%;
     --alternate: 0 0% 75%;
@@ -33,7 +33,7 @@
 
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --ring: 74 15% 71%;
 
     --radius: 0.5rem;    
   }

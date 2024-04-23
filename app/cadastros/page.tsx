@@ -1,14 +1,27 @@
 'use client'
 
 import db from "@/lib/firebase";
-import { collection, getDocs, query, where, addDoc } from "firebase/firestore";
+import { collection, getDocs, query } from "firebase/firestore";
 import { Factory } from "@/lib/types";
 import Header from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 import { useState } from "react";
 import { Icon } from "@/components/Header";
 import { columns } from "./columns"
 import { DataTable } from "@/components/DataTable"
+import { CirclePlus } from "lucide-react";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import FormFactory from "@/components/FormFactory";
+
 
 async function fetchFactory(param?: string) {
 
@@ -26,37 +39,53 @@ async function fetchFactory(param?: string) {
 
 export default function Cadastros() {
   const [tab, setTab] = useState<Icon>('factory');
-  
-  const className = "text-xl px-6 -mt-0.5 font-normal text-tertiary rounded-none border-transparent border-b data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold data-[state=active]:border-b-2 data-[state=active]:shadow-none";
+  const example = Array(12).fill({ name: "Butzke ADsafasfa FSAF", pricing: 5, style: "Contemporâneo", environment: "Interno", representative: "Punto", direct_sale: 0.0835, discount: 0.05, link_table: "https://www.acervomobilia.com/" });
+  example.push({ name: "Casa", pricing: 4, style: "Moderno", environment: "Externo", representative: "Punto", discount: 0.02, link_table: "https://www.acervomobilia.com/" })
+  example.push({ name: "Exemplo", pricing: 3, style: "Moderno", environment: "Externo", representative: "Teste", discount: 0.01})
 
   return (
-    <div className="flex flex-col gap-4 px-20 py-10 max-h-full">
+    <div className="flex flex-col gap-4 px-20 py-10 h-full">
       <Header page='Cadastros' tab={tab}/>
-        <Tabs className='h-full' defaultValue="factory" onValueChange={(value: Icon) => {setTab(value)}}>
-          <TabsList className="bg-transparent text-foreground w-full justify-start rounded-none border-b border-alternate p-0" >
-            <TabsTrigger className={className} value="factory">Fábricas</TabsTrigger>
-            <TabsTrigger className={className} value="client">Clientes</TabsTrigger>
-            <TabsTrigger className={className} value="representative">Representação</TabsTrigger>
-            <TabsTrigger className={className} value="office">Escritórios</TabsTrigger>
-            <TabsTrigger className={className} value="service">Serviços</TabsTrigger>
-            <TabsTrigger className={className} value="collaborator">Colaboradores</TabsTrigger>
-          </TabsList>
+      <Tabs className='flex-1' defaultValue="factory" onValueChange={(value: Icon) => {setTab(value)}}>
+        <TabsList >
+          <TabsTrigger value="factory">Fábricas</TabsTrigger>
+          <TabsTrigger value="client">Clientes</TabsTrigger>
+          <TabsTrigger value="representative">Representação</TabsTrigger>
+          <TabsTrigger value="office">Escritórios</TabsTrigger>
+          <TabsTrigger value="service">Serviços</TabsTrigger>
+          <TabsTrigger value="collaborator">Colaboradores</TabsTrigger>
+        </TabsList>
 
-          <TabsContent className='' value="factory">
+        <TabsContent value="factory">
           <div className="flex flex-col gap-4">
-              <div className="h-9">
+          <div className="h-9">
 
-              </div>
-              <DataTable columns={columns} data={Array(12).fill({ name: "Butzke", pricing: 5, style: "Contemporâneo", environment: "Interno", representative: "Punto", direct_sale: 0.0835, discount: 0.05, link_table: "*", link_catalog: "*" })} />
-            </div>
-          </TabsContent>
-          <TabsContent value="client">client</TabsContent>
-          <TabsContent value="representative">representative</TabsContent>
-          <TabsContent value="office">office</TabsContent>
-          <TabsContent value="service">service</TabsContent>
-          <TabsContent value="collaborator">collaborator</TabsContent>
+          </div>
+          <DataTable columns={columns} data={example} />
+          <div className="flex justify-between">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>
+                    <CirclePlus /> ADICIONAR REPRESENTANTE
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <FormFactory />
+              </DialogContent>
+            </Dialog>
+            
+            
+            <p className="text-sm">{example.length} fábricas encontradas</p>
+          </div>
+        </div>
+        </TabsContent>
+        <TabsContent value="client">client</TabsContent>
+        <TabsContent value="representative">representative</TabsContent>
+        <TabsContent value="office">office</TabsContent>
+        <TabsContent value="service">service</TabsContent>
+        <TabsContent value="collaborator">collaborator</TabsContent>
 
-        </Tabs>
+      </Tabs>
     </div>
   )
 }
