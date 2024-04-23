@@ -1,8 +1,12 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table";
+import { Column, ColumnDef } from "@tanstack/react-table";
 import { Factory } from "@/lib/types";
 import Chip from "@/components/Chip";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpDown, ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10 } from "lucide-react"
+import { Button } from "@/components/ui/button";
 
 function formatPercent(float?: number) {
   if (!float) return "-";
@@ -14,16 +18,47 @@ function formatPercent(float?: number) {
   return formated;
 }
 
+function SortHeader(column: Column<Factory>, header: string, center?: boolean, numeric?: boolean) {
+  if (numeric) {
+    return (
+      <div className={`flex ${center ? 'justify-center' : ''}`}>
+        <button
+          className={`flex items-center gap-1 hover:outline outline-primary rounded outline-1 outline-offset-4`}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          {header}
+          {column.getIsSorted() === "asc" ? <ArrowUp01 className="h-4 w-4" /> : column.getIsSorted() === "desc" ? <ArrowDown10 className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4" />}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`flex ${center ? 'justify-center' : ''}`}>
+      <button
+        className={`flex items-center gap-1 hover:outline outline-primary rounded outline-1 outline-offset-4`}
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        {header}
+        {column.getIsSorted() === "asc" ? <ArrowUpAZ className="h-4 w-4" /> : column.getIsSorted() === "desc" ? <ArrowDownZA className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4" />}
+      </button>
+    </div>
+  )
+}
+
 export const columns: ColumnDef<Factory>[] = [
   {
     accessorKey: "name",
-    header: "NOME",
+    header: ({ column }) => {
+      return SortHeader(column, 'NOME')
+    },
   },
   {
     accessorKey: "pricing",
-    header: () => <div className="text-center">PADRÃO</div>,
+    header: ({ column }) => {
+      return SortHeader(column, 'PADRÃO', true, true)
+    },
     cell: ({ row }) => {
-
       return <div className="text-center"><Chip label={row.getValue('pricing')} /></div>
     }
   },
@@ -43,18 +78,24 @@ export const columns: ColumnDef<Factory>[] = [
   },
   {
     accessorKey: "representative",
-    header: "REPRESENTANTE",
+    header: ({ column }) => {
+      return SortHeader(column, 'REPRESENTANTE')
+    },
   },
   {
     accessorKey: "direct_sale",
-    header: () => <div className="text-center">V.DIR</div>,
+    header: ({ column }) => {
+      return SortHeader(column, 'V.DIR.', true, true)
+    },
     cell: ({ row }) => {
       return <div className="text-center">{formatPercent(row.getValue("direct_sale"))}</div>
     }
   },
   {
     accessorKey: "discount",
-    header: () => <div className="text-center">DESC.</div>,
+    header: ({ column }) => {
+      return SortHeader(column, 'DESC.', true, true)
+    },
     cell: ({ row }) => {
       return <div className="text-center">{formatPercent(row.getValue("discount"))}</div>
     }
@@ -63,14 +104,32 @@ export const columns: ColumnDef<Factory>[] = [
     accessorKey: "link_table",
     header: () => <div className="text-center">TABELA</div>,
     cell: ({ row }) => {
-      return <div className="text-center">{row.getValue("link_table")}</div>
+      return (
+        <div className="flex justify-center">
+          {
+            row.getValue("link_table") ? 
+              <Link target="_blank" href={row.getValue("link_table")}>
+                <Image alt={'Acessar Tabela'} src={'/icons/link.svg'} width={24} height={24} />
+              </Link> : '-'
+          }
+        </div>
+      )
     }
   },
   {
     accessorKey: "link_catalog",
-    header: () => <div className="text-center">ACAB.</div>,
+    header: () => <div className="text-center">ACABA.</div>,
     cell: ({ row }) => {
-      return <div className="text-center">{row.getValue("link_catalog")}</div>
+      return (
+        <div className="flex justify-center">
+          {
+            row.getValue("link_catalog") ?
+              <Link target="_blank" href={row.getValue("link_catalog")}>
+                <Image alt={'Acessar Catálogo de Acabamentos'} src={'/icons/link.svg'} width={24} height={24} />
+              </Link> : '-'
+          }
+        </div>
+      )
     }
   },
 ]
