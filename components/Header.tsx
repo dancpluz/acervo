@@ -1,11 +1,5 @@
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 const icons = {
   factory: '/icons/factory.svg',
@@ -39,7 +33,7 @@ export default function Header({ page, tab }: Props) {
         </div>
         <Avatar>
           <AvatarImage src="" />
-          <AvatarFallback className='bg-primary text-background text-xl font-medium'>{user[0]}</AvatarFallback>
+          <AvatarFallback>{user[0]}</AvatarFallback>
         </Avatar>
       </div>
     </div>
