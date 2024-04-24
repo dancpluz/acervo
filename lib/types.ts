@@ -28,8 +28,8 @@ const paymentSchema = z.object({
 });
 
 const infoSchema = z.object({
-  name: z.string(),
-  surname: z.string().optional(),
+  name: z.string().min(2).max(150),
+  surname: z.string().min(2).max(150).optional(),
   cpf: z.string().optional(),
   rg: z.string().optional(),
   tax_address: addressSchema.optional(),
@@ -42,7 +42,7 @@ const infoSchema = z.object({
   state_register: z.string().optional(),
 });
 
-const personSchema = z.object({
+export const personSchema = z.object({
   id: z.string(),
   contact: contactSchema.array().optional(),
   info: infoSchema,
@@ -65,7 +65,7 @@ const representativeSchema = z.object({
   team: workerSchema.array().optional(),
 });
 
-const factorySchema = z.object({
+export const factorySchema = z.object({
   id: z.string(),
   person: z.object({}).refine(
     (x: object): x is DocumentReference => x instanceof DocumentReference,

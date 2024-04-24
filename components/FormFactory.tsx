@@ -39,6 +39,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import cidades from '@/lib/cidades.json';
 import { useState } from "react";
+import TinyTable from "@/components/TinyTable";
 
 
 type Fields = {
@@ -240,6 +241,9 @@ export default function FormFactory() {
                   <FullField obj={fields.state} form={form} search onSelect={setSelectedState} customClass={'grow-0 min-w-44'}/>
                   <FullField obj={fields.city} form={form} search unlock={selectedState} customClass={'grow-0 min-w-44'}/>
                   <FullField obj={fields.complement} form={form} customClass={'grow'}/>
+                </div>
+                <div>
+                  <TinyTable />
                 </div>
               </div>
             </div>
