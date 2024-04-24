@@ -39,9 +39,11 @@ async function fetchFactory(param?: string) {
 
 export default function Cadastros() {
   const [tab, setTab] = useState<Icon>('factory');
-  const example = Array(12).fill({ name: "Butzke ADsafasfa FSAF", pricing: 5, style: "Contemporâneo", environment: "Interno", representative: "Punto", direct_sale: 0.0835, discount: 0.05, link_table: "https://www.acervomobilia.com/" });
+  const example = Array(3).fill({ name: "Butzke", pricing: 5, style: "Contemporâneo", environment: "Interno", representative: "Punto", direct_sale: 0.0835, discount: 0.05, link_table: "https://www.acervomobilia.com/" });
   example.push({ name: "Casa", pricing: 4, style: "Moderno", environment: "Externo", representative: "Punto", discount: 0.02, link_table: "https://www.acervomobilia.com/" })
-  example.push({ name: "Exemplo", pricing: 3, style: "Moderno", environment: "Externo", representative: "Teste", discount: 0.01})
+  example.push({ name: "Exemplo", pricing: 3, style: "Moderno", environment: "Externo", representative: "Teste", discount: 0.01, direct_sale: 0.05 })
+  example.push({ name: "Teste", pricing: 1, style: "Antigo", environment: "Int. e Ext", representative: "", discount: 0.05 })
+  example.push({ name: "Acervo", pricing: 2, style: "Antigo", environment: "Int. e Ext", representative: "", discount: 0.04 })
 
   return (
     <div className="flex flex-col gap-4 px-20 py-10 h-full">
@@ -58,26 +60,26 @@ export default function Cadastros() {
 
         <TabsContent value="factory">
           <div className="flex flex-col gap-4">
-          <div className="h-9">
+            <div className="h-9">
 
+            </div>
+            <DataTable columns={columns} data={example} />
+            <div className="flex justify-between">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>
+                      <CirclePlus /> ADICIONAR FÁBRICA
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <FormFactory />
+                </DialogContent>
+              </Dialog>
+              
+              
+              <p className="text-sm">{example.length} fábricas encontradas</p>
+            </div>
           </div>
-          <DataTable columns={columns} data={example} />
-          <div className="flex justify-between">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>
-                    <CirclePlus /> ADICIONAR REPRESENTANTE
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <FormFactory />
-              </DialogContent>
-            </Dialog>
-            
-            
-            <p className="text-sm">{example.length} fábricas encontradas</p>
-          </div>
-        </div>
         </TabsContent>
         <TabsContent value="client">client</TabsContent>
         <TabsContent value="representative">representative</TabsContent>

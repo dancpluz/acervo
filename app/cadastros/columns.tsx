@@ -6,7 +6,6 @@ import Chip from "@/components/Chip";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpDown, ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10 } from "lucide-react"
-import { Button } from "@/components/ui/button";
 
 function formatPercent(float?: number) {
   if (!float) return "-";
@@ -52,6 +51,7 @@ export const columns: ColumnDef<Factory>[] = [
     header: ({ column }) => {
       return SortHeader(column, 'NOME')
     },
+    size: 250,
   },
   {
     accessorKey: "pricing",
@@ -60,27 +60,31 @@ export const columns: ColumnDef<Factory>[] = [
     },
     cell: ({ row }) => {
       return <div className="text-center"><Chip label={row.getValue('pricing')} /></div>
-    }
+    },
+    size: 100,
   },
   {
     accessorKey: "style",
     header: () => <div className="text-center">ESTILO</div>,
     cell: ({ row }) => {
       return <div className="text-center"><Chip label={row.getValue('style')} /></div>
-    }
+    },
+    size: 150,
   },
   {
     accessorKey: "environment",
     header: () => <div className="text-center">AMBIENTE</div>,
     cell: ({ row }) => {
       return <div className="text-center"><Chip label={row.getValue('environment')} /></div>
-    }
+    },
+    size: 100,
   },
   {
     accessorKey: "representative",
     header: ({ column }) => {
       return SortHeader(column, 'REPRESENTANTE')
     },
+    size: 250,
   },
   {
     accessorKey: "direct_sale",
@@ -89,7 +93,8 @@ export const columns: ColumnDef<Factory>[] = [
     },
     cell: ({ row }) => {
       return <div className="text-center">{formatPercent(row.getValue("direct_sale"))}</div>
-    }
+    },
+    size: 50,
   },
   {
     accessorKey: "discount",
@@ -98,7 +103,8 @@ export const columns: ColumnDef<Factory>[] = [
     },
     cell: ({ row }) => {
       return <div className="text-center">{formatPercent(row.getValue("discount"))}</div>
-    }
+    },
+    size: 50,
   },
   {
     accessorKey: "link_table",
@@ -108,13 +114,14 @@ export const columns: ColumnDef<Factory>[] = [
         <div className="flex justify-center">
           {
             row.getValue("link_table") ? 
-              <Link target="_blank" href={row.getValue("link_table")}>
+              <Link className='hover:opacity-60' target="_blank" href={row.getValue("link_table")}>
                 <Image alt={'Acessar Tabela'} src={'/icons/link.svg'} width={24} height={24} />
               </Link> : '-'
           }
         </div>
       )
-    }
+    },
+    size: 50,
   },
   {
     accessorKey: "link_catalog",
@@ -124,12 +131,13 @@ export const columns: ColumnDef<Factory>[] = [
         <div className="flex justify-center">
           {
             row.getValue("link_catalog") ?
-              <Link target="_blank" href={row.getValue("link_catalog")}>
+              <Link className='hover:opacity-60' target="_blank" href={row.getValue("link_catalog")}>
                 <Image alt={'Acessar Catálogo de Acabamentos'} src={'/icons/link.svg'} width={24} height={24} />
               </Link> : '-'
           }
         </div>
       )
-    }
+    },
+    size: 50,
   },
 ]
