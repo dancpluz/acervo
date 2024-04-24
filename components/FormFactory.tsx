@@ -49,7 +49,7 @@ type Fields = {
     placeholder: string;
     validation: z.ZodType<any, any>;
     mask?: (string | RegExp)[];
-    items?: (string[] | Record<string, string[]>);
+    items?: string[] | { [key: string]: string[] };
   };
 };
 
@@ -255,7 +255,7 @@ export default function FormFactory() {
   )
 }
 
-export function FullField({ obj, form, customClass, select=false, search=false, onSelect, unlock }: { obj: typeof fields[keyof typeof fields], form: ReturnType<typeof useForm>, customClass?: string, select?: boolean, search?: boolean, onSelect?: (value: string) => void, unlock?: string }) {
+export function FullField({ obj, form, customClass, select=false, search=false, onSelect, unlock }: { obj: typeof fields[keyof typeof fields], form: ReturnType<typeof useForm>, customClass?: string, select?: boolean, search?: boolean, onSelect?: (value: string) => void, unlock?: any }) {
   if (select && obj.items) {
     return (
       <FormField
@@ -271,7 +271,7 @@ export function FullField({ obj, form, customClass, select=false, search=false, 
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {obj.items.map((item: string) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+                {obj.items ? (obj.items as string[]).map((item: string) => <SelectItem key={item} value={item}>{item}</SelectItem>) : ''}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -282,7 +282,17 @@ export function FullField({ obj, form, customClass, select=false, search=false, 
   }
 
   if (search && obj.items) {
-    const items = unlock===undefined ? obj.items : unlock==='' ? [] : obj.items[unlock];
+    let items: any[] = [];
+    if (unlock === undefined) {
+      items = obj.items as any[];
+    } else {
+      if (obj.items) {
+        if (unlock !== '') {
+          items = (obj.items as { [key: string]: string[]; })[unlock];
+        }
+      }
+    }
+    
 
     return (
       <FormField
