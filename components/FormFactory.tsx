@@ -2,47 +2,18 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form"
 import { toast } from "@/components/ui/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandList,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 import cidades from '@/lib/cidades.json';
 import { useState } from "react";
-import TinyTable from "@/components/TinyTable";
+import { EditTinyTable } from "@/components/TinyTable";
+import { FullField } from "./FullField";
 
 
-type Fields = {
+type Field = {
   [key: string]: {
     value: string;
     label: string;
@@ -53,7 +24,7 @@ type Fields = {
   };
 };
 
-const fields: Fields = {
+const fields: Field = {
   name: {
     value: 'name',
     label: 'NOME OU RAZÃO SOCIAL*',
@@ -76,7 +47,7 @@ const fields: Fields = {
     value: 'cnpj',
     label: 'CNPJ*',
     placeholder: 'Ex. 00.000.000/0000-00',
-    validation: z.string().length(18, 'O CNPJ deve ter 14 números.').transform((e) => e.replace(/\D/g, "")),
+    validation: z.string().length(18, 'O CNPJ deve ter 14 números.'),
     mask: [/\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/],
   },
   tax_payer: {
@@ -90,27 +61,27 @@ const fields: Fields = {
     value: 'state_register',
     label: 'INSCRIÇÃO ESTADUAL',
     placeholder: 'Ex. 149.679.601.869',
-    validation: z.string().length(15, 'A inscrição estadual deve ter 12 números.').optional().or(z.literal('')).transform((e?: string) => (e || '').replace(/\D/g, "")),
+    validation: z.string().refine((e: string) => (e).replace(/\D/g, "").length == 12, 'A inscrição estadual deve ter 12 números.').or(z.literal('')),
     mask: [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/],
   },
   municipal_register: {
     value: 'municipal_register',
     label: 'INSCRIÇÃO MUNICIPAL',
     placeholder: 'Ex. 149.679.601.869',
-    validation: z.string().length(15, 'A inscrição municipal deve ter 12 números.').optional().or(z.literal('')).transform((e?: string) => (e || '').replace(/\D/g, "")),
+    validation: z.string().refine((e: string) => (e).replace(/\D/g, "").length == 12, 'A inscrição municipal deve ter 12 números.').or(z.literal('')),
     mask: [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/],
   },
   pix: {
     value: 'pix',
     label: 'CHAVE PIX',
     placeholder: 'Ex. 6198765432',
-    validation: z.optional(z.string()),
+    validation: z.string().max(150, 'Máximo de 150 caracteres.').optional().or(z.literal('')),
   },
   account: {
     value: 'account',
     label: 'CONTA',
     placeholder: 'Ex. 1751610-8',
-    validation: z.string().length(9, 'A conta deve ter 7 números.').optional().or(z.literal('')).transform((e?: string) => (e || '').replace(/\D/g, "")),
+    validation: z.string().refine((e: string) => (e).replace(/\D/g, "").length == 7, 'A conta deve ter 7 números.').or(z.literal('')),
     mask: [/\d/, /\d/, /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/],
   },
   agency: {
@@ -130,13 +101,13 @@ const fields: Fields = {
     label: 'CEP',
     placeholder: 'Ex. 71234-567',
     mask: [/\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/],
-    validation: z.string().length(9, 'O CEP deve ter 8 números.').optional().or(z.literal('')).transform((e?: string) => (e || '').replace(/\D/g, "")),
+    validation: z.string().refine((e: string) => (e).replace(/\D/g, "").length == 8, 'O CEP deve ter 8 números.').or(z.literal('')),
   },
   address: {
     value: 'address',
     label: 'ENDEREÇO',
     placeholder: 'Ex. Quadra F Dois',
-    validation: z.string().optional().or(z.literal('')),
+    validation: z.string().max(50, 'Máximo de 50 caracteres.').optional().or(z.literal('')),
   },
   number: {
     value: 'number',
@@ -162,26 +133,81 @@ const fields: Fields = {
     value: 'complement',
     label: 'COMPLEMENTO',
     placeholder: ' Ex. Jardim Santos Dumont I',
-    validation: z.string().optional().or(z.literal('')),
+    validation: z.string().max(50, 'Máximo de 50 caracteres.').optional().or(z.literal('')),
   },
 }
 
-const formSchema = z.object(Object.assign({}, ...Object.values(fields).map((e) => {
+const tableFields = [
+  {
+    value: 'name',
+    label: 'NOME',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  {
+    value: 'detail',
+    label: 'DETALHE',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  {
+    value: 'phone',
+    label: 'CELULAR',
+    validation: z.string().refine((e: string) => (e).replace(/\D/g, "").length == 10 || (e).replace(/\D/g, "").length == 11, 'O celular deve ter 10-11 números.').optional().or(z.literal('')),
+    mask: ['(', /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
+  },
+  {
+    value: 'telephone',
+    label: 'TELEFONE',
+    validation: z.string().refine((e: string) => (e).replace(/\D/g, "").length == 10, 'O telefone deve ter 10-11 números.').optional().or(z.literal('')),
+    mask: ['(', /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
+  }
+]
+
+// Default values for the fields
+
+const defaultValues: {[key: string] : (string | {[key: string] : string}[])} = Object.values(fields).map((field) => { return field.value }).reduce((acc, key) => ({ ...acc, [key]: '' }), {});
+
+// Add default values for contact table
+const tableDefaultValues = Object.values(tableFields).map((field) => { return field.value }).reduce((acc, key) => ({ ...acc, [key]: undefined }), {});
+
+// Get all of the validations from fields and assign them as "value":"validation"
+
+const fieldsVerification = Object.assign({}, ...Object.values(fields).map((e) => {
   const obj: { [key: string]: z.ZodType<any, any> } = {};
   obj[e.value] = e.validation;
   return obj;
-})));
+}));
+
+const tableFieldsVerification = Object.assign({}, ...tableFields.map((e) => {
+  const obj: { [key: string]: z.ZodType<any, any> } = {};
+  obj[e.value] = e.validation;
+  return obj;
+}));
+
+// Join validations together to make the object of schema validation
+
+const formSchema = z.object({...fieldsVerification, contact: z.array(z.object(tableFieldsVerification))});
+
+// Define the contact default values
+
+// const defaultContact = Object.assign({}, ...tableFields.map((e) => {
+//     const obj: { [key: string]: string } = {};
+//     obj[e.value] = '';
+//     return obj;
+//   }))
 
 export default function FormFactory() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: Object.keys(fields).reduce((acc, key) => ({ ...acc, [key]: '' }), {}),
+    defaultValues,
     shouldFocusError: false,
+  })
+  const tableForm = useFieldArray({
+    control: form.control,
+    name: 'contact',
   })
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
-    // ✅ This will be type-safe and validated.
     console.log(cidades);
     toast({
       title: "You submitted the following values:",
@@ -194,15 +220,21 @@ export default function FormFactory() {
   }
 
   const [selectedState, setSelectedState] = useState('');
-  
   const divStyle = 'flex gap-2';
-  
+
+  // useEffect(() => {
+  //   if (tableForm.fields.length === 0) {
+  //     tableForm.append(tableDefaultValues);
+  //   }
+    
+  // }, [tableForm])
+
   return (
     <Tabs>
-      <TabsList className='h-8'>
-        <TabsTrigger className="text-sm" value="factory">FÁBRICAS</TabsTrigger>
-        <TabsTrigger className="text-sm" value="representative">REPRESENTAÇÃO</TabsTrigger>
-        <TabsTrigger className="text-sm"  value="other">OUTRAS INFORMAÇÕES</TabsTrigger>
+      <TabsList className='h-9'>
+        <TabsTrigger className="text-base" value="factory">FÁBRICAS</TabsTrigger>
+        <TabsTrigger className="text-base" value="representative">REPRESENTAÇÃO</TabsTrigger>
+        <TabsTrigger className="text-base"  value="other">OUTRAS INFORMAÇÕES</TabsTrigger>
       </TabsList>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -243,7 +275,7 @@ export default function FormFactory() {
                   <FullField obj={fields.complement} form={form} customClass={'grow'}/>
                 </div>
                 <div>
-                  <TinyTable />
+                  <EditTinyTable title='CONTATOS DA FÁBRICA' columns={tableFields} rows={tableForm.fields} append={() => tableForm.append(tableDefaultValues)} remove={tableForm.remove} edit='contact' form={form}/>
                 </div>
               </div>
             </div>
@@ -255,124 +287,3 @@ export default function FormFactory() {
   )
 }
 
-export function FullField({ obj, form, customClass, select=false, search=false, onSelect, unlock }: { obj: typeof fields[keyof typeof fields], form: ReturnType<typeof useForm>, customClass?: string, select?: boolean, search?: boolean, onSelect?: (value: string) => void, unlock?: any }) {
-  if (select && obj.items) {
-    return (
-      <FormField
-        control={form.control}
-        name={obj.value}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{obj.label}</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder={obj.placeholder} />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {obj.items ? (obj.items as string[]).map((item: string) => <SelectItem key={item} value={item}>{item}</SelectItem>) : ''}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    )
-  }
-
-  if (search && obj.items) {
-    let items: any[] = [];
-    if (unlock === undefined) {
-      items = obj.items as any[];
-    } else {
-      if (obj.items) {
-        if (unlock !== '') {
-          items = (obj.items as { [key: string]: string[]; })[unlock];
-        }
-      }
-    }
-    
-
-    return (
-      <FormField
-        control={form.control}
-        name={obj.value}
-        render={({ field }) => (
-          <FormItem className={customClass}>
-            <FormLabel>{obj.label}</FormLabel>
-            <Popover>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className={cn(
-                      "justify-between",
-                      !field.value && "text-tertiary"
-                    )}
-                  >
-                    {field.value
-                      ? items.find(
-                        (item: string) => item === field.value
-                      )
-                      : `Selecione ${obj.label.toLowerCase()}`}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="p-0 max-w-44">
-                <Command>
-                  <CommandInput placeholder={obj.placeholder} />
-                  <CommandEmpty>Não encontrado</CommandEmpty>
-                  <CommandGroup>
-                    <CommandList>
-                      {items.map((item: string) => (
-                          <CommandItem
-                            value={item}
-                            key={item}
-                            onSelect={() => {
-                              form.setValue(obj.value, item);
-                              onSelect ? onSelect(item) : '';
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                item === field.value
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
-                            {item}
-                          </CommandItem>
-                        )
-                      )}
-                    </CommandList>
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    )
-  }
-
-  return (
-    <FormField
-      control={form.control}
-      name={obj.value}
-      render={({ field }) => (
-        <FormItem className={customClass}>
-          <FormLabel>{obj.label}</FormLabel>
-          <FormControl>
-            <Input mask={obj.mask} actions={{ isDirty: form.getFieldState(obj.value).isDirty, clear: () => form.resetField(obj.value, { keepError: false }) }} placeholder={obj.placeholder} {...field} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  )
-}
