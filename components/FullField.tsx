@@ -68,11 +68,16 @@ export function FullField({ obj, form, customClass, select = false, search = fal
   }
 
   if (search && obj.items) {
+    // Unlock = key for object to display a group of items
+
     let items: any[] = [];
     if (unlock === undefined) {
+      // Search with items defined, no Unlock
       items = obj.items as string[];
     } else {
+      // If there is an unlock, check if the values are there
       if (obj.items) {
+        // If there is unlock set the icons as Objects
         if (unlock !== '') {
           items = (obj.items as { [key: string]: string[]; })[unlock];
         }
@@ -108,10 +113,10 @@ export function FullField({ obj, form, customClass, select = false, search = fal
                   </Button>
                 </FormControl>
               </PopoverTrigger>
-              <PopoverContent className="p-0 max-w-44">
+              <PopoverContent className="p-0">
                 <Command>
                   <CommandInput placeholder={obj.placeholder} />
-                  <CommandEmpty>{items ? 'Selecione o campo anterior' : 'Não encontrado'}</CommandEmpty>
+                  <CommandEmpty>{items.length === 0 && unlock !== undefined ? 'Selecione o campo anterior' : 'Não encontrado'}</CommandEmpty>
                   <CommandGroup>
                     <CommandList>
                       {items.map((item: string) => (

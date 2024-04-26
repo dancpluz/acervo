@@ -99,7 +99,7 @@ const FormLabel = React.forwardRef<
   return (
     <Label
       ref={ref}
-      className={cn(error && "text-destructive", "text-foreground font-normal",className)}
+      className={cn(error && "text-destructive", "text-foreground",className)}
       htmlFor={formItemId}
       {...props}
     />
@@ -155,8 +155,8 @@ const FormMessage = React.forwardRef<
 
   return (
     <Popover>
-      <PopoverTrigger className={cn('absolute right-0 ', className)}>
-        <Info className={`${body ? 'scale-1' : 'scale-0 w-0 h-0' } w-4 h-4 transition-transform duration-400 text-destructive`} />
+      <PopoverTrigger className={cn('absolute right-0', !body && 'hidden' , className)}>
+        <Info className={`w-4 h-4 text-destructive`} />
       </PopoverTrigger>
       <PopoverContent side='top' className='w-full bg-background rounded-lg p-3'>
         <PopoverArrow className='fill-background'/>
@@ -170,8 +170,6 @@ const FormMessage = React.forwardRef<
         </p>
       </PopoverContent>
     </Popover>
-   
-          
   )
 })
 FormMessage.displayName = "FormMessage"

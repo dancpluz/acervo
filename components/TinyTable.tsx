@@ -7,6 +7,7 @@ import {
   TableRow,
   TableFooter,
 } from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
@@ -45,16 +46,16 @@ type EditProps = {
 export function EditTinyTable({ columns, title, rows, append, remove, form, edit}: EditProps) {
   return (
     <div className='flex flex-col gap-1'>
-      <h4 className='text-sm'>{title}</h4>
-      <Table containerClassname="max-h-44 overflow-y-auto">
+      <Label>{title}</Label>
+      <Table containerClassName="max-h-[180px] overflow-y-auto">
         <TableHeader className='bg-transparent'>
           <TableRow>
             {columns.map((column) => {
               return (
-                <TableHead key={column.label} className={`text-tertiary text-sm w-[${column.size}]`}>{column.label}</TableHead>
+                <TableHead key={column.label} className={`first:pl-4 px-2 text-tertiary text-sm w-[${column.size}]`}>{column.label}</TableHead>
               )
             })}
-            <TableHead className='text-center'></TableHead>
+            <TableHead className='text-center w-2 px-0'></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="overflow-y-auto">
@@ -102,8 +103,8 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, edit
 
 export function TinyTable({ columns, title, rows, placeholder }: Props) {  
   return (
-    <div className='flex flex-col gap-2'>
-      <h4 className='text-sm'>{title}</h4>
+    <div className='flex flex-1 flex-col gap-1'>
+      <Label>{title}</Label>
       <Table>
         <TableHeader className='bg-transparent'>
           <TableRow>
