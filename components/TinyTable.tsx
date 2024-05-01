@@ -88,13 +88,14 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, edit
           })}
         </TableBody>
         <TableFooter>
-          <th colSpan={5}>
-            <div className='flex hover:bg-secondary/20 w-full border-t border-secondary font-normal justify-center gap-2 cursor-pointer items-center py-2' onClick={() => append()}>
-            
-            <CirclePlus className='text-primary w-5 h-5' />
-            Adicionar
-            </div>
-          </th>
+          <tr>
+            <th colSpan={5}>
+              <div className='flex hover:bg-secondary/20 w-full border-t border-secondary font-normal justify-center gap-2 cursor-pointer items-center py-2' onClick={() => append()}>
+                <CirclePlus className='text-primary w-5 h-5' />
+                Adicionar
+              </div>
+            </th>
+          </tr>
         </TableFooter>
       </Table>
     </div>
