@@ -22,7 +22,7 @@ const Input = React.forwardRef<HTMLInputElement, InputCustom>(
     const MyInput = mask ? MaskedInput : 'input';
 
     return (
-      <div className='relative'>
+      <div className='relative grow'>
         <MyInput
           type={type}
           mask={mask || []}

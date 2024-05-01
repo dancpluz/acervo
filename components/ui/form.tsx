@@ -158,8 +158,8 @@ const FormMessage = React.forwardRef<
       <PopoverTrigger className={cn('absolute right-0', !body && 'hidden' , className)}>
         <Info className={`w-4 h-4 text-destructive`} />
       </PopoverTrigger>
-      <PopoverContent side='top' className='w-full bg-background rounded-lg p-3'>
-        <PopoverArrow className='fill-background'/>
+      <PopoverContent side='top' className='outline outline-destructive outline-1 shadow-none w-full bg-background rounded-lg p-3'>
+        <PopoverArrow className='fill-destructive'/>
         <p
           ref={ref}
           id={formMessageId}
