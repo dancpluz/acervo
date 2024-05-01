@@ -5,17 +5,8 @@ import { Factory } from "@/lib/types";
 import Chip from "@/components/Chip";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpDown, ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10 } from "lucide-react"
-
-function formatPercent(float?: number) {
-  if (!float) return "-";
-
-  const decimals: number = float.toString().split(".")[1]?.length || 0;
-  const minimumFractionDigits: number = decimals >= 3 ? 2 : 0;
-  const formated = float.toLocaleString('pt-BR', { style: 'percent', minimumFractionDigits });
-  
-  return formated;
-}
+import { ArrowUpDown, ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10 } from "lucide-react";
+import { formatPercent } from '@/lib/utils';
 
 function SortHeader(column: Column<Factory>, header: string, center?: boolean, numeric?: boolean) {
   if (numeric) {
