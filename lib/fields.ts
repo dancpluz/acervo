@@ -15,7 +15,7 @@ export type EnumFieldT = {
   value: string;
   label: string;
   validation: z.ZodType<any, any>;
-  items: string[] | number[]
+  items: string[];
 };
 
 export type TableFieldT = {
