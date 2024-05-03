@@ -184,7 +184,7 @@ export function RadioField({ form, obj }: { form: ReturnType<typeof useForm>, ob
                 return (
                   <FormItem key={item} className="flex-initial">
                     <FormControl>
-                      <RadioGroupItem value={String(item)} />
+                      <RadioGroupItem value={item} />
                     </FormControl>
                   </FormItem>
                 )

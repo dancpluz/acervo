@@ -1,6 +1,5 @@
 import { z } from "zod";
 import cidades from '@/lib/cidades.json';
-import { getEnumItems } from "./utils";
 import { PricingEnum, StyleEnum, AmbientEnum, TaxEnum } from "./types";
 
 export type FieldT = {
@@ -57,7 +56,7 @@ export const fields: { [key: string]: FieldT } = {
     label: 'CONTRIBUINTE*',
     placeholder: 'Selecione contribuinte',
     validation: z.nativeEnum(TaxEnum, { required_error: 'Campo não preenchido.' }),
-    items: getEnumItems(TaxEnum) as string[],
+    items: Object.values(TaxEnum),
   },
   state_register: {
     value: 'state_register',
@@ -187,19 +186,19 @@ export const enumFields: { [key: string]: EnumFieldT } = {
     value: 'pricing',
     label: 'PADRÃO*',
     validation: z.nativeEnum(PricingEnum, { required_error: 'Campo não preenchido.' }),
-    items: getEnumItems(PricingEnum),
+    items: Object.values(PricingEnum),
   },
   style: {
     value: 'style',
     label: 'ESTILO*',
     validation: z.nativeEnum(StyleEnum, { required_error: 'Campo não preenchido.' }),
-    items: getEnumItems(StyleEnum),
+    items: Object.values(StyleEnum),
   },
   ambient: {
     value: 'ambient',
     label: 'AMBIENTE*',
     validation: z.nativeEnum(AmbientEnum, { required_error: 'Campo não preenchido.' }),
-    items: getEnumItems(AmbientEnum),
+    items: Object.values(AmbientEnum),
   },
 };
 

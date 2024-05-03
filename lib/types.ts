@@ -1,11 +1,11 @@
 import { DocumentReference, FieldValue } from "firebase/firestore";
 
 export enum PricingEnum {
-  $ = 1,
-  $$ = 2,
-  $$$ = 3,
-  $$$$ = 4,
-  $$$$$ = 5,
+  $ = '1',
+  $$ = '2',
+  $$$ = '3',
+  $$$$ = '4',
+  $$$$$ = '5',
 }
 
 export enum StyleEnum {
@@ -76,7 +76,7 @@ export type AddressT = {
 export type FactoryT = {
   person: PersonT | DocumentReference;
   representative: string;
-  pricing: string;
+  pricing: number;
   ambient: string;
   style: string;
   direct_sale: number;

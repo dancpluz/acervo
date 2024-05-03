@@ -25,7 +25,7 @@ const RadioGroupItem = React.forwardRef<
   return (
     <RadioGroupPrimitive.Item
       ref={ref}
-      value={Number(value) ? Number(value) : value}
+      value={value}
       className={cn(
         "rounded-lg py-1 px-2 text-tertiary text-sm border border-secondary hover:bg-secondary/50 ring-offset-background bg-secondary data-[state=checked]:bg-transparent data-[state=checked]:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
         className

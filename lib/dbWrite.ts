@@ -55,7 +55,7 @@ export async function addFactory(values: any) {
       link_catalog: values.link_catalog,
       link_table: values.link_table,
       link_site: values.link_site,
-      pricing: values.pricing,
+      pricing: Number(values.pricing),
       style: values.style,
       ambient: values.ambient
     }
