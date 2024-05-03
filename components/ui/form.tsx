@@ -1,6 +1,6 @@
-import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
-import { Slot } from "@radix-ui/react-slot"
+import * as React from "react";
+import * as LabelPrimitive from "@radix-ui/react-label";
+import { Slot } from "@radix-ui/react-slot";
 import {
   Controller,
   ControllerProps,
@@ -8,10 +8,16 @@ import {
   FieldValues,
   FormProvider,
   useFormContext,
-} from "react-hook-form"
-
-import { cn } from "@/lib/utils"
-import { Label } from "@/components/ui/label"
+} from "react-hook-form";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  PopoverArrow,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { Info } from 'lucide-react';
 
 const Form = FormProvider
 
@@ -78,7 +84,7 @@ const FormItem = React.forwardRef<
 
   return (
     <FormItemContext.Provider value={{ id }}>
-      <div ref={ref} className={cn("flex flex-1 flex-col gap-1", className)} {...props} />
+      <div ref={ref} className={cn("flex flex-1 flex-col gap-1 relative", className)} {...props} />
     </FormItemContext.Provider>
   )
 })
@@ -93,7 +99,7 @@ const FormLabel = React.forwardRef<
   return (
     <Label
       ref={ref}
-      className={cn(error && "text-destructive", "text-foreground font-normal",className)}
+      className={cn(error && "text-destructive", "text-foreground",className)}
       htmlFor={formItemId}
       {...props}
     />
@@ -147,19 +153,23 @@ const FormMessage = React.forwardRef<
   const { error, formMessageId } = useFormField()
   const body = error ? String(error?.message) : children
 
-  if (!body) {
-    return null
-  }
-
   return (
-    <p
-      ref={ref}
-      id={formMessageId}
-      className={cn("text-sm font-medium text-destructive", className)}
-      {...props}
-    >
-      {body}
-    </p>
+    <Popover>
+      <PopoverTrigger className={cn('absolute right-0', !body && 'hidden' , className)}>
+        <Info className={`w-4 h-4 text-destructive`} />
+      </PopoverTrigger>
+      <PopoverContent side='top' className='outline outline-destructive outline-1 shadow-none w-full bg-background rounded-lg p-3'>
+        <PopoverArrow className='fill-destructive'/>
+        <p
+          ref={ref}
+          id={formMessageId}
+          className={cn("text-sm font-medium text-destructive", className)}
+          {...props}
+        >
+          {body}
+        </p>
+      </PopoverContent>
+    </Popover>
   )
 })
 FormMessage.displayName = "FormMessage"

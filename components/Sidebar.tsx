@@ -44,7 +44,7 @@ export default function SideBar() {
   };
 
   return (
-    <aside className={`fixed flex flex-col bg-background justify-between h-full py-10 inset-y-0 left-0 z-10 w-24 border-r border-secondary transition-all ${expanded ? "w-64" : ""}`}>
+    <aside className={`fixed flex flex-col bg-background justify-between h-full py-10 inset-y-0 left-0 z-10 w-24 border-r border-secondary transition-all ${expanded ? "w-64 shadow-2xl" : ""}`}>
       <button className={`absolute flex justify-center items-center transition-all cursor-pointer w-5 h-5 top-32 -right-2.5 bg-secondary rounded-full ${expanded ? 'rotate-180' : ""}`} onClick={() => setExpanded(curr => !curr)}>
         <Image alt={'Expandir Aba'} src={'/icons/chevron.svg'} width={16} height={16} />
       </button>

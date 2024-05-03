@@ -19,16 +19,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { FactoryT } from "@/lib/types";
 
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  fullData: FactoryT[]
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  fullData,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const table = useReactTable({
@@ -41,7 +44,7 @@ export function DataTable<TData, TValue>({
       sorting,
     },
   })
-
+  
   return (
     <Table>
       <TableHeader>
@@ -87,3 +90,4 @@ export function DataTable<TData, TValue>({
     </Table>
   )
 }
+

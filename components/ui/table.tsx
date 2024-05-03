@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils"
 
 const Table = React.forwardRef<
   HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative w-full rounded-lg border border-secondary overflow-hidden">
+  React.HTMLAttributes<HTMLTableElement> & { containerClassName?: string }
+>(({ className, containerClassName, ...props }, ref) => (
+  <div className={cn("relative w-full rounded-lg border border-secondary overflow-hidden", containerClassName)}>
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}
@@ -43,7 +43,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "border-t bg-muted/50 text-sm font-medium [&>tr]:last:border-b-0",
+      "sticky bg-background border-secondary text-base [&>tr]:last:border-b-0",
       className
     )}
     {...props}

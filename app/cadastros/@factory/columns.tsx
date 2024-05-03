@@ -1,23 +1,14 @@
 "use client"
 
 import { Column, ColumnDef } from "@tanstack/react-table";
-import { Factory } from "@/lib/types";
+import { FactoryT } from "@/lib/types";
 import Chip from "@/components/Chip";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpDown, ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10 } from "lucide-react"
+import { ArrowUpDown, ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10 } from "lucide-react";
+import { formatPercent } from '@/lib/utils';
 
-function formatPercent(float?: number) {
-  if (!float) return "-";
-
-  const decimals: number = float.toString().split(".")[1]?.length || 0;
-  const minimumFractionDigits: number = decimals >= 3 ? 2 : 0;
-  const formated = float.toLocaleString('pt-BR', { style: 'percent', minimumFractionDigits });
-  
-  return formated;
-}
-
-function SortHeader(column: Column<Factory>, header: string, center?: boolean, numeric?: boolean) {
+function SortHeader(column: Column<FactoryT>, header: string, center?: boolean, numeric?: boolean) {
   if (numeric) {
     return (
       <div className={`flex ${center ? 'justify-center' : ''}`}>
@@ -45,11 +36,11 @@ function SortHeader(column: Column<Factory>, header: string, center?: boolean, n
   )
 }
 
-export const columns: ColumnDef<Factory>[] = [
+export const columns: ColumnDef<FactoryT>[] = [
   {
     accessorKey: "name",
     header: ({ column }) => {
-      return SortHeader(column, 'NOME')
+      return SortHeader(column, 'NOME/NOME FANTASIA')
     },
     size: 250,
   },
@@ -72,10 +63,10 @@ export const columns: ColumnDef<Factory>[] = [
     size: 150,
   },
   {
-    accessorKey: "environment",
+    accessorKey: "ambient",
     header: () => <div className="text-center">AMBIENTE</div>,
     cell: ({ row }) => {
-      return <div className="text-center"><Chip label={row.getValue('environment')} /></div>
+      return <div className="text-center"><Chip label={row.getValue('ambient')} /></div>
     },
     size: 100,
   },
