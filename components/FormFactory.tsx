@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form"
 import { toast } from "@/components/ui/use-toast";
 import { useState } from "react";
@@ -14,7 +13,8 @@ import { fields, tableFields, enumFields } from "@/lib/fields";
 import { FormDiv, FieldDiv, TabDiv } from "@/components/ui/div";
 import { useEffect } from 'react';
 import FormButton from '@/components/FormButton';
-import { documentExists } from '@/lib/queries'
+import { documentExists } from '@/lib/dbRead';
+import { addFactory } from '@/lib/dbWrite';
 
 // Default values for the fields
 
@@ -64,10 +64,6 @@ export default function FormFactory() {
     const check = {
       person: [
         {
-          query: 'info.cnpj',
-          value: values.cnpj
-        },
-        {
           query: 'info.email',
           value: values.info_email
         },
@@ -85,15 +81,16 @@ export default function FormFactory() {
       toast({
         title: "Fábrica adicionada com sucesso!",
       })
-      
+      console.log(values);
+      await addFactory(values)
     }
   }
 
   const [selectedState, setSelectedState] = useState('');
 
-  useEffect(() => {
-    console.log(`submited: ${form.formState.isLoading}, submitsuccess: ${form.formState.isSubmitSuccessful}, submitting: ${form.formState.isSubmitting}`)
-  })
+  // useEffect(() => {
+  //   console.log(`submited: ${form.formState.isLoading}, submitsuccess: ${form.formState.isSubmitSuccessful}, submitting: ${form.formState.isSubmitting}`)
+  // })
 
   return (
     <Tabs>
