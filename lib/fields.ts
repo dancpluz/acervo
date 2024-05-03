@@ -1,6 +1,7 @@
 import { z } from "zod";
 import cidades from '@/lib/cidades.json';
-import { getEnumItems } from "./utils"; 
+import { getEnumItems } from "./utils";
+import { PricingEnum, StyleEnum, AmbientEnum, TaxEnum } from "./types";
 
 export type FieldT = {
   value: string;
@@ -54,9 +55,9 @@ export const fields: { [key: string]: FieldT } = {
   tax_payer: {
     value: 'tax_payer',
     label: 'CONTRIBUINTE*',
-    placeholder: 'Selecione',
-    validation: z.string().min(1, 'Selecione o tipo de contribuinte.'),
-    items: ["Não Informado","Contribuinte isento de inscrição no cadastro de contribuintes do ICMS", "Não Contribuinte, que pode ou não possuir inscrição estadual no cadastro ICMS"]
+    placeholder: 'Selecione contribuinte',
+    validation: z.nativeEnum(TaxEnum, { required_error: 'Campo não preenchido.' }),
+    items: getEnumItems(TaxEnum) as string[],
   },
   state_register: {
     value: 'state_register',
@@ -181,27 +182,6 @@ export const fields: { [key: string]: FieldT } = {
   }
 };
 
-enum PricingEnum {
-  $ = 1,
-  $$ = 2,
-  $$$ = 3,
-  $$$$ = 4,
-  $$$$$ = 5,
-}
-
-enum StyleEnum {
-  Contemporaneo = 'Contemporâneo',
-  Classico = 'Clássico',
-  Rustico = 'Rústico',
-  Moderno = 'Moderno'
-}
-
-enum AmbientEnum {
-  Interno = 'Interno',
-  Externo = 'Externo',
-  Int_Externo = 'Int. e Externo'
-}
-
 export const enumFields: { [key: string]: EnumFieldT } = {
   pricing: {
     value: 'pricing',
@@ -247,3 +227,58 @@ export const tableFields: TableFieldT[] = [
     mask: ['(', /\d/, /\d/, ')', /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
   }
 ];
+
+// const factory = {
+//   "representative": "",
+//   "discount": "",
+//   "direct_sale": "",
+//   "link_catalog": "https://exemplo.com.br",
+//   "link_table": "",
+//   "link_site": "",
+//   "pricing": 1,
+//   "style": "Contemporâneo",
+//   "ambient": "Interno"
+// }
+
+// const contact = [
+//   {
+//     "name": "nome contato",
+//     "detail": "detalhe",
+//     "phone": "(00)00000-0000",
+//     "telephone": "(00)0000-0000"
+//   }
+// ]
+
+// const address = {
+//   "cep": "00000-000",
+//   "address": "endereço",
+//   "number": "000",
+//   "state": "DF",
+//   "city": "Brasília",
+//   "complement": "complemento",
+// }
+
+// const payment = {
+//   "pix": "619982398",
+//   "account": "0000000-0",
+//   "agency": "",
+//   "bank": "banco",
+// }
+
+// const info = {
+//   name: 'nome',
+//   fantasy_name: 'fantasia',
+//   info_email: '',
+//   cnpj: '00.000.000/0000-00',
+//   tax_payer: "Não Informado",
+//   state_register: "000.000.000.000",
+//   municipal_register: "000.000.000.000",
+//   address: address,
+// }
+
+// const person = {
+//   contact: contact,
+//   info: info,
+//   payment: payment,
+//   observations: "observacoes",
+// }

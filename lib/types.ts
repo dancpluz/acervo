@@ -1,101 +1,87 @@
-import { DocumentReference } from "firebase/firestore";
-import { z } from "zod";
+import { DocumentReference, FieldValue } from "firebase/firestore";
 
-const environmentEnum = ["Interno", "Externo", "Interno e Externo"] as const;
-const styleEnum = ["Moderno", "Clássico", "Rústico", "Industrial", "Outro"] as const;
+export enum PricingEnum {
+  $ = 1,
+  $$ = 2,
+  $$$ = 3,
+  $$$$ = 4,
+  $$$$$ = 5,
+}
 
-const contactSchema = z.object({
-  name: z.string(),
-  detail: z.string(),
-  phone: z.string().optional(),
-  telephone: z.string().optional(),
-});
+export enum StyleEnum {
+  Contemporaneo = 'Contemporâneo',
+  Classico = 'Clássico',
+  Rustico = 'Rústico',
+  Moderno = 'Moderno'
+}
 
-const addressSchema = z.object({
-  state: z.string(),
-  cep: z.string(),
-  city: z.string(),
-  address_name: z.string(),
-  number: z.string().optional(),
-  complement: z.string().optional(),
-});
+export enum AmbientEnum {
+  Interno = 'Interno',
+  Externo = 'Externo',
+  Int_Externo = 'Int. e Externo'
+}
 
-const paymentSchema = z.object({
-  pix: z.string(),
-  account: z.string().optional(),
-  bank: z.string().optional(),
-  agency: z.string().optional(),
-});
+export enum TaxEnum {
+  NaoInfo = "Não Informado",
+  Contribuinte = "Contribuinte isento de inscrição no cadastro de contribuintes do ICMS",
+  NContribuinte = "Não Contribuinte, que pode ou não possuir inscrição estadual no cadastro ICMS"
+}
 
-const infoSchema = z.object({
-  name: z.string().min(2).max(150),
-  surname: z.string().min(2).max(150).optional(),
-  cpf: z.string().optional(),
-  rg: z.string().optional(),
-  tax_address: addressSchema.optional(),
-  shipping_address: addressSchema.optional(),
-  info_email: z.string(),
-  fantasy_name: z.string().optional(),
-  cnpj: z.string().optional(),
-  tax_payer: z.enum(["0", "1"]).optional(),
-  municipal_register: z.string().optional(),
-  state_register: z.string().optional(),
-});
+export type PersonT = {
+  contact: ContactT[];
+  info: InfoT;
+  payment: PaymentT;
+  observations: string;
+  timestamp: FieldValue | Date | { seconds: number, nanoseconds: number };
+}
 
-export const personSchema = z.object({
-  id: z.string(),
-  contact: contactSchema.array().optional(),
-  info: infoSchema,
-  payment: paymentSchema,
-  observations: z.string().optional(),
-});
+export type ContactT = {
+  name: string;
+  detail: string;
+  phone: string;
+  telephone: string;
+}
 
-const workerSchema = z.object({
-  name: z.string(),
-  role: z.string(),
-  email: z.string(),
-  payment: paymentSchema,
-});
+export type PaymentT = {
+  pix: string;
+  account: string;
+  bank: string;
+  agency: string;
+}
 
-const representativeSchema = z.object({
-  id: z.string(),
-  person: z.object({}).refine(
-    (x: object): x is DocumentReference => x instanceof DocumentReference,
-  ),
-  team: workerSchema.array().optional(),
-});
+export type InfoT = {
+  name: string;
+  surname?: string;
+  cpf?: string;
+  rg?: string;
+  tax_address: AddressT;
+  shipping_address?: AddressT;
+  info_email: string;
+  fantasy_name: string;
+  cnpj: string;
+  tax_payer: TaxEnum;
+  municipal_register: string;
+  state_register: string;
+}
 
-export const factorySchema = z.object({
-  id: z.string(),
-  person: z.object({}).refine(
-    (x: object): x is DocumentReference => x instanceof DocumentReference,
-  ),
-  representative: z.object({}).refine(
-    (x: object): x is DocumentReference => x instanceof DocumentReference,
-  ),
-  pricing: z.number().positive().int().lte(5),
-  environment: z.enum(environmentEnum),
-  style: z.enum(styleEnum),
-  direct_sale: z.number().optional(),
-  discount: z.number().optional(),
-  link_table: z.string().optional(),
-  link_catalog: z.string().optional(),
-  site: z.string().optional(),
-});
+export type AddressT = {
+  state: string;
+  cep: string;
+  city: string;
+  address: string;
+  number: string;
+  complement: string;
+}
 
-
-type Person = z.infer<typeof personSchema>;
-
-type Contact = z.infer<typeof contactSchema>;
-
-export type Factory = z.infer<typeof factorySchema>;
-
-type Payment = z.infer<typeof paymentSchema>;
-
-type Info = z.infer<typeof infoSchema>;
-
-type Address = z.infer<typeof addressSchema>;
-
-type Worker = z.infer<typeof workerSchema>;
-
-type Representative = z.infer<typeof representativeSchema>;
+export type FactoryT = {
+  person: PersonT | DocumentReference;
+  representative: string;
+  pricing: string;
+  ambient: string;
+  style: string;
+  direct_sale: number;
+  discount: number;
+  link_table: string;
+  link_catalog: string;
+  link_site: string;
+}
