@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 import FormButton from '@/components/FormButton';
 import { documentExists } from '@/lib/dbRead';
 import { addFactory } from '@/lib/dbWrite';
+import { fillCepFields } from "@/lib/utils";
 
 // Default values for the fields
 
@@ -64,8 +65,8 @@ export default function FormFactory() {
     const check = {
       person: [
         {
-          query: 'info.email',
-          value: values.info_email
+          query: 'info.cnpj',
+          value: values.cnpj
         },
       ],
     }
@@ -93,7 +94,7 @@ export default function FormFactory() {
   // })
 
   return (
-    <Tabs>
+    <Tabs defaultValue="factory">
       <TabsList className='h-9'>
         <TabsTrigger className="text-base" value="factory">FÁBRICAS</TabsTrigger>
         <TabsTrigger className="text-base" value="representative">REPRESENTAÇÃO</TabsTrigger>
@@ -119,17 +120,17 @@ export default function FormFactory() {
                     <InputField obj={fields.municipal_register} form={form} />
                   </FieldDiv>
                   <FieldDiv>
+                    <InputField obj={fields.bank} form={form} customClass={'grow'}/>
                     <InputField obj={fields.pix} form={form} />
-                    <InputField obj={fields.account} form={form} />
                   </FieldDiv>
                   <FieldDiv>
+                    <InputField obj={fields.account} form={form} />
                     <InputField obj={fields.agency} form={form} customClass={'grow-0 min-w-32'}/>
-                    <InputField obj={fields.bank} form={form} customClass={'grow'}/>
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
                   <FieldDiv>
-                    <InputField obj={fields.cep} form={form} customClass={'grow-0 min-w-36'}/>
+                    <InputField obj={fields.cep} autofill={fillCepFields} setSelectedState={setSelectedState} form={form} customClass={'grow-0 min-w-36'}/>
                     <InputField obj={fields.address} form={form} customClass={'grow'}/>
                     <InputField obj={fields.number} form={form} customClass={'grow-0 min-w-36'} />
                   </FieldDiv>

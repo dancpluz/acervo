@@ -33,6 +33,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
+import { Dispatch } from "react";
 
 export function SelectField({ form, obj }: { form: ReturnType<typeof useForm>, obj: FieldT }) {
   return (
@@ -146,7 +147,7 @@ export function ShowField({ text, placeholder, label }: {  text?: string, placeh
   )
 }
 
-export function InputField({ form, obj, customClass, percent }: { form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, percent?: boolean }) {
+export function InputField({ form, obj, autofill, setSelectedState, customClass, percent }: { form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, setSelectedState?: Dispatch<React.SetStateAction<string>>, customClass?: string, percent?: boolean }) {
   return (
     <FormField
       control={form.control}
@@ -157,7 +158,7 @@ export function InputField({ form, obj, customClass, percent }: { form: ReturnTy
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <div className='flex items-center gap-1'>
-              <Input mask={obj.mask} actions={{ isDirty: form.getFieldState(obj.value).isDirty, clear: () => form.resetField(obj.value, { keepError: false }) }} placeholder={obj.placeholder} {...field} />
+              <Input mask={obj.mask} actions={{ isDirty: form.getFieldState(obj.value).isDirty, clear: () => form.resetField(obj.value, { keepError: false }) }} placeholder={obj.placeholder} {...field} onChange={(e) => {field.onChange(e); autofill ? autofill(e.target.value, setSelectedState,form) : ''}} />
               {percent ? <span className='text-tertiary'>%</span> : ''}
             </div>
           </FormControl>

@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { FactoryT, PersonT } from '@/lib/types';
+import { Dispatch } from "react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -36,5 +37,37 @@ export function formatFactory(data: FactoryT[]): any {
   } catch (error) {
     console.log(error);
     return [];
+  }
+}
+
+export async function fillCepFields(inputCep: string, setSelectedState: Dispatch<React.SetStateAction<string>>, form: any) {
+  try {
+    const cep = inputCep.replace(/\D/g, '');
+    if (cep.length === 8) {
+      // continue with the rest of the code
+      
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`,{
+        method: 'GET',
+      });
+      
+      const cepInfo = await res.json();
+
+      if (cepInfo.erro) {
+        // form.resetField('address')
+        // form.resetField('state')
+        // form.resetField('city')
+        // form.resetField('complement')
+      } else {
+        const { logradouro, complemento, bairro, localidade, uf } = cepInfo;
+        setSelectedState(uf)
+        
+        form.setValue('address', logradouro + ' ' + bairro, { shouldValidate: true });
+        form.setValue('state', uf, { shouldValidate: true });
+        form.setValue('city', localidade, { shouldValidate: true });
+        form.setValue('complement', complemento, { shouldValidate: true });
+      }
+    }
+  } catch(error) {
+    console.log(error);
   }
 }

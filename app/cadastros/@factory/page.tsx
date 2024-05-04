@@ -8,7 +8,7 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import FormFactory from "@/components/FormFactory";
+import FormFactory from "@/components/AddFactory";
 import { formatFactory } from "@/lib/utils";
 
 export default async function Factory() {
