@@ -190,8 +190,8 @@ export const enumFields: { [key: string]: EnumFieldT } = {
   },
   style: {
     value: 'style',
-    label: 'ESTILO*',
-    validation: z.nativeEnum(StyleEnum, { required_error: 'Campo não preenchido.' }),
+    label: 'ESTILO',
+    validation: z.nativeEnum(StyleEnum).optional().or(z.literal('')),
     items: Object.values(StyleEnum),
   },
   ambient: {

@@ -56,13 +56,13 @@ export async function addFactory(values: any) {
       link_table: values.link_table,
       link_site: values.link_site,
       pricing: Number(values.pricing),
-      style: values.style,
+      style: values.style ? values.style : '',
       ambient: values.ambient
     }
   
     await addDoc(collection(db, "factory"), factory);
     revalidatePath('/cadastros')
   } catch (error) {
-    throw new Error('Ocorreu um erro ao adicionar a fábrica')
+    console.log(error);
   }
 }  
