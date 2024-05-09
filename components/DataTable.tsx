@@ -79,7 +79,7 @@ export function DataTable<TData, TValue>({
             <Collapsible key={row.id} asChild>
               <>
                 <TableRow
-                  className='relative hover:bg-secondary/20'
+                  className='relative hover:bg-secondary/10'
                   data-state={row.getIsSelected() && "selected"}
                 >
                   <CollapsibleTrigger className='transition-transform cursor-pointer data-[state=open]:rotate-90' asChild>
@@ -98,7 +98,7 @@ export function DataTable<TData, TValue>({
                 <CollapsibleContent asChild>
                   <TableRow>
                     <TableCell colSpan={columns.length + 1} className="p-0">
-                      <AddFactory />
+                      <AddFactory data={fullData[index]} show />
                     </TableCell>
                   </TableRow>
                 </CollapsibleContent>

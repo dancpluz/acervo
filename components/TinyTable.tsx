@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 import { CirclePlus, CircleX } from 'lucide-react';
@@ -38,7 +38,7 @@ type EditProps = {
   }[];
   title?: string;
   edit: string;
-  form: ReturnType<typeof useForm>;
+  form: UseFormReturn;
   append: () => void;
   remove: (index: number) => void;
 }
@@ -90,7 +90,7 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, edit
         <TableFooter>
           <tr>
             <th colSpan={5}>
-              <div className='flex hover:bg-secondary/20 w-full border-t border-secondary font-normal justify-center gap-2 cursor-pointer items-center py-2' onClick={() => append()}>
+              <div className='flex bg-transparent hover:bg-secondary/20 w-full border-t border-secondary font-normal justify-center gap-2 cursor-pointer items-center py-2' onClick={() => append()}>
                 <CirclePlus className='text-primary w-5 h-5' />
                 Adicionar
               </div>
