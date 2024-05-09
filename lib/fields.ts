@@ -202,6 +202,12 @@ export const enumFields: { [key: string]: EnumFieldT } = {
     validation: z.nativeEnum(AmbientEnum, { required_error: 'Campo não preenchido.' }),
     items: Object.values(AmbientEnum),
   },
+  bool_direct_sale: {
+    value: 'bool_direct_sale',
+    label: 'VENDA DIRETA?',
+    validation: z.string({ required_error: 'Campo não preenchido.' }),
+    items: ['Sim', 'Não'],
+  }
 };
 
 export const tableFields: TableFieldT[] = [

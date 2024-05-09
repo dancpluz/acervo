@@ -166,7 +166,7 @@ export function InputField({ form, obj, autofill, setSelectedState=()=>console.l
   )
 }
 
-export function RadioField({ form, obj, optional }: { form: ReturnType<typeof useForm>, obj: EnumFieldT, optional?: boolean }) {
+export function RadioField({ form, obj, bool, optional }: { form: ReturnType<typeof useForm>, obj: EnumFieldT, bool?: boolean, optional?: boolean }) {
   return (
     <FormField
       control={form.control}
@@ -177,14 +177,16 @@ export function RadioField({ form, obj, optional }: { form: ReturnType<typeof us
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <RadioGroup
+              className={bool ? 'p-0 border-0 grow' : ''}
               onValueChange={field.onChange}
               defaultValue={field.value}
             >
               {obj.items && (obj.items).map((item) => {
                 return (
-                  <FormItem key={item} className="flex-initial">
+                  <FormItem key={item} className={`flex-initial ${bool ? 'p-0 border-0 grow' : ''}`}>
                     <FormControl>
                       <RadioGroupItem
+                        className={bool ? 'grow' : ''}
                         value={item}
                         clear={optional ? ((e: ChangeEvent<HTMLInputElement>) => {
                           if (e.target.dataset.state === 'checked') {

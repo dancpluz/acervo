@@ -77,9 +77,6 @@ export default function FormFactory({ data, show, edit }: { data?: any, show?: b
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
   
-  
-
-  
   async function addSubmit(values: z.infer<typeof formSchema>) {
     // Check if values already exists
     const check = {
@@ -190,6 +187,7 @@ export default function FormFactory({ data, show, edit }: { data?: any, show?: b
                 <FormDiv>
                   <FieldDiv>
                     <InputField obj={fields.discount} form={form} percent />
+                    <RadioField obj={enumFields.bool_direct_sale} form={form} bool/>
                     <InputField obj={fields.direct_sale} form={form} percent />
                   </FieldDiv>
                   <FieldDiv>
