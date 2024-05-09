@@ -1,3 +1,5 @@
+'use server'
+
 import db from "@/lib/firebase";
 import { collection, query, or, getDocs, getDoc, where } from "firebase/firestore";
 import { FactoryT, PersonT } from '@/lib/types';

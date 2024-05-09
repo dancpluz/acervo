@@ -1,5 +1,6 @@
 import { z } from "zod";
 import cidades from '@/lib/cidades.json';
+import bancos from '@/lib/bancos.json';
 import { PricingEnum, StyleEnum, AmbientEnum, TaxEnum } from "./types";
 
 export type FieldT = {
@@ -94,8 +95,9 @@ export const fields: { [key: string]: FieldT } = {
   bank: {
     value: 'bank',
     label: 'BANCO',
-    placeholder: 'Ex. Santander',
-    validation: z.string().max(50, 'Máximo de 50 caracteres.').optional().or(z.literal('')),
+    placeholder: 'Selecione o banco',
+    validation: z.string().optional().or(z.literal('')),
+    items: bancos
   },
   cep: {
     value: 'cep',

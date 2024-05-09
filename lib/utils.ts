@@ -44,8 +44,6 @@ export async function fillCepFields(inputCep: string, setSelectedState: Dispatch
   try {
     const cep = inputCep.replace(/\D/g, '');
     if (cep.length === 8) {
-      // continue with the rest of the code
-      
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`,{
         method: 'GET',
       });
