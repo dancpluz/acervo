@@ -33,7 +33,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
-import { Dispatch } from "react";
+import { Dispatch, ChangeEvent } from "react";
 
 export function SelectField({ form, obj }: { form: ReturnType<typeof useForm>, obj: FieldT }) {
   return (
@@ -59,7 +59,7 @@ export function SelectField({ form, obj }: { form: ReturnType<typeof useForm>, o
   );
 }
 
-export function SearchField({ form, obj, customClass, hint, unlock, onSelect }: { form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, unlock?: string, onSelect?: (value: string) => void }) {
+export function SearchField({ form, obj, customClass, hint, unlock }: { form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, unlock?: string }) {
   let items: any[] = [];
   if (unlock === undefined) {
     // Search with items defined, no Unlock
@@ -108,13 +108,12 @@ export function SearchField({ form, obj, customClass, hint, unlock, onSelect }: 
                 <CommandEmpty>{items.length === 0 && unlock !== undefined ? 'Selecione o campo anterior' : 'Não encontrado'}</CommandEmpty>
                 <CommandGroup>
                   <CommandList>
-                    {items.map((item: string) => (
+                    {items ? items.map((item: string) => (
                       <CommandItem
                         value={item}
                         key={item}
                         onSelect={() => {
                           form.setValue(obj.value, item);
-                          onSelect ? onSelect(item) : '';
                         }}
                       >
                         <Check
@@ -127,7 +126,7 @@ export function SearchField({ form, obj, customClass, hint, unlock, onSelect }: 
                         {item}
                       </CommandItem>
                     )
-                    )}
+                    ) : ''}
                   </CommandList>
                 </CommandGroup>
               </Command>
@@ -147,7 +146,7 @@ export function ShowField({ text, placeholder, label }: {  text?: string, placeh
   )
 }
 
-export function InputField({ form, obj, autofill, setSelectedState, customClass, percent }: { form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, setSelectedState?: Dispatch<React.SetStateAction<string>>, customClass?: string, percent?: boolean }) {
+export function InputField({ form, obj, autofill, setSelectedState=()=>console.log('t'), customClass, percent, long, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, setSelectedState?: Dispatch<React.SetStateAction<string>>, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean }) {
   return (
     <FormField
       control={form.control}
@@ -158,7 +157,7 @@ export function InputField({ form, obj, autofill, setSelectedState, customClass,
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <div className='flex items-center gap-1'>
-              <Input mask={obj.mask} actions={{ isDirty: form.getFieldState(obj.value).isDirty, clear: () => form.resetField(obj.value, { keepError: false }) }} placeholder={obj.placeholder} {...field} onChange={(e) => {field.onChange(e); autofill ? autofill(e.target.value, setSelectedState,form) : ''}} />
+              <Input long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(obj.value).isDirty, clear: () => form.resetField(obj.value, { keepError: false }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={obj.placeholder} {...field} onChange={(e) => {field.onChange(e); autofill ? autofill(e.target.value, setSelectedState,form) : ''}} disabled={disabled} />
               {percent ? <span className='text-tertiary'>%</span> : ''}
             </div>
           </FormControl>
@@ -167,7 +166,7 @@ export function InputField({ form, obj, autofill, setSelectedState, customClass,
   )
 }
 
-export function RadioField({ form, obj }: { form: ReturnType<typeof useForm>, obj: EnumFieldT }) {
+export function RadioField({ form, obj, optional }: { form: ReturnType<typeof useForm>, obj: EnumFieldT, optional?: boolean }) {
   return (
     <FormField
       control={form.control}
@@ -185,10 +184,21 @@ export function RadioField({ form, obj }: { form: ReturnType<typeof useForm>, ob
                 return (
                   <FormItem key={item} className="flex-initial">
                     <FormControl>
-                      <RadioGroupItem value={item} />
+                      <RadioGroupItem
+                        value={item}
+                        clear={optional ? ((e: ChangeEvent<HTMLInputElement>) => {
+                          if (e.target.dataset.state === 'checked') {
+                            form.resetField(obj.value, { keepError: false });
+                            e.target.setAttribute('data-state', 'unchecked');
+                          } else {
+                            form.setValue(obj.value, item);
+                            e.target.setAttribute('data-state', 'checked');
+                          }
+                        }): undefined}
+                      />
                     </FormControl>
                   </FormItem>
-                )
+                );
               })}
             </RadioGroup>
           </FormControl>
