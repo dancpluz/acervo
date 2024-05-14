@@ -38,7 +38,7 @@ export async function getFactory(param?: string): Promise<FactoryT[]> {
       const personRef = await getDoc(data.person);
       const person = personRef.data() as PersonT; // Add type assertion here
       person.timestamp = new Date((person.timestamp as { seconds: number }).seconds * 1000);
-      return { ...data, person };
+      return { ...data, person, refs: { person: personRef.id, factory: doc.id } };
     }))
 
     return factoryData;

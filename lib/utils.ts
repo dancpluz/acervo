@@ -1,19 +1,29 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { FactoryT, PersonT } from '@/lib/types';
-import { Dispatch } from "react";
+import { UseFieldArrayReturn, UseFormReturn } from "react-hook-form";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatPercent(float?: number) {
-  if (!float) return "-";
+export function setFormValues(form: UseFormReturn, tableForm: UseFieldArrayReturn<any,any,any>, data: any) {
+  for (const [key, value] of Object.entries(data)) {
+    if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
+      setFormValues(form, tableForm, value)
+    } else if (value !== '') {
+      form.setValue(key, value)
+    }
+  }
+}
+
+export function formatPercent(float: number | '') {
+  if (float === '') return "-";
 
   const decimals: number = float.toString().split(".")[1]?.length || 0;
   const minimumFractionDigits: number = decimals >= 3 ? 2 : 0;
   const formated = float.toLocaleString('pt-BR', { style: 'percent', minimumFractionDigits });
-  
+
   return formated;
 }
 
@@ -40,7 +50,7 @@ export function formatFactory(data: FactoryT[]): any {
   }
 }
 
-export async function fillCepFields(inputCep: string, setSelectedState: Dispatch<React.SetStateAction<string>>, form: any) {
+export async function fillCepFields(inputCep: string, form: any) {
   try {
     const cep = inputCep.replace(/\D/g, '');
     if (cep.length === 8) {
@@ -57,7 +67,6 @@ export async function fillCepFields(inputCep: string, setSelectedState: Dispatch
         // form.resetField('complement')
       } else {
         const { logradouro, complemento, bairro, localidade, uf } = cepInfo;
-        setSelectedState(uf)
         
         form.setValue('address', logradouro + ' ' + bairro, { shouldValidate: true });
         form.setValue('state', uf, { shouldValidate: true });

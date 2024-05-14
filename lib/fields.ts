@@ -95,7 +95,7 @@ export const fields: { [key: string]: FieldT } = {
   bank: {
     value: 'bank',
     label: 'BANCO',
-    placeholder: 'Selecione o banco',
+    placeholder: 'Selecione um banco',
     validation: z.string().optional().or(z.literal('')),
     items: bancos
   },
