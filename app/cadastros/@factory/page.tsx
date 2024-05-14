@@ -28,7 +28,6 @@ export default async function Factory() {
             <FormFactory />
           </DialogContent>
         </Dialog>
-        {fullData ? <p className="text-sm">{`${fullData.length} ${fullData.length > 1 ? 'fábricas encontradas' : 'fábrica encontrada'}`}</p> : <p>Procurando fábricas</p>}
       </div>
     </div>
   )

@@ -10,6 +10,7 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import {
@@ -28,7 +29,8 @@ import {
 import { ChevronRight, Search } from 'lucide-react';
 import { FactoryT } from "@/lib/types";
 import FormFactory from '@/components/FormFactory';
-import { Input } from '@/components/ui/input'
+import { Input } from '@/components/ui/input';
+import { Button } from "@/components/ui/button";
 
 
 interface DataTableProps<TData, TValue> {
@@ -55,13 +57,12 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     state: {
       sorting,
       columnFilters,
     },
   })
-
-  
   
   return (
     <>
@@ -129,13 +130,34 @@ export function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length + 1} className="h-24 text-center">
-                Sem resultados.
+              <TableCell colSpan={columns.length + 1} className="h-16 text-center">
+                Não foi encontrado nenhum resultado...
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
+      <div className='flex justify-between'>
+        {fullData ? <p className="text-sm">{`${fullData.length} ${fullData.length > 1 ? 'fábricas encontradas' : 'fábrica encontrada'}`}</p> : <p>Procurando fábricas</p>}
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Anterior
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Próximo
+          </Button>
+        </div>
+      </div>
     </>
   )
 }
