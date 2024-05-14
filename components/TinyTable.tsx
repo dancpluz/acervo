@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 import { CirclePlus, CircleX } from 'lucide-react';
@@ -29,6 +29,7 @@ type Props = {
   }[];
   placeholder?: string;
   title?: string;
+  order: string[];
 }
 
 type EditProps = {
@@ -38,7 +39,7 @@ type EditProps = {
   }[];
   title?: string;
   edit: string;
-  form: ReturnType<typeof useForm>;
+  form: UseFormReturn;
   append: () => void;
   remove: (index: number) => void;
 }
@@ -90,7 +91,7 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, edit
         <TableFooter>
           <tr>
             <th colSpan={5}>
-              <div className='flex hover:bg-secondary/20 w-full border-t border-secondary font-normal justify-center gap-2 cursor-pointer items-center py-2' onClick={() => append()}>
+              <div className='flex bg-transparent hover:bg-secondary/20 w-full border-t border-secondary font-normal justify-center gap-2 cursor-pointer items-center py-2' onClick={() => append()}>
                 <CirclePlus className='text-primary w-5 h-5' />
                 Adicionar
               </div>
@@ -102,7 +103,7 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, edit
   )
 }
 
-export function TinyTable({ columns, title, rows, placeholder }: Props) {  
+export function TinyTable({ columns, title, rows, placeholder, order }: Props) {  
   return (
     <div className='flex flex-1 flex-col gap-1'>
       <Label>{title}</Label>
@@ -117,10 +118,11 @@ export function TinyTable({ columns, title, rows, placeholder }: Props) {
           </TableRow>
         </TableHeader>
         <TableBody className={rows ? '' : 'relative h-12'}>
-          {rows ? rows.map((row) => {
+          {rows && rows.length !== 0 ? rows.map((row) => {
             return (
               <TableRow key={row.value}>
-              {Object.keys(row).map((key) => {
+                {Object.keys(row).sort((a, b) => { return order.indexOf(a) - order.indexOf(b); }).map((key) => {
+                if (key === 'id') {return}
                 return (
                   <TableCell key={key} className='pr-0 py-3'>{row[key as keyof typeof row]}</TableCell>
                 )
@@ -129,7 +131,7 @@ export function TinyTable({ columns, title, rows, placeholder }: Props) {
             )
           }) :
             <TableRow>
-              <TableCell className='text-center text-base text-tertiary' colSpan={columns.length}>
+              <TableCell className='text-center text-base text-tertiary border-secondary border-t' colSpan={columns.length}>
                 {placeholder}
               </TableCell>
             </TableRow>}

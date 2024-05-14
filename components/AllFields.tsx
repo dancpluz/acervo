@@ -33,8 +33,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
+import { ChangeEvent } from "react";
 
-export function SelectField({ form, obj }: { form: ReturnType<typeof useForm>, obj: FieldT }) {
+export function SelectField({ form, obj, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, disabled?: boolean }) {
   return (
     <FormField
       control={form.control}
@@ -45,8 +46,8 @@ export function SelectField({ form, obj }: { form: ReturnType<typeof useForm>, o
           <FormLabel>{obj.label}</FormLabel>
           <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder={obj.placeholder} />
+              <SelectTrigger className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} disabled={disabled}>
+                <SelectValue placeholder={disabled ? '' : obj.placeholder} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
@@ -58,7 +59,7 @@ export function SelectField({ form, obj }: { form: ReturnType<typeof useForm>, o
   );
 }
 
-export function SearchField({ form, obj, customClass, hint, unlock, onSelect }: { form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, unlock?: string, onSelect?: (value: string) => void }) {
+export function SearchField({ form, obj, customClass, hint, unlock, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, unlock?: string, disabled?: boolean }) {
   let items: any[] = [];
   if (unlock === undefined) {
     // Search with items defined, no Unlock
@@ -81,14 +82,14 @@ export function SearchField({ form, obj, customClass, hint, unlock, onSelect }: 
         <FormItem className={customClass}>
           <FormMessage />
           <FormLabel>{obj.label}</FormLabel>
-          <Popover>
-            <PopoverTrigger asChild>
+          <Popover open={disabled ? false : undefined}>
+            <PopoverTrigger className={disabled ? 'cursor-default' : ''} asChild>
               <FormControl>
                 <Button
                   variant="outline"
                   role="combobox"
                   className={cn(
-                    "justify-between pl-3",
+                    "justify-between pl-3 pr-3 relative overflow-hidden",
                     !field.value && "text-tertiary"
                   )}
                 >
@@ -96,24 +97,23 @@ export function SearchField({ form, obj, customClass, hint, unlock, onSelect }: 
                     ? items.find(
                       (item: string) => item === field.value
                     )
-                    : obj.placeholder}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    : disabled ? undefined : obj.placeholder}
+                  <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
                 </Button>
               </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="p-0">
+            <PopoverContent className="p-0 ">
               <Command>
                 <CommandInput placeholder={hint} />
                 <CommandEmpty>{items.length === 0 && unlock !== undefined ? 'Selecione o campo anterior' : 'Não encontrado'}</CommandEmpty>
                 <CommandGroup>
                   <CommandList>
-                    {items.map((item: string) => (
+                    {items ? items.map((item: string) => (
                       <CommandItem
                         value={item}
                         key={item}
                         onSelect={() => {
                           form.setValue(obj.value, item);
-                          onSelect ? onSelect(item) : '';
                         }}
                       >
                         <Check
@@ -126,7 +126,7 @@ export function SearchField({ form, obj, customClass, hint, unlock, onSelect }: 
                         {item}
                       </CommandItem>
                     )
-                    )}
+                    ) : ''}
                   </CommandList>
                 </CommandGroup>
               </Command>
@@ -146,7 +146,7 @@ export function ShowField({ text, placeholder, label }: {  text?: string, placeh
   )
 }
 
-export function InputField({ form, obj, customClass, percent }: { form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, percent?: boolean }) {
+export function InputField({ form, obj, autofill, customClass, percent, long, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean }) {
   return (
     <FormField
       control={form.control}
@@ -157,7 +157,7 @@ export function InputField({ form, obj, customClass, percent }: { form: ReturnTy
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <div className='flex items-center gap-1'>
-              <Input mask={obj.mask} actions={{ isDirty: form.getFieldState(obj.value).isDirty, clear: () => form.resetField(obj.value, { keepError: false }) }} placeholder={obj.placeholder} {...field} />
+              <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(obj.value).isDirty, clear: () => form.resetField(obj.value, { keepError: false }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {field.onChange(e); autofill ? autofill(e.target.value, form) : ''}} disabled={disabled} />
               {percent ? <span className='text-tertiary'>%</span> : ''}
             </div>
           </FormControl>
@@ -166,7 +166,7 @@ export function InputField({ form, obj, customClass, percent }: { form: ReturnTy
   )
 }
 
-export function RadioField({ form, obj }: { form: ReturnType<typeof useForm>, obj: EnumFieldT }) {
+export function RadioField({ form, obj, bool, optional, disabled }: { form: ReturnType<typeof useForm>, obj: EnumFieldT, bool?: boolean, optional?: boolean, disabled?: boolean }) {
   return (
     <FormField
       control={form.control}
@@ -177,17 +177,31 @@ export function RadioField({ form, obj }: { form: ReturnType<typeof useForm>, ob
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <RadioGroup
+              className={bool ? 'p-0 border-0 grow' : ''}
               onValueChange={field.onChange}
               defaultValue={field.value}
             >
               {obj.items && (obj.items).map((item) => {
                 return (
-                  <FormItem key={item} className="flex-initial">
+                  <FormItem key={item} className={`flex-initial ${bool ? 'p-0 border-0 grow' : ''}`}>
                     <FormControl>
-                      <RadioGroupItem value={item} />
+                      <RadioGroupItem
+                        disabled={disabled}
+                        className={`data-[state=unchecked]:disabled:hover:bg-secondary disabled:cursor-default disabled:opacity-100 ${bool ? 'grow' : ''} ${disabled  ? '' : ''}`}
+                        value={item}
+                        clear={optional ? ((e: ChangeEvent<HTMLInputElement>) => {
+                          if (e.target.dataset.state === 'checked') {
+                            form.resetField(obj.value, { keepError: false });
+                            e.target.setAttribute('data-state', 'unchecked');
+                          } else {
+                            form.setValue(obj.value, item);
+                            e.target.setAttribute('data-state', 'checked');
+                          }
+                        }): undefined}
+                      />
                     </FormControl>
                   </FormItem>
-                )
+                );
               })}
             </RadioGroup>
           </FormControl>

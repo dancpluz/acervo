@@ -1,5 +1,6 @@
 import { z } from "zod";
 import cidades from '@/lib/cidades.json';
+import bancos from '@/lib/bancos.json';
 import { PricingEnum, StyleEnum, AmbientEnum, TaxEnum } from "./types";
 
 export type FieldT = {
@@ -94,8 +95,9 @@ export const fields: { [key: string]: FieldT } = {
   bank: {
     value: 'bank',
     label: 'BANCO',
-    placeholder: 'Ex. Santander',
-    validation: z.string().max(50, 'Máximo de 50 caracteres.').optional().or(z.literal('')),
+    placeholder: 'Selecione um banco',
+    validation: z.string().optional().or(z.literal('')),
+    items: bancos
   },
   cep: {
     value: 'cep',
@@ -190,8 +192,8 @@ export const enumFields: { [key: string]: EnumFieldT } = {
   },
   style: {
     value: 'style',
-    label: 'ESTILO*',
-    validation: z.nativeEnum(StyleEnum, { required_error: 'Campo não preenchido.' }),
+    label: 'ESTILO',
+    validation: z.nativeEnum(StyleEnum).optional().or(z.literal('')),
     items: Object.values(StyleEnum),
   },
   ambient: {
@@ -200,6 +202,12 @@ export const enumFields: { [key: string]: EnumFieldT } = {
     validation: z.nativeEnum(AmbientEnum, { required_error: 'Campo não preenchido.' }),
     items: Object.values(AmbientEnum),
   },
+  bool_direct_sale: {
+    value: 'bool_direct_sale',
+    label: 'VENDA DIRETA?',
+    validation: z.string({ required_error: 'Campo não preenchido.' }),
+    items: ['Sim', 'Não'],
+  }
 };
 
 export const tableFields: TableFieldT[] = [
