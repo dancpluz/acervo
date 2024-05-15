@@ -72,6 +72,7 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
   });
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const tabs = ['FÁBRICAS', 'REPRESENTAÇÃO', 'OUTRAS INFORMAÇÕES'];
 
   useEffect(() => {
     if (data) {
@@ -125,12 +126,12 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
   }
 
   return (
-    <Tabs className='bg-secondary/20' defaultValue="factory">
+    <Tabs className='bg-secondary/20' defaultValue={tabs[0]}>
       <div className='flex'>
       <TabsList className={`${show ? 'h-8' : 'h-9'}`}>
-        <TabsTrigger className={`${show ? 'text-sm' : 'text-base'}`} value="factory">FÁBRICAS</TabsTrigger>
-        <TabsTrigger className={`${show ? 'text-sm' : 'text-base'}`} value="representative">REPRESENTAÇÃO</TabsTrigger>
-        <TabsTrigger className={`${show ? 'text-sm' : 'text-base'}`}  value="other">OUTRAS INFORMAÇÕES</TabsTrigger>
+        {tabs.map((tab) => 
+          <TabsTrigger className={`${show ? 'text-sm' : 'text-base'}`} value={tab}>{tab}</TabsTrigger>
+        )}
       </TabsList>
       {show && <div className='flex grow justify-end'>
         <AlertDialog>
@@ -152,7 +153,7 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
       </div>
       <Form {...form}>
         <form onSubmit={show ? form.handleSubmit(editSubmit) : form.handleSubmit(addSubmit)}>
-          <TabsContent value="factory">
+          <TabsContent value={tabs[0]}>
             <TabDiv>
               <div className='flex gap-8'>
                 <FormDiv>
@@ -193,12 +194,12 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
                     {show && !isEditing ? <TinyTable title='CONTATOS DA FÁBRICA' columns={tableFields} rows={tableForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} /> 
                     : <EditTinyTable title='CONTATOS DA FÁBRICA' columns={tableFields} rows={tableForm.fields} append={() => tableForm.append(tableDefaultValues)} remove={tableForm.remove} edit='contact' form={form}/>}
                   </div>
-                  <FormButton nextValue='representative' state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
+                  <FormButton nextValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
                 </FormDiv>
               </div>
             </TabDiv>
           </TabsContent>
-          <TabsContent value="representative">
+          <TabsContent value={tabs[1]}>
             <TabDiv>
               <div className='flex gap-8'>
                 <FormDiv>
@@ -207,12 +208,12 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
                 </FormDiv>
                 <FormDiv>
                   <TinyTable title='CONTATOS DA REPRESENTAÇÃO' columns={tableFields} placeholder='Selecione uma Representação' order={[]} />
-                  <FormButton backValue='factory' state={form.formState} nextValue='other' setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
+                  <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
                 </FormDiv>
               </div>
             </TabDiv>
           </TabsContent>
-          <TabsContent value="other">
+          <TabsContent value={tabs[2]}>
             <TabDiv>
               <div className='flex gap-8'>
                 <FormDiv>
@@ -236,7 +237,7 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
                   <InputField obj={fields.link_site} form={form} disabled={show && !isEditing} />
                 </FormDiv>
               </div>
-              <FormButton backValue='representative' state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} submit={!show} />
+              <FormButton backValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} submit={!show} />
             </TabDiv>
           </TabsContent>
         </form>
