@@ -32,7 +32,6 @@ export type PersonT = {
   info: InfoT;
   payment: PaymentT;
   observations: string;
-  timestamp: FieldValue | Date | { seconds: number, nanoseconds: number };
 }
 
 export type ContactT = {
@@ -84,4 +83,19 @@ export type FactoryT = {
   link_table: string;
   link_catalog: string;
   link_site: string;
+  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+}
+
+export type WorkerT = {
+  name: string;
+  role: string;
+  email: string;
+  payment: PaymentT;
+}
+
+export type RepresentativeT = {
+  person: PersonT | DocumentReference;
+  team: WorkerT[];
+  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+  refs?: { [key: string]: string };
 }

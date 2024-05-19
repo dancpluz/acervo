@@ -1,16 +1,18 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { FactoryT, PersonT } from '@/lib/types';
-import { UseFieldArrayReturn, UseFormReturn } from "react-hook-form";
+import { FactoryT, PersonT, RepresentativeT } from '@/lib/types';
+import { FieldT, TableFieldT, EnumFieldT } from '@/lib/fields';
+import { UseFormReturn } from "react-hook-form";
+import { z } from "zod";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function setFormValues(form: UseFormReturn, tableForm: UseFieldArrayReturn<any,any,any>, data: any) {
+export function setFormValues(form: UseFormReturn, data: any) {
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
-      setFormValues(form, tableForm, value)
+      setFormValues(form, value)
     } else if (value !== '') {
       form.setValue(key, value)
     }
@@ -29,19 +31,37 @@ export function formatPercent(float: number | '') {
 
 export function formatFactory(data: FactoryT[]): any {
   try {
-    return data.map((e: FactoryT) => {
-      const person = e.person as PersonT; // Cast 'person' to type 'PersonT'
+    return data.map((factory: FactoryT) => {
+      const person = factory.person as PersonT;
       return {
         name: person.info.fantasy_name ? person.info.fantasy_name : person.info.name,
-        pricing: e.pricing,
-        style: e.style,
-        ambient: e.ambient,
-        representative: e.representative,
-        discount: e.discount,
-        direct_sale: e.direct_sale,
-        link_table: e.link_table,
-        link_catalog: e.link_catalog,
-        link_site: e.link_site
+        pricing: factory.pricing,
+        style: factory.style,
+        ambient: factory.ambient,
+        representative: factory.representative,
+        discount: factory.discount,
+        direct_sale: factory.direct_sale,
+        link_table: factory.link_table,
+        link_catalog: factory.link_catalog,
+        link_site: factory.link_site
+      }
+    })
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export function formatRepresentative(data: RepresentativeT[]): any {
+  try {
+    return data.map((representative: RepresentativeT) => {
+      const person = representative.person as PersonT;
+      return {
+        name: person.info.fantasy_name ? person.info.fantasy_name : person.info.name,
+        info_email: person.info.info_email,
+        phone: person.contact,
+        telephone: person.contact,
+        factories: representative.refs?.representative,
       }
     })
   } catch (error) {
@@ -78,3 +98,13 @@ export async function fillCepFields(inputCep: string, form: any) {
     console.log(error);
   }
 }
+
+type Fields = { [key: string]: EnumFieldT } | { [key: string]: FieldT } | TableFieldT[]
+
+export const createDefaultValues = (fields: Fields) => Object.values(fields).map((field) => { return field.value }).reduce((acc, key) => ({ ...acc, [key]: '' }), {});
+
+export const formatVerifications = (fields: Fields) => Object.assign({}, ...Object.values(fields).map((e) => {
+  const obj: { [key: string]: z.ZodType<any, any> } = {};
+  obj[e.value] = e.validation;
+  return obj;
+}));
