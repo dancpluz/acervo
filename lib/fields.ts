@@ -23,7 +23,9 @@ export type TableFieldT = {
   value: string;
   label: string;
   validation: z.ZodType<any, any>;
+  placeholder?: string;
   mask?: (string | RegExp)[];
+  size?: string;
 };
 
 export const fields: { [key: string]: FieldT } = {
@@ -210,7 +212,7 @@ export const enumFields: { [key: string]: EnumFieldT } = {
   }
 };
 
-export const tableFields: TableFieldT[] = [
+export const contactFields: TableFieldT[] = [
   {
     value: 'name',
     label: 'NOME',
@@ -230,6 +232,47 @@ export const tableFields: TableFieldT[] = [
   {
     value: 'telephone',
     label: 'TELEFONE',
+    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 10, 'O telefone deve ter 10-11 números.').optional().or(z.literal('')),
+    mask: ['(', /\d/, /\d/, ')', /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
+  }
+];
+
+export const workerFields: TableFieldT[] = [
+  {
+    value: 'name',
+    label: 'NOME*',
+    placeholder: 'Ex. Thiago',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  {
+    value: 'role',
+    label: 'CARGO*',
+    placeholder: 'Ex. Estagiário',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  {
+    value: 'pix',
+    label: 'CHAVE PIX',
+    placeholder: 'Ex. 61998118398',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  {
+    value: 'email',
+    label: 'EMAIL',
+    placeholder: 'Ex. acervo@gmail.com',
+    validation: z.string().email('E-mail inválido.').optional().or(z.literal('')),
+  },
+  {
+    value: 'phone',
+    label: 'CELULAR',
+    placeholder: 'Ex. (61)98765-4321',
+    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 10 || e.replace(/\D/g, "").length == 11, 'O celular deve ter 10-11 números.').optional().or(z.literal('')),
+    mask: ['(', /\d/, /\d/, ')', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
+  },
+  {
+    value: 'telephone',
+    label: 'TELEFONE',
+    placeholder: 'Ex. (61)3876-5432',
     validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 10, 'O telefone deve ter 10-11 números.').optional().or(z.literal('')),
     mask: ['(', /\d/, /\d/, ')', /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
   }
