@@ -13,17 +13,10 @@ import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 import { CirclePlus, CircleX } from 'lucide-react';
-
-type TableField = {
-  value: string;
-  label: string;
-  validation?: z.ZodType<any, any>;
-  mask?: (string | RegExp)[];
-  size?: string;
-};
+import { TableFieldT } from '@/lib/fields';
 
 type Props = {
-  columns: TableField[];
+  columns: TableFieldT[];
   rows?: {
     [key: string]: any;
   }[];
@@ -33,18 +26,18 @@ type Props = {
 }
 
 type EditProps = {
-  columns: TableField[];
+  columns: TableFieldT[];
   rows: {
     [key: string]: any;
   }[];
   title?: string;
-  edit: string;
+  prefix: string;
   form: UseFormReturn;
   append: () => void;
   remove: (index: number) => void;
 }
 
-export function EditTinyTable({ columns, title, rows, append, remove, form, edit}: EditProps) {
+export function EditTinyTable({ columns, title, rows, append, remove, form, prefix}: EditProps) {
   return (
     <div className='flex flex-col gap-1'>
       <Label>{title}</Label>
@@ -69,11 +62,11 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, edit
                     <TableCell className='first:pl-4 px-2' key={key}>
                       <FormField
                         control={form.control}
-                        name={`${edit}.${index}.${key}`}
+                        name={`${prefix}.${index}.${key}`}
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <Input mask={columns[i].mask} actions={{ isDirty: form.getFieldState(`${edit}.${index}.${key}`).isDirty, clear: () => form.resetField(`${edit}.${index}.${key}`, { defaultValue: '', keepError: false }) }} {...field} />
+                              <Input mask={columns[i].mask} actions={{ isDirty: form.getFieldState(`${prefix}.${index}.${key}`).isDirty, clear: () => form.resetField(`${prefix}.${index}.${key}`, { defaultValue: '', keepError: false }) }} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -110,7 +103,7 @@ export function TinyTable({ columns, title, rows, placeholder, order }: Props) {
       <Table>
         <TableHeader className='bg-transparent'>
           <TableRow>
-            {columns.map((column) => {
+            {columns.sort((a, b) => { return order.indexOf(a.value) - order.indexOf(b.value); }).map((column) => {
               return (
                 <TableHead key={column.label} className={`text-tertiary text-sm w-[${column.size}]`}>{column.label}</TableHead>
               )
@@ -120,7 +113,7 @@ export function TinyTable({ columns, title, rows, placeholder, order }: Props) {
         <TableBody className={rows ? '' : 'relative h-12'}>
           {rows && rows.length !== 0 ? rows.map((row) => {
             return (
-              <TableRow key={row.value}>
+              <TableRow key={row.id}>
                 {Object.keys(row).sort((a, b) => { return order.indexOf(a) - order.indexOf(b); }).map((key) => {
                 if (key === 'id') {return}
                 return (

@@ -8,13 +8,13 @@ import { Form } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
 import { Trash2 } from 'lucide-react';
 import { EditTinyTable, TinyTable } from "@/components/TinyTable";
-import { InputField, SearchField, SelectField, ShowField, RadioField } from "./AllFields";
-import { fields, contactFields, enumFields } from "@/lib/fields";
+import { InputField, SearchField, SelectField } from "./AllFields";
+import { fields, contactFields, workerFields } from "@/lib/fields";
 import { FormDiv, FieldDiv, TabDiv } from "@/components/ui/div";
 import { useEffect, useState } from 'react';
 import FormButton from '@/components/FormButton';
 import { documentExists } from '@/lib/dbRead';
-import { addFactory, deleteDocs, updateFactory } from '@/lib/dbWrite';
+import { addRepresentative, deleteDocs, updateFactory } from '@/lib/dbWrite';
 import { fillCepFields, setFormValues, formatVerifications, createDefaultValues } from "@/lib/utils";
 import { useRouter } from 'next/navigation';
 import { AlertDialog,
@@ -27,6 +27,7 @@ import { AlertDialog,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import TeamFields from "@/components/TeamFields";
 
 // Default values for the fields
 
@@ -36,19 +37,23 @@ const defaultValues = createDefaultValues(fields);
 
 const contactDefaultValues = createDefaultValues(contactFields)
 
+// Add default values for worker table
+
+const workerDefaultValues = createDefaultValues(workerFields)
+
 // Get all of the validations from fields and assign them as "value":"validation"
 
 const fieldsVerification = formatVerifications(fields);
 
 const contactVerification = formatVerifications(contactFields);
 
-const enumVerification = formatVerifications(enumFields);
+const workerVerification = formatVerifications(workerFields);
 
 // Join validations together to make the object of schema validation
 
-const formSchema = z.object({ ...fieldsVerification, contact: z.array(z.object(contactVerification)), ...enumVerification});
+const formSchema = z.object({ ...fieldsVerification, contact: z.array(z.object(contactVerification)), team: z.array(z.object(workerVerification)),});
 
-export default function FormFactory({ data, show }: { data?: any, show?: boolean }) {
+export default function FormRepresentative({ data, show }: { data?: any, show?: boolean }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues,
@@ -58,15 +63,18 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
     control: form.control,
     name: 'contact',
   });
+  const teamForm = useFieldArray({
+    control: form.control,
+    name: 'team',
+  });
+
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const tabs = ['FÁBRICAS', 'REPRESENTAÇÃO', 'OUTRAS INFORMAÇÕES'];
+  const tabs = ['REPRESENTAÇÃO', 'EQUIPE','ENDEREÇO E CONTATO'];
 
   useEffect(() => {
     if (data) {
       setFormValues(form, data);
-      form.setValue('pricing', data.pricing.toString());
-      form.setValue('bool_direct_sale', data.direct_sale !== '' ? 'Sim' : 'Não');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
@@ -85,14 +93,15 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
     if (await documentExists(check)) {
       toast({
         variant: 'destructive',
-        title: "Esta fábrica já existe",
+        title: "Esta representação já existe",
       })
       throw new Error("Document exists");
       
     } else {
-      await addFactory(values)
+      await addRepresentative(values)
+      console.log(values)
       toast({
-        title: "Fábrica adicionada com sucesso!",
+        title: "Representação adicionada com sucesso!",
       })
     }
   }
@@ -101,14 +110,14 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
     await updateFactory(data.refs, values);
     setIsEditing(false);
     toast({
-      title: "Fábrica editada com sucesso!",
+      title: "Representação editada com sucesso!",
     })
   }
   
   async function deleteFactory(ids: { [key: string]: string }) {
     await deleteDocs(ids)
     toast({
-      title: "Fábrica apagada com sucesso!",
+      title: "Representação apagada com sucesso!",
     })
     router.refresh()
   }
@@ -158,30 +167,9 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
                     <InputField obj={fields.state_register} form={form} disabled={show && !isEditing} />
                     <InputField obj={fields.municipal_register} form={form} disabled={show && !isEditing} />
                   </FieldDiv>
-                  <FieldDiv>
-                    <SearchField obj={fields.bank} form={form} hint={'Ex. Bradesco'} customClass={'overflow-hidden text-ellipsis'} disabled={show && !isEditing} />
-                    <InputField obj={fields.pix} form={form} disabled={show && !isEditing} />
-                  </FieldDiv>
-                  <FieldDiv>
-                    <InputField obj={fields.account} form={form} disabled={show && !isEditing} />
-                    <InputField obj={fields.agency} form={form} disabled={show && !isEditing}/>
-                  </FieldDiv>
                 </FormDiv>
                 <FormDiv>
-                  <FieldDiv>
-                    <InputField obj={fields.cep} autofill={fillCepFields} form={form} customClass={'grow-0 min-w-36'} disabled={show && !isEditing}/>
-                    <InputField obj={fields.address} form={form} customClass={'grow'} disabled={show && !isEditing}/>
-                    <InputField obj={fields.number} form={form} customClass={'grow-0 min-w-36'} disabled={show && !isEditing}/>
-                  </FieldDiv>
-                  <FieldDiv>
-                    <SearchField obj={fields.state} form={form} hint={'Ex. DF'} customClass={'grow-0 min-w-44'} disabled={show && !isEditing} />
-                    <SearchField obj={fields.city} form={form} hint={'Ex. Brasília'} unlock={form.watch('state')} customClass={'grow-0 min-w-44'} disabled={show && !isEditing} />
-                    <InputField obj={fields.complement} form={form} customClass={'grow'} disabled={show && !isEditing}/>
-                  </FieldDiv>
-                  <div>
-                    {show && !isEditing ? <TinyTable title='CONTATOS DA FÁBRICA' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} /> 
-                    : <EditTinyTable title='CONTATOS DA FÁBRICA' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(contactDefaultValues)} remove={contactForm.remove} prefix='contact' form={form}/>}
-                  </div>
+                  <InputField obj={fields.observations} form={form} long disabled={show && !isEditing} />
                   <FormButton nextValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
                 </FormDiv>
               </div>
@@ -189,43 +177,31 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
           </TabsContent>
           <TabsContent value={tabs[1]}>
             <TabDiv>
-              <div className='flex gap-8'>
-                <FormDiv>
-                  <SearchField customClass={'grow-0'} obj={fields.representative} form={form} hint={'Ex. Punto'} disabled={show && !isEditing} />
-                  <ShowField text={''} label={'EMAIL DA REPRESENTAÇÃO'} placeholder={'Selecione uma Representação'} />
-                </FormDiv>
-                <FormDiv>
-                  <TinyTable title='CONTATOS DA REPRESENTAÇÃO' columns={contactFields} placeholder='Selecione uma Representação' order={[]} />
-                  <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
-                </FormDiv>
-              </div>
+              <TeamFields title='EQUIPE' form={form} fields={workerFields} rows={teamForm.fields} append={() => teamForm.append(workerDefaultValues)} remove={teamForm.remove} update={teamForm.update} prefix={'team'} disabled={show && !isEditing} />
+              <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
             </TabDiv>
           </TabsContent>
           <TabsContent value={tabs[2]}>
             <TabDiv>
               <div className='flex gap-8'>
                 <FormDiv>
-                  <RadioField obj={enumFields.pricing} form={form} disabled={show && !isEditing}/>
-                  <RadioField obj={enumFields.style} form={form} optional disabled={show && !isEditing}/>
-                  <RadioField obj={enumFields.ambient} form={form} disabled={show && !isEditing}/>
-                </FormDiv>
-                <FormDiv>
                   <FieldDiv>
-                    <InputField obj={fields.discount} form={form} percent disabled={show && !isEditing} />
-                    <RadioField obj={enumFields.bool_direct_sale} form={form} bool disabled={show && !isEditing}/>
-                    <InputField obj={fields.direct_sale} form={form} percent disabled={show && !isEditing} />
+                    <InputField obj={fields.cep} autofill={fillCepFields} form={form} customClass={'grow-0 min-w-36'} disabled={show && !isEditing} />
+                    <InputField obj={fields.address} form={form} customClass={'grow'} disabled={show && !isEditing} />
+                    <InputField obj={fields.number} form={form} customClass={'grow-0 min-w-36'} disabled={show && !isEditing} />
                   </FieldDiv>
                   <FieldDiv>
-                    <InputField obj={fields.observations} form={form} long disabled={show && !isEditing}/>
+                    <SearchField obj={fields.state} form={form} hint={'Ex. DF'} customClass={'grow-0 min-w-44'} disabled={show && !isEditing} />
+                    <SearchField obj={fields.city} form={form} hint={'Ex. Brasília'} unlock={form.watch('state')} customClass={'grow-0 min-w-44'} disabled={show && !isEditing} />
+                    <InputField obj={fields.complement} form={form} customClass={'grow'} disabled={show && !isEditing} />
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
-                  <InputField obj={fields.link_catalog} form={form} disabled={show && !isEditing} />
-                  <InputField obj={fields.link_table} form={form} disabled={show && !isEditing} />
-                  <InputField obj={fields.link_site} form={form} disabled={show && !isEditing} />
+                  {show && !isEditing ? <TinyTable title='CONTATOS DA FÁBRICA' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
+                    : <EditTinyTable title='CONTATOS DA FÁBRICA' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(contactDefaultValues)} remove={contactForm.remove} prefix='contact' form={form} />}
+                  <FormButton backValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} submit={!show} />
                 </FormDiv>
               </div>
-              <FormButton backValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} submit={!show} />
             </TabDiv>
           </TabsContent>
         </form>

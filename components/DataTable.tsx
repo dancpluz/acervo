@@ -1,7 +1,6 @@
 "use client"
 
-import { useState } from "react";
-
+import { useState, ReactElement, cloneElement } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -27,8 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronRight, Search } from 'lucide-react';
-import { FactoryT } from "@/lib/types";
-import FormFactory from '@/components/FormFactory';
+import { FactoryT, RepresentativeT } from "@/lib/types";
 import { Input } from '@/components/ui/input';
 import { Button } from "@/components/ui/button";
 
@@ -36,15 +34,17 @@ import { Button } from "@/components/ui/button";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  fullData: FactoryT[]
+  fullData: FactoryT[] | RepresentativeT[]
   search: string
+  children: ReactElement
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   fullData,
-  search
+  search,
+  children,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -121,7 +121,7 @@ export function DataTable<TData, TValue>({
                   <CollapsibleContent asChild>
                     <TableRow>
                       <TableCell colSpan={columns.length + 1} className="p-0">
-                        <FormFactory data={fullData[row.index]} show />
+                        {cloneElement(children, { data: fullData[row.index], show: true })}
                       </TableCell>
                     </TableRow>
                   </CollapsibleContent>

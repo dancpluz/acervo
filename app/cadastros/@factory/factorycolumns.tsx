@@ -1,53 +1,25 @@
 "use client"
 
-import { Column, ColumnDef } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { FactoryT } from "@/lib/types";
 import Chip from "@/components/Chip";
+import SortHeader from "@/components/SortHeader";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpDown, ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10 } from "lucide-react";
 import { formatPercent } from '@/lib/utils';
-
-function SortHeader(column: Column<FactoryT>, header: string, center?: boolean, numeric?: boolean) {
-  if (numeric) {
-    return (
-      <div className={`flex ${center ? 'justify-center' : ''}`}>
-        <button
-          className={`flex items-center gap-1 hover:outline outline-primary rounded outline-1 outline-offset-4`}
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          {column.getIsSorted() === "asc" ? <ArrowUp01 className="h-4 w-4" /> : column.getIsSorted() === "desc" ? <ArrowDown10 className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4" />}
-          {header}
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <div className={`flex ${center ? 'justify-center' : ''}`}>
-      <button
-        className={`flex items-center gap-1 hover:outline outline-primary rounded outline-1 outline-offset-4`}
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        {column.getIsSorted() === "asc" ? <ArrowUpAZ className="h-4 w-4" /> : column.getIsSorted() === "desc" ? <ArrowDownZA className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4" />}
-        {header}
-      </button>
-    </div>
-  )
-}
 
 export const columns: ColumnDef<FactoryT>[] = [
   {
     accessorKey: "name",
     header: ({ column }) => {
-      return SortHeader(column, 'NOME/NOME FANTASIA')
+      return <SortHeader column={column} header='NOME/NOME FANTASIA'/>
     },
     size: 250,
   },
   {
     accessorKey: "pricing",
     header: ({ column }) => {
-      return SortHeader(column, 'PADRÃO', true, true)
+      return <SortHeader column={column} header='PADRÃO' center numeric />
     },
     cell: ({ row }) => {
       return <div className="text-center"><Chip label={row.getValue('pricing')} /></div>
@@ -73,14 +45,14 @@ export const columns: ColumnDef<FactoryT>[] = [
   {
     accessorKey: "representative",
     header: ({ column }) => {
-      return SortHeader(column, 'REPRESENTANTE')
+      return <SortHeader column={column} header='REPRESENTANTE'/>
     },
     size: 250,
   },
   {
     accessorKey: "direct_sale",
     header: ({ column }) => {
-      return SortHeader(column, 'V.DIR.', true, true)
+      return <SortHeader column={column} header='V.DIR.' center numeric />
     },
     cell: ({ row }) => {
       return <div className="text-center">{formatPercent(row.getValue("direct_sale"))}</div>
@@ -90,7 +62,7 @@ export const columns: ColumnDef<FactoryT>[] = [
   {
     accessorKey: "discount",
     header: ({ column }) => {
-      return SortHeader(column, 'DESC.', true, true)
+      return <SortHeader column={column} header='DESC.' center numeric />
     },
     cell: ({ row }) => {
       return <div className="text-center">{formatPercent(row.getValue("discount"))}</div>

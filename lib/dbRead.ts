@@ -1,8 +1,8 @@
 'use server'
 
 import db from "@/lib/firebase";
-import { collection, query, or, getDocs, getDoc, where } from "firebase/firestore";
-import { FactoryT, PersonT } from '@/lib/types';
+import { collection, query, or, orderBy, getDocs, getDoc, where } from "firebase/firestore";
+import { FactoryT, PersonT, RepresentativeT } from '@/lib/types';
 
 export async function documentExists(obj: { [key: string]: { query: string, value: string }[] }): Promise<boolean> {
   // Checks in the database if a document with the input values already 
@@ -30,18 +30,37 @@ export async function documentExists(obj: { [key: string]: { query: string, valu
   return exists;
 }
 
-export async function getFactory(param?: string): Promise<FactoryT[]> {
+export async function getFactory(): Promise<FactoryT[]> {
   try {
-    const querySnapshot = await getDocs(query(collection(db, "factory")));
+    const querySnapshot = await getDocs(query(collection(db, "factory"), orderBy("last_updated", "desc")));
     const factoryData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
       const data = doc.data();
       const personRef = await getDoc(data.person);
-      const person = personRef.data() as PersonT; // Add type assertion here
-      person.timestamp = new Date((person.timestamp as { seconds: number }).seconds * 1000);
+      const person = personRef.data() as PersonT;
+      data.last_updated = new Date((data.last_updated as { seconds: number }).seconds * 1000);
       return { ...data, person, refs: { person: personRef.id, factory: doc.id } };
     }))
 
     return factoryData;
+  } catch (error) {
+    console.log(error);
+    return [];
+    //throw new Error("Ocorreu um erro ao buscar as fábricas")
+  }
+}
+
+export async function getRepresentative(): Promise<RepresentativeT[]> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, "representative"), orderBy("last_updated", "desc")));
+    const representativeData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
+      const data = doc.data();
+      const personRef = await getDoc(data.person);
+      const person = personRef.data() as PersonT;
+      data.last_updated = new Date((data.last_updated as { seconds: number }).seconds * 1000);
+      return { ...data, person, refs: { person: personRef.id, representative: doc.id } };
+    }))
+
+    return representativeData;
   } catch (error) {
     console.log(error);
     return [];
