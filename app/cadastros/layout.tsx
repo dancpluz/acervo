@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState } from "react";
 import { Icon } from "@/components/Header";
 
-export default function Layout({ children, factory, representative } : { children: React.ReactNode, factory: React.ReactNode, representative: React.ReactNode }) {
+export default function Layout({ children, factory, representative, office, client, collaborator , service } : { children: React.ReactNode, factory: React.ReactNode, representative: React.ReactNode, client: React.ReactNode, office: React.ReactNode, collaborator: React.ReactNode, service: React.ReactNode }) {
   const [tab, setTab] = useState<Icon>('factory');
   
   return (
@@ -23,10 +23,10 @@ export default function Layout({ children, factory, representative } : { childre
       
       <TabsContent value="factory">{factory}</TabsContent>
       <TabsContent value="representative">{representative}</TabsContent>
-      <TabsContent value="client">client</TabsContent>
-      <TabsContent value="office">office</TabsContent>
-      <TabsContent value="service">service</TabsContent>
-      <TabsContent value="collaborator">collaborator</TabsContent>
+      <TabsContent value="client">{client}</TabsContent>
+      <TabsContent value="office">{office}</TabsContent>
+      <TabsContent value="service">{service}</TabsContent>
+      <TabsContent value="collaborator">{collaborator}</TabsContent>
 
     </Tabs>
   </div>

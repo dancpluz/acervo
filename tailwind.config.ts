@@ -71,14 +71,13 @@ const config = {
           to: { height: "0" },
         },
         "slide-down": {
-          from: { maxHeight: "0" },
-          to: { maxHeight: "var(--radix-collapsible-content-height)" },
+          from: { height: "0" },
+          to: { height: "var(--radix-collapsible-content-height)" },
         },
         "slide-up": {
-          from: { maxHeight: "var(--radix-collapsible-content-height)" },
-          to: { maxHeight: "0" },
+          from: { height: "var(--radix-collapsible-content-height)" },
+          to: { height: "0" },
         }
-
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",

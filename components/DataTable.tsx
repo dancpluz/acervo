@@ -26,7 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronRight, Search } from 'lucide-react';
-import { FactoryT, RepresentativeT } from "@/lib/types";
+import { FactoryT, RepresentativeT, OfficeT, ClientT, CollaboratorT, ServiceT } from "@/lib/types";
 import { Input } from '@/components/ui/input';
 import { Button } from "@/components/ui/button";
 
@@ -34,9 +34,10 @@ import { Button } from "@/components/ui/button";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  fullData: FactoryT[] | RepresentativeT[]
+  fullData: FactoryT[] | RepresentativeT[] | OfficeT[] | ClientT[] | CollaboratorT[] | ServiceT[]
   search: string
   children: ReactElement
+  found: {singular: string, plural: string, sufix: 'o' | 'a'}
 }
 
 export function DataTable<TData, TValue>({
@@ -45,6 +46,7 @@ export function DataTable<TData, TValue>({
   fullData,
   search,
   children,
+  found,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -67,10 +69,10 @@ export function DataTable<TData, TValue>({
   return (
     <>
       <Input
-        placeholder="Pesquisar..."
+        placeholder={`Pesquisar ${found.plural}...`}
         value={(table.getColumn(search)?.getFilterValue() as string) ?? ""}
-        onChange={(event) =>
-          table.getColumn(search)?.setFilterValue(event.target.value)
+        onChange={(e) =>
+          table.getColumn(search)?.setFilterValue(e.target.value)
         }
         containerClassName='justify-end'
         className="max-w-sm border-primary pr-10"
@@ -80,10 +82,9 @@ export function DataTable<TData, TValue>({
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              <TableHead style={{ width: 8 }} />
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead style={{ width: header.getSize() }} key={header.id}>
+                  <TableHead className='first:pl-10' style={{ width: header.getSize() }} key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -101,27 +102,25 @@ export function DataTable<TData, TValue>({
             table.getRowModel().rows.map((row) => (
               <Collapsible key={row.id} asChild>
                 <>
-                  <TableRow
-                    className='relative hover:bg-secondary/10'
-                    data-state={row.getIsSelected() && "selected"}
-                    >
-                    <CollapsibleTrigger className='transition-transform cursor-pointer data-[state=open]:rotate-90' asChild>
-                      <TableCell className='absolute top-1/2 transform -translate-y-1/2'>
-                          <ChevronRight className='text-tertiary' />
+                  <CollapsibleTrigger className='cursor-pointer [&>svg]:[&>td]:data-[state=open]:rotate-90' asChild>
+                    <TableRow className='relative hover:bg-secondary/10'>
+                    {row.getVisibleCells().map((cell, index) => index === 0 ? (
+                      <TableCell key={cell.id} className='flex items-center gap-3'>
+                        <ChevronRight className='text-tertiary transform transition-transform' />
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
-                    </CollapsibleTrigger>
-                    {row.getVisibleCells().map((cell) => (
-                      <CollapsibleTrigger key={cell.id} className='cursor-pointer' asChild>
-                        <TableCell>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      </CollapsibleTrigger>
-                    ))}
-                  </TableRow>
+                      ) : (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                      )
+                    )}
+                    </TableRow>
+                  </CollapsibleTrigger>
                   <CollapsibleContent asChild>
                     <TableRow>
                       <TableCell colSpan={columns.length + 1} className="p-0">
-                        {cloneElement(children, { data: fullData[row.index], show: true })}
+                        {cloneElement(children, { data: fullData[row.index] })}
                       </TableCell>
                     </TableRow>
                   </CollapsibleContent>
@@ -130,7 +129,7 @@ export function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length + 1} className="h-16 text-center">
+              <TableCell colSpan={columns.length + 1} className="h-16 text-center text-base text-tertiary">
                 Não foi encontrado nenhum resultado...
               </TableCell>
             </TableRow>
@@ -138,7 +137,7 @@ export function DataTable<TData, TValue>({
         </TableBody>
       </Table>
       <div className='flex justify-between'>
-        {fullData ? <p className="text-sm">{`${fullData.length} ${fullData.length > 1 ? 'fábricas encontradas' : 'fábrica encontrada'}`}</p> : <p>Procurando fábricas</p>}
+        {fullData ? fullData.length === 0 ? <p className="text-sm">{`Adicione um${found.sufix === 'a' ? 'a' : ''} nov${found.sufix} ${found.singular}!`}</p> : <p className="text-sm">{`${fullData.length} ${fullData.length > 1 ? `${found.plural} encontrad${found.sufix}s` : `${found.singular} encontrad${found.sufix}`}`}</p> : <p>Procurando ${found.plural}</p>}
         <div className="flex items-center justify-end gap-2">
           <Button
             variant="outline"

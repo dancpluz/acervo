@@ -1,8 +1,15 @@
-import { FactoryT, RepresentativeT } from "@/lib/types";
+import { FactoryT, RepresentativeT, OfficeT, ClientT, CollaboratorT, ServiceT } from "@/lib/types";
 import { Column } from "@tanstack/react-table";
 import { ArrowUpDown, ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10 } from "lucide-react";
 
-export default function SortHeader({column, header, center, numeric} : {column: Column<FactoryT> | Column<RepresentativeT>, header: string, center?: boolean, numeric?: boolean}) {
+type Props = {
+  column: Column<FactoryT> | Column<RepresentativeT> | Column<OfficeT> | Column<ClientT> | Column<CollaboratorT> | Column<ServiceT>
+  header: string,
+  center?: boolean,
+  numeric?: boolean,
+}
+
+export default function SortHeader({column, header, center, numeric} : Props) {
   if (numeric) {
     return (
       <div className={`flex ${center ? 'justify-center' : ''}`}>
