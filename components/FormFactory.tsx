@@ -31,6 +31,8 @@ import { AlertDialog,
 // Default values for the fields
 
 const defaultValues = createDefaultValues(fields);
+defaultValues['bool_direct_sale'] = 'Não';
+defaultValues['style'] = '';
 
 // Add default values for contact table
 
@@ -38,7 +40,7 @@ const contactDefaultValues = createDefaultValues(contactFields)
 
 // Get all of the validations from fields and assign them as "value":"validation"
 
-const fieldsVerification = formatVerifications(fields);
+const fieldsVerification = formatVerifications(fields, ['name', 'surname', 'role', 'service']);
 
 const contactVerification = formatVerifications(contactFields);
 
@@ -49,6 +51,12 @@ const enumVerification = formatVerifications(enumFields);
 const formSchema = z.object({ ...fieldsVerification, contact: z.array(z.object(contactVerification)), ...enumVerification});
 
 export default function FormFactory({ data, show }: { data?: any, show?: boolean }) {
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [initialValues, setInitialValues] = useState<{ [x: string]: any } | undefined>(undefined);
+  const tabs = ['FÁBRICAS', 'REPRESENTAÇÃO', 'OUTRAS INFORMAÇÕES'];
+  let initalValue = null; 
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues,
@@ -58,15 +66,13 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
     control: form.control,
     name: 'contact',
   });
-  const router = useRouter();
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const tabs = ['FÁBRICAS', 'REPRESENTAÇÃO', 'OUTRAS INFORMAÇÕES'];
 
   useEffect(() => {
     if (data) {
       setFormValues(form, data);
       form.setValue('pricing', data.pricing.toString());
       form.setValue('bool_direct_sale', data.direct_sale !== '' ? 'Sim' : 'Não');
+      setInitialValues(form.getValues())
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
@@ -90,10 +96,17 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
       throw new Error("Document exists");
       
     } else {
-      await addFactory(values)
-      toast({
-        title: "Fábrica adicionada com sucesso!",
-      })
+      try {
+        await addFactory(values)
+        toast({
+          title: "Fábrica adicionada com sucesso!",
+        })
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: error.message,
+        })
+      }
     }
   }
   
@@ -111,6 +124,11 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
       title: "Fábrica apagada com sucesso!",
     })
     router.refresh()
+  }
+
+  const test = () => {
+    form.reset(initialValues)
+    console.log('test')
   }
 
   return (
@@ -146,7 +164,7 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
               <div className='flex gap-8'>
                 <FormDiv>
                   <FieldDiv>
-                    <InputField obj={fields.name} form={form} disabled={show && !isEditing} />
+                    <InputField obj={fields.company_name} form={form} disabled={show && !isEditing} />
                     <InputField obj={fields.fantasy_name} form={form} disabled={show && !isEditing} />
                   </FieldDiv>
                   <FieldDiv>
@@ -180,9 +198,9 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
                   </FieldDiv>
                   <div>
                     {show && !isEditing ? <TinyTable title='CONTATOS DA FÁBRICA' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} /> 
-                    : <EditTinyTable title='CONTATOS DA FÁBRICA' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(contactDefaultValues)} remove={contactForm.remove} prefix='contact' form={form}/>}
+                      : <EditTinyTable title='CONTATOS DA FÁBRICA' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(contactDefaultValues)} remove={contactForm.remove} prefix='contact' form={form} order={["name", "detail", "phone", "telephone"]} />}
                   </div>
-                  <FormButton nextValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
+                  <FormButton nextValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={initialValues ? () => form.reset(initialValues) : undefined}/>
                 </FormDiv>
               </div>
             </TabDiv>
@@ -196,7 +214,7 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
                 </FormDiv>
                 <FormDiv>
                   <TinyTable title='CONTATOS DA REPRESENTAÇÃO' columns={contactFields} placeholder='Selecione uma Representação' order={[]} />
-                  <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
+                  <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={initialValues ? () => form.reset(initialValues) : undefined}/>
                 </FormDiv>
               </div>
             </TabDiv>
@@ -205,14 +223,14 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
             <TabDiv>
               <div className='flex gap-8'>
                 <FormDiv>
-                  <RadioField obj={enumFields.pricing} form={form} disabled={show && !isEditing}/>
-                  <RadioField obj={enumFields.style} form={form} optional disabled={show && !isEditing}/>
-                  <RadioField obj={enumFields.ambient} form={form} disabled={show && !isEditing}/>
+                  <RadioField obj={enumFields.pricing} form={form} defaultValue={form.watch('pricing')} disabled={show && !isEditing}/>
+                  <RadioField obj={enumFields.style} form={form} defaultValue={form.watch('style')} optional disabled={show && !isEditing}/>
+                  <RadioField obj={enumFields.ambient} form={form} defaultValue={form.watch('ambient')} disabled={show && !isEditing}/>
                 </FormDiv>
                 <FormDiv>
                   <FieldDiv>
                     <InputField obj={fields.discount} form={form} percent disabled={show && !isEditing} />
-                    <RadioField obj={enumFields.bool_direct_sale} form={form} bool disabled={show && !isEditing}/>
+                    <RadioField obj={enumFields.bool_direct_sale} form={form} bool defaultValue={'Não'} disabled={show && !isEditing}/>
                     <InputField obj={fields.direct_sale} form={form} percent disabled={show && !isEditing} />
                   </FieldDiv>
                   <FieldDiv>
@@ -225,7 +243,7 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
                   <InputField obj={fields.link_site} form={form} disabled={show && !isEditing} />
                 </FormDiv>
               </div>
-              <FormButton backValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} submit={!show} />
+              <FormButton backValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={initialValues ? () => form.reset(initialValues) : undefined} submit={!show} />
             </TabDiv>
           </TabsContent>
         </form>

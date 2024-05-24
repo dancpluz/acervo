@@ -10,7 +10,7 @@ import { formatPercent } from '@/lib/utils';
 
 export const columns: ColumnDef<FactoryT>[] = [
   {
-    accessorKey: "name",
+    accessorKey: "company_name",
     header: ({ column }) => {
       return <SortHeader column={column} header='NOME/NOME FANTASIA'/>
     },
@@ -77,9 +77,9 @@ export const columns: ColumnDef<FactoryT>[] = [
         <div className="flex justify-center">
           {
             row.getValue("link_table") ? 
-              <Link className='hover:opacity-60' target="_blank" href={row.getValue("link_table")}>
-                <Image alt={'Acessar Tabela'} src={'/icons/link.svg'} width={24} height={24} />
-              </Link> : '-'
+            <Link className='hover:opacity-60' target="_blank" href={row.getValue("link_table")}>
+              <Image alt={'Acessar Tabela'} src={'/icons/link.svg'} width={24} height={24} />
+            </Link> : '-'
           }
         </div>
       )
