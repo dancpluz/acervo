@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { FactoryT, PersonT, RepresentativeT } from '@/lib/types';
+import * as Types from '@/lib/types';
 import { FieldT, TableFieldT, EnumFieldT } from '@/lib/fields';
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
@@ -29,12 +29,12 @@ export function formatPercent(float: number | '') {
   return formated;
 }
 
-export function formatFactory(data: FactoryT[]): any {
+export function formatFactory(data: Types.FactoryT[]): any {
   try {
-    return data.map((factory: FactoryT) => {
-      const person = factory.person as PersonT;
+    return data.map((factory: Types.FactoryT) => {
+      const person = factory.person as Types.PersonT;
       return {
-        name: person.info.fantasy_name ? person.info.fantasy_name : person.info.name,
+        company_name: person.info.fantasy_name ? person.info.fantasy_name : person.info.company_name,
         pricing: factory.pricing,
         style: factory.style,
         ambient: factory.ambient,
@@ -52,16 +52,89 @@ export function formatFactory(data: FactoryT[]): any {
   }
 }
 
-export function formatRepresentative(data: RepresentativeT[]): any {
+export function formatRepresentative(data: Types.RepresentativeT[]): any {
   try {
-    return data.map((representative: RepresentativeT) => {
-      const person = representative.person as PersonT;
+    return data.map((representative: Types.RepresentativeT) => {
+      const person = representative.person as Types.PersonT;
       return {
-        name: person.info.fantasy_name ? person.info.fantasy_name : person.info.name,
+        company_name: person.info.fantasy_name ? person.info.fantasy_name : person.info.company_name,
         info_email: person.info.info_email,
-        phone: person.contact,
-        telephone: person.contact,
+        phone: person.contact[0] ? person.contact[0].phone : '-',
+        telephone: person.contact[0] ? person.contact[0].telephone : '-',
         factories: representative.refs?.representative,
+      }
+    })
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export function formatOffice(data: Types.OfficeT[]): any {
+  try {
+    return data.map((office: Types.OfficeT) => {
+      const person = office.person as Types.PersonT;
+      return {
+        company_name: person.info.fantasy_name ? person.info.fantasy_name : person.info.company_name,
+        info_email: person.info.info_email,
+        phone: person.contact[0] ? person.contact[0].phone : '-',
+        telephone: person.contact[0] ? person.contact[0].telephone : '-',
+      }
+    })
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export function formatClient(data: Types.ClientT[]): any {
+  try {
+    return data.map((client: Types.ClientT) => {
+      const person = client.person as Types.PersonT;
+      return {
+        name: person.info.fantasy_name ? person.info.fantasy_name : person.info.company_name ? person.info.company_name : person.info.name + ' ' + person.info.surname,
+        info_email: person.info.info_email,
+        phone: person.contact[0] ? person.contact[0].phone : '-',
+        telephone: person.contact[0] ? person.contact[0].telephone : '-',
+        //office
+      }
+    })
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export function formatCollaborator(data: Types.CollaboratorT[]): any {
+  try {
+    return data.map((collaborator: Types.CollaboratorT) => {
+      const person = collaborator.person as Types.PersonT;
+      return {
+        name: person.info.name + ' ' + person.info.surname,
+        role: collaborator.role,
+        info_email: person.info.info_email,
+        phone: person.contact[0] ? person.contact[0].phone : '-',
+        telephone: person.contact[0] ? person.contact[0].telephone : '-',
+        pix: person.payment.pix
+      }
+    })
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export function formatService(data: Types.ServiceT[]): any {
+  try {
+    return data.map((service: Types.ServiceT) => {
+      const person = service.person as Types.PersonT;
+      return {
+        service: service.service,
+        name: person.info.fantasy_name ? person.info.fantasy_name : person.info.company_name ? person.info.company_name : person.info.name + ' ' + person.info.surname,
+        info_email: person.info.info_email,
+        phone: person.contact[0] ? person.contact[0].phone : '-',
+        telephone: person.contact[0] ? person.contact[0].telephone : '-',
+        pix: person.payment.pix,
       }
     })
   } catch (error) {
@@ -103,7 +176,7 @@ type Fields = { [key: string]: EnumFieldT } | { [key: string]: FieldT } | TableF
 
 export const createDefaultValues = (fields: Fields) => Object.values(fields).map((field) => { return field.value }).reduce((acc, key) => ({ ...acc, [key]: '' }), {});
 
-export const formatVerifications = (fields: Fields) => Object.assign({}, ...Object.values(fields).map((e) => {
+export const formatVerifications = (fields: Fields, filter?: string[]) => Object.assign({}, ...Object.values(fields).filter((e) => filter ? !filter.includes(e.value) : true).map((e) => {
   const obj: { [key: string]: z.ZodType<any, any> } = {};
   obj[e.value] = e.validation;
   return obj;

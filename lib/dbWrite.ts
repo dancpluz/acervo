@@ -2,13 +2,13 @@
 
 import db from "@/lib/firebase";
 import { collection, addDoc, deleteDoc, updateDoc, doc } from "firebase/firestore";
-import { mapPerson, mapFactory, mapRepresentative } from "@/lib/map"
+import { mapPerson, mapFactory, mapRepresentative, mapOffice, mapClient, mapCollaborator, mapService } from "@/lib/map"
 import { revalidatePath } from 'next/cache';
 
 export async function addFactory(values: any) {
   // Add a new factory to the database
   try {
-    const person = await mapPerson(values);
+    const person = await mapPerson(values, 'Jurídica');
   
     const personRef = await addDoc(collection(db, "person"), person);
 
@@ -18,13 +18,14 @@ export async function addFactory(values: any) {
     revalidatePath('/cadastros')
   } catch (error) {
     console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
   }
 }
 
 export async function updateFactory(ids: { [key: string]: string }, values: any) {
   // Update a factory to the database
   try {
-    const person = await mapPerson(values);
+    const person = await mapPerson(values, 'Jurídica');
   
     const personRef = doc(db, 'person', ids.person);
 
@@ -37,13 +38,14 @@ export async function updateFactory(ids: { [key: string]: string }, values: any)
     revalidatePath('/cadastros')
   } catch (error) {
     console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
   }
 }
 
 export async function addRepresentative(values: any) {
   // Add a new representative to the database
   try {
-    const person = await mapPerson(values);
+    const person = await mapPerson(values, 'Jurídica');
   
     const personRef = await addDoc(collection(db, "person"), person);
 
@@ -53,13 +55,14 @@ export async function addRepresentative(values: any) {
     revalidatePath('/cadastros')
   } catch (error) {
     console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
   }
 }
 
 export async function updateRepresentative(ids: { [key: string]: string }, values: any) {
   // Update a representative to the database
   try {
-    const person = await mapPerson(values);
+    const person = await mapPerson(values, 'Jurídica');
   
     const personRef = doc(db, 'person', ids.person);
 
@@ -72,6 +75,155 @@ export async function updateRepresentative(ids: { [key: string]: string }, value
     revalidatePath('/cadastros')
   } catch (error) {
     console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function addOffice(values: any) {
+  // Add a new office to the database
+  try {
+    const person = await mapPerson(values, 'Jurídica');
+
+    const personRef = await addDoc(collection(db, "person"), person);
+
+    const office = await mapOffice(values, personRef);
+
+    await addDoc(collection(db, "office"), office);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function updateOffice(ids: { [key: string]: string }, values: any) {
+  // Update a office to the database
+  try {
+    const person = await mapPerson(values, 'Jurídica');
+
+    const personRef = doc(db, 'person', ids.person);
+
+    await updateDoc(personRef, person);
+
+    const office = await mapOffice(values, personRef);
+
+    const officeRef = doc(db, 'office', ids.office)
+    await updateDoc(officeRef, office);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function addClient(values: any, personType: string) {
+  // Add a new client to the database
+  try {
+    const person = await mapPerson(values, personType);
+
+    const personRef = await addDoc(collection(db, "person"), person);
+    
+    const client = await mapClient(values, personRef);
+
+    await addDoc(collection(db, "client"), client);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function updateClient(ids: { [key: string]: string }, values: any, personType: string) {
+  // Update a client to the database
+  try {
+    const person = await mapPerson(values, personType);
+
+    const personRef = doc(db, 'person', ids.person);
+
+    await updateDoc(personRef, person);
+
+    const client = await mapClient(values, personRef);
+
+    const clientRef = doc(db, 'client', ids.client)
+    await updateDoc(clientRef, client);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function addCollaborator(values: any) {
+  // Add a new collaborator to the database
+  try {
+    const person = await mapPerson(values, 'Física');
+
+    const personRef = await addDoc(collection(db, "person"), person);
+
+    const collaborator = await mapCollaborator(values, personRef);
+
+    await addDoc(collection(db, "collaborator"), collaborator);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function updateCollaborator(ids: { [key: string]: string }, values: any) {
+  // Update a collaborator to the database
+  try {
+    const person = await mapPerson(values, 'Física');
+
+    const personRef = doc(db, 'person', ids.person);
+
+    await updateDoc(personRef, person);
+
+    const collaborator = await mapCollaborator(values, personRef);
+
+    const collaboratorRef = doc(db, 'collaborator', ids.collaborator)
+    await updateDoc(collaboratorRef, collaborator);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function addService(values: any, personType: string) {
+  // Add a new service to the database
+  try {
+    const person = await mapPerson(values, personType);
+
+    const personRef = await addDoc(collection(db, "person"), person);
+
+    const service = await mapService(values, personRef);
+
+    await addDoc(collection(db, "service"), service);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function updateService(ids: { [key: string]: string }, values: any, personType: string) {
+  // Update a service to the database
+  try {
+    const person = await mapPerson(values, personType);
+
+    const personRef = doc(db, 'person', ids.person);
+
+    await updateDoc(personRef, person);
+
+    const service = await mapService(values, personRef);
+
+    const serviceRef = doc(db, 'service', ids.service)
+    await updateDoc(serviceRef, service);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
   }
 }
 

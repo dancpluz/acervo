@@ -49,18 +49,19 @@ export type PaymentT = {
 }
 
 export type InfoT = {
-  name: string;
+  name?: string;
   surname?: string;
   cpf?: string;
   rg?: string;
   tax_address: AddressT;
-  shipping_address?: AddressT;
+  shipping_address?: AddressT | '';
   info_email: string;
-  fantasy_name: string;
-  cnpj: string;
-  tax_payer: TaxEnum;
-  municipal_register: string;
-  state_register: string;
+  company_name?: string;
+  fantasy_name?: string;
+  cnpj?: string;
+  tax_payer?: TaxEnum;
+  municipal_register?: string;
+  state_register?: string;
 }
 
 export type AddressT = {
@@ -98,4 +99,40 @@ export type RepresentativeT = {
   team: WorkerT[];
   last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
   refs?: { [key: string]: string };
+}
+
+export type OfficeT = {
+  person: PersonT | DocumentReference;
+  team: WorkerT[];
+  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+}
+
+export type ClientT = {
+  person: PersonT | DocumentReference;
+  office: OfficeT | DocumentReference;
+  order: OrderT[];
+  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+}
+
+export type OrderT = {
+  id_order: string;
+  date: Date;
+  state: string;
+  cep: string;
+  city: string;
+  address: string;
+  number: string;
+  complement: string;
+}
+
+export type CollaboratorT = {
+  person: PersonT | DocumentReference;
+  role: string;
+  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+}
+
+export type ServiceT = {
+  person: PersonT | DocumentReference;
+  service: string;
+  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
 }

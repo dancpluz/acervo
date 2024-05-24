@@ -29,11 +29,11 @@ export type TableFieldT = {
 };
 
 export const fields: { [key: string]: FieldT } = {
-  name: {
-    value: 'name',
+  company_name: {
+    value: 'company_name',
     label: 'NOME OU RAZÃO SOCIAL*',
     placeholder: 'Ex. ACERVO MOBILIA COMERCIO VAREJISTA DE MOVEIS LTDA',
-    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.'),
+    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.').nullable(),
   },
   fantasy_name: {
     value: 'fantasy_name',
@@ -41,24 +41,50 @@ export const fields: { [key: string]: FieldT } = {
     placeholder: 'Ex. Acervo Mobilia',
     validation: z.string().max(150, 'Máximo de 150 caracteres.').optional().or(z.literal('')),
   },
+  name: {
+    value: 'name',
+    label: 'NOME*',
+    placeholder: 'Ex. Thiago',
+    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.').nullable(),
+  },
+  surname: {
+    value: 'surname',
+    label: 'SOBRENOME*',
+    placeholder: 'Ex. Turchi',
+    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.').nullable(),
+  },
   info_email: {
     value: 'info_email',
     label: 'E-MAIL*',
     placeholder: 'Ex. acervomobilia@gmail.com',
     validation: z.string().min(1, 'Campo não preenchido.').email('E-mail inválido.')
   },
+  cpf: {
+    value: 'cpf',
+    label: 'CPF',
+    placeholder: 'Ex. 000.000.000-00',
+    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 11, 'O CPF deve ter 11 números.').or(z.literal('')),
+    mask: [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/],
+  },
+  rg: {
+    value: 'rg',
+    label: 'RG',
+    placeholder: 'Ex. 0.000.000',
+    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 7, 'O RG deve ter 7 números.').or(z.literal('')),
+    mask: [/\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/],
+  },
   cnpj: {
     value: 'cnpj',
     label: 'CNPJ*',
     placeholder: 'Ex. 00.000.000/0000-00',
-    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 14, 'O CNPJ deve ter 14 números.'),
+    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 14, 'O CNPJ deve ter 14 números.').nullable(),
     mask: [/\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/],
   },
   tax_payer: {
     value: 'tax_payer',
     label: 'CONTRIBUINTE*',
     placeholder: 'Selecione contribuinte',
-    validation: z.nativeEnum(TaxEnum, { required_error: 'Campo não preenchido.' }),
+    validation: z.nativeEnum(TaxEnum, { required_error: 'Campo não preenchido.' }).nullable(),
     items: Object.values(TaxEnum),
   },
   state_register: {
@@ -182,7 +208,26 @@ export const fields: { [key: string]: FieldT } = {
     label: 'LINK SITE',
     placeholder: 'Ex. https://exemplo.com.br',
     validation: z.string().url({ message: 'Link inválida' }).optional().or(z.literal('')),
-  }
+  },
+  office: {
+    value: 'office',
+    label: 'ESCRITÓRIO VINCULADO',
+    placeholder: 'Selecione um escritório',
+    validation: z.string().optional().or(z.literal('')),
+    items: []
+  },
+  role: {
+    value: 'role',
+    label: 'CARGO*',
+    placeholder: 'Ex. Estagiário',
+    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.'),
+  },
+  service: {
+    value: 'service',
+    label: 'SERVIÇO*',
+    placeholder: 'Ex. Mecânico',
+    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.'),
+  },
 };
 
 export const enumFields: { [key: string]: EnumFieldT } = {
@@ -209,6 +254,12 @@ export const enumFields: { [key: string]: EnumFieldT } = {
     label: 'VENDA DIRETA?',
     validation: z.string({ required_error: 'Campo não preenchido.' }),
     items: ['Sim', 'Não'],
+  },
+  bool_person_type: {
+    value: 'bool_person_type',
+    label: 'TIPO DE PESSOA',
+    validation: z.enum(['Física', 'Jurídica']).optional(),
+    items: ['Física', 'Jurídica'],
   }
 };
 
@@ -237,24 +288,23 @@ export const contactFields: TableFieldT[] = [
   }
 ];
 
-export const workerFields: TableFieldT[] = [
+export const teamFields: TableFieldT[] = [
   {
     value: 'name',
     label: 'NOME*',
-    placeholder: 'Ex. Thiago',
     validation: z.string().min(1, 'Campo não preenchido.'),
   },
   {
-    value: 'role',
-    label: 'CARGO*',
-    placeholder: 'Ex. Estagiário',
-    validation: z.string().min(1, 'Campo não preenchido.'),
+    value: 'telephone',
+    label: 'TELEFONE',
+    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 10, 'O telefone deve ter 10-11 números.').optional().or(z.literal('')),
+    mask: ['(', /\d/, /\d/, ')', /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
   },
   {
-    value: 'pix',
-    label: 'CHAVE PIX',
-    placeholder: 'Ex. 61998118398',
-    validation: z.string().optional().or(z.literal('')),
+    value: 'phone',
+    label: 'CELULAR',
+    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 10 || e.replace(/\D/g, "").length == 11, 'O celular deve ter 10-11 números.').optional().or(z.literal('')),
+    mask: ['(', /\d/, /\d/, ')', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
   },
   {
     value: 'email',
@@ -263,20 +313,40 @@ export const workerFields: TableFieldT[] = [
     validation: z.string().email('E-mail inválido.').optional().or(z.literal('')),
   },
   {
-    value: 'phone',
-    label: 'CELULAR',
-    placeholder: 'Ex. (61)98765-4321',
-    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 10 || e.replace(/\D/g, "").length == 11, 'O celular deve ter 10-11 números.').optional().or(z.literal('')),
-    mask: ['(', /\d/, /\d/, ')', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
+    value: 'role',
+    label: 'CARGO*',
+    placeholder: 'Ex. Estagiário',
+    validation: z.string().min(1, 'Campo não preenchido.'),
   },
   {
-    value: 'telephone',
-    label: 'TELEFONE',
-    placeholder: 'Ex. (61)3876-5432',
-    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 10, 'O telefone deve ter 10-11 números.').optional().or(z.literal('')),
-    mask: ['(', /\d/, /\d/, ')', /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
-  }
+    value: 'detail',
+    label: 'DETALHE',
+    validation: z.string().optional().or(z.literal('')),
+  },
 ];
+
+
+export const orderFields: { [key: string]: FieldT } = {
+  id_order: {
+    value: 'id_order',
+    label: 'ID*',
+    placeholder: 'Ex. 12345678',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  date: {
+    value: 'date',
+    label: 'DATA*',
+    placeholder: 'Ex. 21/05/2024',
+    mask: [/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/],
+    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 8, 'A data deve ter 8 números.'),
+  },
+  cep: fields.cep,
+  address: fields.address,
+  number: fields.number,
+  state: fields.state,
+  city: fields.city,
+  complement: fields.complement
+};
 
 // const factory = {
 //   "representative": "",
