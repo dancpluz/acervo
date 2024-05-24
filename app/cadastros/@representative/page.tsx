@@ -16,8 +16,8 @@ export default async function Representative() {
 
   return (
     <div className="flex flex-col gap-4 py-4">
-      <DataTable search={'name'} columns={columns} data={fullData ? formatRepresentative(fullData) : []} fullData={fullData ? fullData : []}>
-        <FormRepresentative />
+      <DataTable search={'company_name'} columns={columns} data={fullData ? formatRepresentative(fullData) : []} fullData={fullData ? fullData : []} found={{plural: 'representações', singular: 'representação', sufix: 'a'}}>
+        <FormRepresentative show />
       </DataTable>
       <div className="flex justify-between">
         <Dialog>

@@ -6,11 +6,11 @@ import SortHeader from "@/components/SortHeader";
 
 export const columns: ColumnDef<RepresentativeT>[] = [
   {
-    accessorKey: "name",
+    accessorKey: "company_name",
     header: ({ column }) => {
       return <SortHeader column={column} header='NOME' />
     },
-    size: 200,
+    size: 150,
   },
   {
     accessorKey: "info_email",
@@ -22,18 +22,18 @@ export const columns: ColumnDef<RepresentativeT>[] = [
   {
     accessorKey: "phone",
     header: () => <div>CELULAR</div>,
-    cell: ({ row }) => {
-      const phones = row.getValue('phone') as Record<string,string>[];
-      return phones.length > 0 ? phones[0].phone : '-';
+     cell: ({ row }) => {
+      const phone = row.getValue('phone');
+      return phone ? phone : '-';
     },
     size: 150,
   },
   {
     accessorKey: "telephone",
     header: () => <div>TELEFONE</div>,
-    cell: ({ row }) => {
-      const telephones = row.getValue('telephone') as Record<string, string>[];
-      return telephones.length > 0 ? telephones[0].telephone : '-';
+     cell: ({ row }) => {
+      const telephone = row.getValue('telephone');
+      return telephone ? telephone : '-';
     },
     size: 150,
   },

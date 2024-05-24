@@ -9,12 +9,12 @@ import { toast } from "@/components/ui/use-toast";
 import { Trash2 } from 'lucide-react';
 import { EditTinyTable, TinyTable } from "@/components/TinyTable";
 import { InputField, SearchField, SelectField } from "./AllFields";
-import { fields, contactFields, workerFields } from "@/lib/fields";
+import { fields, contactFields, teamFields } from "@/lib/fields";
 import { FormDiv, FieldDiv, TabDiv } from "@/components/ui/div";
 import { useEffect, useState } from 'react';
 import FormButton from '@/components/FormButton';
 import { documentExists } from '@/lib/dbRead';
-import { addRepresentative, deleteDocs, updateFactory } from '@/lib/dbWrite';
+import { addRepresentative, deleteDocs, updateRepresentative } from '@/lib/dbWrite';
 import { fillCepFields, setFormValues, formatVerifications, createDefaultValues } from "@/lib/utils";
 import { useRouter } from 'next/navigation';
 import { AlertDialog,
@@ -27,7 +27,6 @@ import { AlertDialog,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import TeamFields from "@/components/TeamFields";
 
 // Default values for the fields
 
@@ -37,23 +36,28 @@ const defaultValues = createDefaultValues(fields);
 
 const contactDefaultValues = createDefaultValues(contactFields)
 
-// Add default values for worker table
+// Add default values for team table
 
-const workerDefaultValues = createDefaultValues(workerFields)
+const teamDefaultValues = createDefaultValues(teamFields)
 
 // Get all of the validations from fields and assign them as "value":"validation"
 
-const fieldsVerification = formatVerifications(fields);
+const fieldsVerification = formatVerifications(fields,['name', 'surname', 'role', 'service']);
 
 const contactVerification = formatVerifications(contactFields);
 
-const workerVerification = formatVerifications(workerFields);
+const teamVerification = formatVerifications(teamFields);
 
 // Join validations together to make the object of schema validation
 
-const formSchema = z.object({ ...fieldsVerification, contact: z.array(z.object(contactVerification)), team: z.array(z.object(workerVerification)),});
+const formSchema = z.object({ ...fieldsVerification, contact: z.array(z.object(contactVerification)), team: z.array(z.object(teamVerification)),});
 
 export default function FormRepresentative({ data, show }: { data?: any, show?: boolean }) {
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [initialValues, setInitialValues] = useState<{ [x: string]: any } | undefined>(undefined);
+  const tabs = ['REPRESENTAÇÃO', 'EQUIPE','ENDEREÇO E CONTATO'];
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues,
@@ -68,13 +72,10 @@ export default function FormRepresentative({ data, show }: { data?: any, show?: 
     name: 'team',
   });
 
-  const router = useRouter();
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const tabs = ['REPRESENTAÇÃO', 'EQUIPE','ENDEREÇO E CONTATO'];
-
   useEffect(() => {
     if (data) {
       setFormValues(form, data);
+      setInitialValues(form.getValues())
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
@@ -98,23 +99,29 @@ export default function FormRepresentative({ data, show }: { data?: any, show?: 
       throw new Error("Document exists");
       
     } else {
-      await addRepresentative(values)
-      console.log(values)
-      toast({
-        title: "Representação adicionada com sucesso!",
-      })
+      try {
+        await addRepresentative(values)
+        toast({
+          title: "Representação adicionada com sucesso!",
+        })
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: error.message,
+        })
+      }
     }
   }
   
   async function editSubmit(values: z.infer<typeof formSchema>) {
-    await updateFactory(data.refs, values);
+    await updateRepresentative(data.refs, values);
     setIsEditing(false);
     toast({
       title: "Representação editada com sucesso!",
     })
   }
   
-  async function deleteFactory(ids: { [key: string]: string }) {
+  async function deleteRepresentative(ids: { [key: string]: string }) {
     await deleteDocs(ids)
     toast({
       title: "Representação apagada com sucesso!",
@@ -142,7 +149,7 @@ export default function FormRepresentative({ data, show }: { data?: any, show?: 
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>CANCELAR</AlertDialogCancel>
-              <AlertDialogAction onClick={() => {deleteFactory(data.refs)}}>APAGAR</AlertDialogAction>
+                <AlertDialogAction onClick={() => { deleteRepresentative(data.refs)}}>APAGAR</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -155,7 +162,7 @@ export default function FormRepresentative({ data, show }: { data?: any, show?: 
               <div className='flex gap-8'>
                 <FormDiv>
                   <FieldDiv>
-                    <InputField obj={fields.name} form={form} disabled={show && !isEditing} />
+                    <InputField obj={fields.company_name} form={form} disabled={show && !isEditing} />
                     <InputField obj={fields.fantasy_name} form={form} disabled={show && !isEditing} />
                   </FieldDiv>
                   <FieldDiv>
@@ -170,15 +177,16 @@ export default function FormRepresentative({ data, show }: { data?: any, show?: 
                 </FormDiv>
                 <FormDiv>
                   <InputField obj={fields.observations} form={form} long disabled={show && !isEditing} />
-                  <FormButton nextValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
+                  <FormButton nextValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={initialValues ? () => form.reset(initialValues) : undefined}/>
                 </FormDiv>
               </div>
             </TabDiv>
           </TabsContent>
           <TabsContent value={tabs[1]}>
             <TabDiv>
-              <TeamFields title='EQUIPE' form={form} fields={workerFields} rows={teamForm.fields} append={() => teamForm.append(workerDefaultValues)} remove={teamForm.remove} update={teamForm.update} prefix={'team'} disabled={show && !isEditing} />
-              <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined}/>
+              {show && !isEditing ? <TinyTable title='' columns={teamFields} rows={teamForm.fields} placeholder={'Sem funcionários'} order={["name", "telephone", "phone", "email", "role", "detail"]} />
+                : <EditTinyTable title='' columns={teamFields} rows={teamForm.fields} append={() => teamForm.append(teamDefaultValues)} remove={teamForm.remove} prefix='team' form={form} order={["name", "telephone", "phone", "email", "role", "detail"]} />}
+              <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={initialValues ? () => form.reset(initialValues) : undefined}/>
             </TabDiv>
           </TabsContent>
           <TabsContent value={tabs[2]}>
@@ -197,9 +205,9 @@ export default function FormRepresentative({ data, show }: { data?: any, show?: 
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
-                  {show && !isEditing ? <TinyTable title='CONTATOS DA FÁBRICA' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
-                    : <EditTinyTable title='CONTATOS DA FÁBRICA' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(contactDefaultValues)} remove={contactForm.remove} prefix='contact' form={form} />}
-                  <FormButton backValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} submit={!show} />
+                  {show && !isEditing ? <TinyTable title='CONTATOS DA REPRESENTAÇÃO' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
+                    : <EditTinyTable title='CONTATOS DA REPRESENTAÇÃO' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(contactDefaultValues)} remove={contactForm.remove} prefix='contact' form={form} order={["name", "detail", "phone", "telephone"]} />}
+                  <FormButton backValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={initialValues ? () => form.reset(initialValues) : undefined} submit={!show} />
                 </FormDiv>
               </div>
             </TabDiv>
