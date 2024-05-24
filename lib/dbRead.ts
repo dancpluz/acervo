@@ -1,8 +1,8 @@
 'use server'
 
 import db from "@/lib/firebase";
-import { collection, query, or, getDocs, getDoc, where } from "firebase/firestore";
-import { FactoryT, PersonT } from '@/lib/types';
+import { collection, query, or, orderBy, getDocs, getDoc, where } from "firebase/firestore";
+import * as Types from '@/lib/types';
 
 export async function documentExists(obj: { [key: string]: { query: string, value: string }[] }): Promise<boolean> {
   // Checks in the database if a document with the input values already 
@@ -30,14 +30,14 @@ export async function documentExists(obj: { [key: string]: { query: string, valu
   return exists;
 }
 
-export async function getFactory(param?: string): Promise<FactoryT[]> {
+export async function getFactory(): Promise<Types.FactoryT[]> {
   try {
-    const querySnapshot = await getDocs(query(collection(db, "factory")));
+    const querySnapshot = await getDocs(query(collection(db, "factory"), orderBy("last_updated", "desc")));
     const factoryData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
       const data = doc.data();
       const personRef = await getDoc(data.person);
-      const person = personRef.data() as PersonT; // Add type assertion here
-      person.timestamp = new Date((person.timestamp as { seconds: number }).seconds * 1000);
+      const person = personRef.data() as Types.PersonT;
+      data.last_updated = new Date((data.last_updated as { seconds: number }).seconds * 1000);
       return { ...data, person, refs: { person: personRef.id, factory: doc.id } };
     }))
 
@@ -45,6 +45,98 @@ export async function getFactory(param?: string): Promise<FactoryT[]> {
   } catch (error) {
     console.log(error);
     return [];
-    //throw new Error("Ocorreu um erro ao buscar as fábricas")
+    
+  }
+}
+
+export async function getRepresentative(): Promise<Types.RepresentativeT[]> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, "representative"), orderBy("last_updated", "desc")));
+    const representativeData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
+      const data = doc.data();
+      const personRef = await getDoc(data.person);
+      const person = personRef.data() as Types.PersonT;
+      data.last_updated = new Date((data.last_updated as { seconds: number }).seconds * 1000);
+      return { ...data, person, refs: { person: personRef.id, representative: doc.id } };
+    }))
+
+    return representativeData;
+  } catch (error) {
+    console.log(error);
+    return [];
+    
+  }
+}
+
+export async function getOffice(): Promise<Types.OfficeT[]> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, "office"), orderBy("last_updated", "desc")));
+    const officeData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
+      const data = doc.data();
+      const personRef = await getDoc(data.person);
+      const person = personRef.data() as Types.PersonT;
+      data.last_updated = new Date((data.last_updated as { seconds: number }).seconds * 1000);
+      return { ...data, person, refs: { person: personRef.id, office: doc.id } };
+    }))
+
+    return officeData;
+  } catch (error) {
+    console.log(error);
+    return [];
+    
+  }
+}
+
+export async function getClient(): Promise<Types.ClientT[]> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, "client"), orderBy("last_updated", "desc")));
+    const clientData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
+      const data = doc.data();
+      const personRef = await getDoc(data.person);
+      const person = personRef.data() as Types.PersonT;
+      data.last_updated = new Date((data.last_updated as { seconds: number }).seconds * 1000);
+      return { ...data, person, refs: { person: personRef.id, client: doc.id } };
+    }))
+
+    return clientData;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export async function getCollaborator(): Promise<Types.CollaboratorT[]> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, "collaborator"), orderBy("last_updated", "desc")));
+    const collaboratorData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
+      const data = doc.data();
+      const personRef = await getDoc(data.person);
+      const person = personRef.data() as Types.PersonT;
+      data.last_updated = new Date((data.last_updated as { seconds: number }).seconds * 1000);
+      return { ...data, person, refs: { person: personRef.id, collaborator: doc.id } };
+    }))
+
+    return collaboratorData;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export async function getService(): Promise<Types.ServiceT[]> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, "service"), orderBy("last_updated", "desc")));
+    const serviceData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
+      const data = doc.data();
+      const personRef = await getDoc(data.person);
+      const person = personRef.data() as Types.PersonT;
+      data.last_updated = new Date((data.last_updated as { seconds: number }).seconds * 1000);
+      return { ...data, person, refs: { person: personRef.id, service: doc.id } };
+    }))
+
+    return serviceData;
+  } catch (error) {
+    console.log(error);
+    return [];
   }
 }

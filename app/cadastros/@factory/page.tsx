@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { columns } from "./columns";
+import { columns } from "./factorycolumns";
 import { DataTable } from "@/components/DataTable"
 import { CirclePlus } from "lucide-react";
 import { getFactory } from "@/lib/dbRead";
@@ -16,12 +16,14 @@ export default async function Factory() {
 
   return (
     <div className="flex flex-col gap-4 py-4">
-      <DataTable search={'name'} columns={columns} data={fullData ? formatFactory(fullData) : []} fullData={fullData ? fullData : []} />
+      <DataTable search={'company_name'} columns={columns} data={fullData ? formatFactory(fullData) : []} fullData={fullData ? fullData : []} found={{plural: 'fábricas', singular: 'fábrica', sufix: 'a'}}>
+        <FormFactory show />
+      </DataTable>
       <div className="flex justify-between">
         <Dialog>
           <DialogTrigger asChild>
             <Button>
-              <CirclePlus /> ADICIONAR FÁBRICA
+              <CirclePlus />ADICIONAR FÁBRICA
             </Button>
           </DialogTrigger>
           <DialogContent>

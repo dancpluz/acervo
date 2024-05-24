@@ -1,145 +1,229 @@
 'use server'
 
 import db from "@/lib/firebase";
-import { collection, addDoc, deleteDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
-import { PaymentT, ContactT, PersonT, AddressT, FactoryT, InfoT } from "@/lib/types";
+import { collection, addDoc, deleteDoc, updateDoc, doc } from "firebase/firestore";
+import { mapPerson, mapFactory, mapRepresentative, mapOffice, mapClient, mapCollaborator, mapService } from "@/lib/map"
 import { revalidatePath } from 'next/cache';
 
 export async function addFactory(values: any) {
   // Add a new factory to the database
   try {
-    const address: AddressT = {
-      cep: values.cep,
-      address: values.address,
-      number: values.number,
-      state: values.state,
-      city: values.city,
-      complement: values.complement
-    }
-  
-    const payment: PaymentT = {
-      pix: values.pix,
-      account: values.account,
-      agency: values.agency,
-      bank: values.bank
-    }
-    
-    const contact: ContactT[] = values.contact;
-  
-    const info: InfoT = {
-      name: values.name,
-      fantasy_name: values.fantasy_name,
-      info_email: values.info_email,
-      cnpj: values.cnpj,
-      tax_payer: values.tax_payer,
-      state_register: values.state_register,
-      municipal_register: values.municipal_register,
-      tax_address: address,
-    }
-  
-    const person: PersonT = {
-      contact: contact,
-      info: info,
-      payment: payment,
-      observations: values.observations,
-      timestamp: serverTimestamp(),
-    }
+    const person = await mapPerson(values, 'Jurídica');
   
     const personRef = await addDoc(collection(db, "person"), person);
 
-    let direct_sale = values.direct_sale ? values.direct_sale : 0;
-
-    if (!values.bool_direct_sale) {
-      direct_sale = '';
-    }
-  
-    const factory: FactoryT = {
-      person: personRef,
-      representative: values.representative,
-      discount: values.discount,
-      direct_sale,
-      link_catalog: values.link_catalog,
-      link_table: values.link_table,
-      link_site: values.link_site,
-      pricing: Number(values.pricing),
-      style: values.style ? values.style : '',
-      ambient: values.ambient
-    }
+    const factory = await mapFactory(values, personRef);
   
     await addDoc(collection(db, "factory"), factory);
     revalidatePath('/cadastros')
   } catch (error) {
     console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
   }
 }
 
 export async function updateFactory(ids: { [key: string]: string }, values: any) {
   // Update a factory to the database
   try {
-    const address: AddressT = {
-      cep: values.cep,
-      address: values.address,
-      number: values.number,
-      state: values.state,
-      city: values.city,
-      complement: values.complement
-    }
+    const person = await mapPerson(values, 'Jurídica');
   
-    const payment: PaymentT = {
-      pix: values.pix,
-      account: values.account,
-      agency: values.agency,
-      bank: values.bank
-    }
-    
-    const contact: ContactT[] = values.contact;
-  
-    const info: InfoT = {
-      name: values.name,
-      fantasy_name: values.fantasy_name,
-      info_email: values.info_email,
-      cnpj: values.cnpj,
-      tax_payer: values.tax_payer,
-      state_register: values.state_register,
-      municipal_register: values.municipal_register,
-      tax_address: address,
-    }
-  
-    const person: PersonT = {
-      contact: contact,
-      info: info,
-      payment: payment,
-      observations: values.observations,
-      timestamp: serverTimestamp(),
-    }
-  
-    const personRef = doc(db, 'person', ids.person) 
+    const personRef = doc(db, 'person', ids.person);
+
     await updateDoc(personRef, person);
 
-    let direct_sale = values.direct_sale ? values.direct_sale : 0;
+    const factory = await mapFactory(values, personRef);
 
-    if (!values.bool_direct_sale) {
-      direct_sale = '';
-    }
-  
-    const factory: FactoryT = {
-      person: personRef,
-      representative: values.representative,
-      discount: values.discount,
-      direct_sale,
-      link_catalog: values.link_catalog,
-      link_table: values.link_table,
-      link_site: values.link_site,
-      pricing: Number(values.pricing),
-      style: values.style ? values.style : '',
-      ambient: values.ambient
-    }
-  
-    const factoryRef = doc(db, 'person', ids.person)
-    await updateDoc(factoryRef, person);
+    const factoryRef = doc(db, 'factory', ids.factory)
+    await updateDoc(factoryRef, factory);
     revalidatePath('/cadastros')
   } catch (error) {
     console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function addRepresentative(values: any) {
+  // Add a new representative to the database
+  try {
+    const person = await mapPerson(values, 'Jurídica');
+  
+    const personRef = await addDoc(collection(db, "person"), person);
+
+    const representative = await mapRepresentative(values, personRef);
+  
+    await addDoc(collection(db, "representative"), representative);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function updateRepresentative(ids: { [key: string]: string }, values: any) {
+  // Update a representative to the database
+  try {
+    const person = await mapPerson(values, 'Jurídica');
+  
+    const personRef = doc(db, 'person', ids.person);
+
+    await updateDoc(personRef, person);
+
+    const representative = await mapRepresentative(values, personRef);
+
+    const representativeRef = doc(db, 'representative', ids.representative)
+    await updateDoc(representativeRef, representative);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function addOffice(values: any) {
+  // Add a new office to the database
+  try {
+    const person = await mapPerson(values, 'Jurídica');
+
+    const personRef = await addDoc(collection(db, "person"), person);
+
+    const office = await mapOffice(values, personRef);
+
+    await addDoc(collection(db, "office"), office);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function updateOffice(ids: { [key: string]: string }, values: any) {
+  // Update a office to the database
+  try {
+    const person = await mapPerson(values, 'Jurídica');
+
+    const personRef = doc(db, 'person', ids.person);
+
+    await updateDoc(personRef, person);
+
+    const office = await mapOffice(values, personRef);
+
+    const officeRef = doc(db, 'office', ids.office)
+    await updateDoc(officeRef, office);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function addClient(values: any, personType: string) {
+  // Add a new client to the database
+  try {
+    const person = await mapPerson(values, personType);
+
+    const personRef = await addDoc(collection(db, "person"), person);
+    
+    const client = await mapClient(values, personRef);
+
+    await addDoc(collection(db, "client"), client);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function updateClient(ids: { [key: string]: string }, values: any, personType: string) {
+  // Update a client to the database
+  try {
+    const person = await mapPerson(values, personType);
+
+    const personRef = doc(db, 'person', ids.person);
+
+    await updateDoc(personRef, person);
+
+    const client = await mapClient(values, personRef);
+
+    const clientRef = doc(db, 'client', ids.client)
+    await updateDoc(clientRef, client);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function addCollaborator(values: any) {
+  // Add a new collaborator to the database
+  try {
+    const person = await mapPerson(values, 'Física');
+
+    const personRef = await addDoc(collection(db, "person"), person);
+
+    const collaborator = await mapCollaborator(values, personRef);
+
+    await addDoc(collection(db, "collaborator"), collaborator);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function updateCollaborator(ids: { [key: string]: string }, values: any) {
+  // Update a collaborator to the database
+  try {
+    const person = await mapPerson(values, 'Física');
+
+    const personRef = doc(db, 'person', ids.person);
+
+    await updateDoc(personRef, person);
+
+    const collaborator = await mapCollaborator(values, personRef);
+
+    const collaboratorRef = doc(db, 'collaborator', ids.collaborator)
+    await updateDoc(collaboratorRef, collaborator);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function addService(values: any, personType: string) {
+  // Add a new service to the database
+  try {
+    const person = await mapPerson(values, personType);
+
+    const personRef = await addDoc(collection(db, "person"), person);
+
+    const service = await mapService(values, personRef);
+
+    await addDoc(collection(db, "service"), service);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function updateService(ids: { [key: string]: string }, values: any, personType: string) {
+  // Update a service to the database
+  try {
+    const person = await mapPerson(values, personType);
+
+    const personRef = doc(db, 'person', ids.person);
+
+    await updateDoc(personRef, person);
+
+    const service = await mapService(values, personRef);
+
+    const serviceRef = doc(db, 'service', ids.service)
+    await updateDoc(serviceRef, service);
+    revalidatePath('/cadastros')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
   }
 }
 

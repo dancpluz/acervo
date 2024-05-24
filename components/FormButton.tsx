@@ -16,14 +16,15 @@ type Props = {
   submit?: boolean;
   state: FormState<any>;
   isEditing?: boolean;
-  setIsEditing: Dispatch<SetStateAction<boolean>>
+  setIsEditing: Dispatch<SetStateAction<boolean>>;
+  undoForm?: () => void;
 }
 
-export default function FormButton({ nextValue, backValue, submit, state, isEditing, setIsEditing }: Props) {
+export default function FormButton({ nextValue, backValue, submit, state, isEditing, setIsEditing, undoForm }: Props) {
   const error = state?.isValid ? false : undefined;
   const success = state?.isSubmitSuccessful && !isEditing;
   const loading = state?.isSubmitting;
-
+  //console.log(state.errors)
   function Icon() {
     if (loading) return <LoaderCircle className='text-background animate-spin' />
     else if (success) return <Check className='text-background' />
@@ -67,7 +68,7 @@ export default function FormButton({ nextValue, backValue, submit, state, isEdit
             Preencha os campos corretamente
           </PopoverContent>
         </Popover>
-        <Button onClick={() => setIsEditing(false)} variant='outline' className='border-0 px-3 outline outline-primary outline-1 outline-offset-0'>
+        <Button onClick={() => {setIsEditing(false); undoForm ? undoForm() : ''}} variant='outline' className='border-0 px-3 outline outline-primary outline-1 outline-offset-0'>
             CANCELAR
         </Button>
       </>}

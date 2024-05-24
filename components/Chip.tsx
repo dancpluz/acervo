@@ -1,8 +1,4 @@
-type Props = {
-  label: string | number
-}
-
-export default function Chip({ label }: Props) {
+export default function Chip({ label }: { label: string | number }) {
   if (label === '') {
     return '-'
   }
