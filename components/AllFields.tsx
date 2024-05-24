@@ -146,7 +146,7 @@ export function ShowField({ text, placeholder, label }: {  text?: string, placeh
   )
 }
 
-export function InputField({ form, obj, autofill, customClass, percent, long, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean }) {
+export function InputField({ form, obj, autofill, customClass, percent, long, disabled, update }: { form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any }) {
   return (
     <FormField
       control={form.control}
@@ -157,7 +157,7 @@ export function InputField({ form, obj, autofill, customClass, percent, long, di
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <div className='flex items-center gap-1'>
-              <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(obj.value).isDirty, clear: () => form.resetField(obj.value, { keepError: false }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {field.onChange(e); autofill ? autofill(e.target.value, form) : ''}} disabled={disabled} />
+              <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(obj.value).isDirty, clear: () => form.resetField(obj.value, { keepError: false, defaultValue: '' }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {field.onChange(e); autofill ? autofill(e.target.value, form) : ''; update ? update(obj.value, e.target.value) : ''}} disabled={disabled} />
               {percent ? <span className='text-tertiary'>%</span> : ''}
             </div>
           </FormControl>
@@ -166,28 +166,51 @@ export function InputField({ form, obj, autofill, customClass, percent, long, di
   )
 }
 
-export function RadioField({ form, obj, bool, optional, disabled }: { form: ReturnType<typeof useForm>, obj: EnumFieldT, bool?: boolean, optional?: boolean, disabled?: boolean }) {
+export function RadioField({ form, obj, bool, optional, disabled, defaultValue, setPersonType }: { form: ReturnType<typeof useForm>, obj: EnumFieldT, bool?: boolean, optional?: boolean, disabled?: boolean, defaultValue?: string, setPersonType?: React.Dispatch<React.SetStateAction<string>> }) {
   return (
     <FormField
       control={form.control}
       name={obj.value}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={bool ? 'max-w-56' : ''}>
           <FormMessage />
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <RadioGroup
-              className={bool ? 'p-0 border-0 grow' : ''}
+              className={bool ? 'p-0 border-0 grow gap-1' : ''}
               onValueChange={field.onChange}
-              defaultValue={field.value}
+              defaultValue={defaultValue}
             >
-              {obj.items && (obj.items).map((item) => {
-                return (
-                  <FormItem key={item} className={`flex-initial ${bool ? 'p-0 border-0 grow' : ''}`}>
+              {bool && obj.items ?
+                <>
+                  <FormItem key={obj.items[0]} className={`flex-initial p-0 border-0 grow`}>
                     <FormControl>
                       <RadioGroupItem
                         disabled={disabled}
-                        className={`data-[state=unchecked]:disabled:hover:bg-secondary disabled:cursor-default disabled:opacity-100 ${bool ? 'grow' : ''} ${disabled  ? '' : ''}`}
+                        className={`data-[state=unchecked]:disabled:hover:bg-secondary disabled:cursor-default disabled:opacity-100 grow`}
+                        value={obj.items[0]}
+                        onClick={setPersonType ? () => setPersonType(obj.items[0]) : undefined}
+                      />
+                    </FormControl>
+                  </FormItem>
+                  <FormItem key={obj.items[1]} className={`flex-initial p-0 border-0 grow`}>
+                  <FormControl>
+                    <RadioGroupItem
+                      disabled={disabled}
+                      className={`data-[state=unchecked]:disabled:hover:bg-secondary disabled:cursor-default disabled:opacity-100 grow`}
+                      value={obj.items[1]}
+                      onClick={setPersonType ? () => setPersonType(obj.items[1]) : undefined}
+                    />
+                  </FormControl>
+                </FormItem>
+                </>
+              : (obj.items).map((item) => {
+                return (
+                  <FormItem key={item} className={'flex-initial'}>
+                    <FormControl>
+                      <RadioGroupItem
+                        disabled={disabled}
+                        className={`data-[state=unchecked]:disabled:hover:bg-secondary disabled:cursor-default disabled:opacity-100`}
                         value={item}
                         clear={optional ? ((e: ChangeEvent<HTMLInputElement>) => {
                           if (e.target.dataset.state === 'checked') {
