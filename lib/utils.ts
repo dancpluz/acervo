@@ -11,7 +11,11 @@ export function cn(...inputs: ClassValue[]) {
 
 export function setFormValues(form: UseFormReturn, data: any) {
   for (const [key, value] of Object.entries(data)) {
-    if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
+    // MUITO TOSCO, MUDE DPS
+    if (key === 'representative') {
+      form.setValue(key, value)
+    }
+    else if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
       setFormValues(form, value)
     } else if (value !== '') {
       form.setValue(key, value)
@@ -38,7 +42,7 @@ export function formatFactory(data: Types.FactoryT[]): any {
         pricing: factory.pricing,
         style: factory.style,
         ambient: factory.ambient,
-        representative: factory.representative,
+        representative: factory.representative.label,
         discount: factory.discount,
         direct_sale: factory.direct_sale,
         link_table: factory.link_table,

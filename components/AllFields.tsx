@@ -34,6 +34,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
 import { ChangeEvent } from "react";
+import { ReferenceT } from "@/lib/types"
 
 export function SelectField({ form, obj, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, disabled?: boolean }) {
   return (
@@ -59,8 +60,73 @@ export function SelectField({ form, obj, disabled }: { form: ReturnType<typeof u
   );
 }
 
+export function ReferenceField({ form, obj, references, customClass, hint, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, references: ReferenceT[], customClass?: string, hint: string, disabled?: boolean }) {
+  let items = references.map((item) => item.label);
+  return (
+    <FormField
+      control={form.control}
+      name={obj.value}
+      render={({ field }) => (
+        <FormItem className={customClass}>
+          <FormMessage />
+          <FormLabel>{obj.label}</FormLabel>
+          <Popover open={disabled ? false : undefined}>
+            <PopoverTrigger className={disabled ? 'cursor-default' : ''} asChild>
+              <FormControl>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className={cn(
+                    "justify-between pl-3 pr-3 relative overflow-hidden",
+                    !field.value && "text-tertiary"
+                  )}
+                >
+                  {field.value
+                    ? items.find((item: string) => item === field.value.label)
+                    : disabled ? undefined : obj.placeholder}
+                  <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
+                </Button>
+              </FormControl>
+            </PopoverTrigger>
+            <PopoverContent className="p-0">
+              <Command>
+                <CommandInput placeholder={hint} />
+                <CommandEmpty>{'Não encontrado'}</CommandEmpty>
+                <CommandGroup>
+                  <CommandList>
+                    {items ?
+                      items.map((item: string, n) => (
+                        <CommandItem
+                          value={item}
+                          key={item}
+                          onSelect={() => {
+                            form.setValue(obj.value, references[n]);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              item === field.value.label
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )} />
+                          {item}
+                        </CommandItem>
+                      )
+                      )
+                       : ''}
+                  </CommandList>
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </FormItem>
+      )} />
+  );
+}
+
 export function SearchField({ form, obj, customClass, hint, unlock, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, unlock?: string, disabled?: boolean }) {
-  let items: any[] = [];
+  let items: (string[] | { [key: string]: string[]; }) = [];
   if (unlock === undefined) {
     // Search with items defined, no Unlock
     items = obj.items as string[];
@@ -94,15 +160,13 @@ export function SearchField({ form, obj, customClass, hint, unlock, disabled }: 
                   )}
                 >
                   {field.value
-                    ? items.find(
-                      (item: string) => item === field.value
-                    )
+                    ? items.find((item: string) => item === field.value) 
                     : disabled ? undefined : obj.placeholder}
                   <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
                 </Button>
               </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="p-0 ">
+            <PopoverContent className="p-0">
               <Command>
                 <CommandInput placeholder={hint} />
                 <CommandEmpty>{items.length === 0 && unlock !== undefined ? 'Selecione o campo anterior' : 'Não encontrado'}</CommandEmpty>
@@ -125,7 +189,7 @@ export function SearchField({ form, obj, customClass, hint, unlock, disabled }: 
                           )} />
                         {item}
                       </CommandItem>
-                    )
+                      )
                     ) : ''}
                   </CommandList>
                 </CommandGroup>

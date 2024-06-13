@@ -46,7 +46,7 @@ const orderDefaultValues = createDefaultValues(orderFields)
 
 // Get all of the validations from fields and assign them as "value":"validation"
 
-const fieldsVerificationJuridical = formatVerifications(fields, ['role','name','surname','role','service']);
+const fieldsVerificationJuridical = formatVerifications(fields, ['name','surname','role','service']);
 const fieldsVerificationFisical = formatVerifications(fields, ['cnpj','company_name','tax_payer','role','service']);
 
 const shippingVerification = {cep: fieldsVerificationJuridical.cep, address: fieldsVerificationJuridical.address, number: fieldsVerificationJuridical.number, state: fieldsVerificationJuridical.state, city: fieldsVerificationJuridical.city, complement: fieldsVerificationJuridical.complement}
@@ -94,7 +94,6 @@ export default function FormClient({ data, show }: { data?: any, show?: boolean 
 
   async function addSubmit(values: z.infer<typeof formSchemaFisical> | z.infer<typeof formSchemaJuridical>) {
     // Check if values already exists
-    console.log(values)
 
     const check = {
       person: [

@@ -50,7 +50,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-
+  
   const table = useReactTable({
     data,
     columns,
@@ -65,21 +65,23 @@ export function DataTable<TData, TValue>({
       columnFilters,
     },
   })
-  
+
   return (
     <>
-      <Input
-        placeholder={`Pesquisar ${found.plural}...`}
-        value={(table.getColumn(search)?.getFilterValue() as string) ?? ""}
-        onChange={(e) =>
-          table.getColumn(search)?.setFilterValue(e.target.value)
-        }
-        containerClassName='justify-end'
-        className="max-w-sm border-primary pr-10"
-        icon={<Search className='text-primary w-5 h-5 absolute transform -translate-y-1/2 top-1/2 right-3' />}
-      />
-      <Table>
-        <TableHeader>
+      <div className='relative'>
+        <Input
+          placeholder={`Pesquisar ${found.plural}...`}
+          value={(table.getColumn(search)?.getFilterValue() as string) ?? ""}
+          onChange={(e) =>
+            table.getColumn(search)?.setFilterValue(e.target.value)
+          }
+          containerClassName='justify-end'
+          className="max-w-sm border-primary pr-10"
+          icon={<Search className='text-primary w-5 h-5 absolute transform -translate-y-1/2 top-1/2 right-3' />}
+        />
+      </div>
+      <Table containerClassName="h-[520px] overflow-y-auto">
+        <TableHeader style={{insetBlockStart: 0, position: 'sticky', zIndex: 5}}>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -97,7 +99,7 @@ export function DataTable<TData, TValue>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody>
+        <TableBody className='last:border-b last:border-secondary'>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <Collapsible key={row.id} asChild>

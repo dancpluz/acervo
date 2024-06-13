@@ -170,8 +170,7 @@ export const fields: { [key: string]: FieldT } = {
     value: 'representative',
     label: 'NOME DA REPRESENTAÇÃO',
     placeholder: 'Selecione uma Representação',
-    validation: z.string().optional().or(z.literal('')),
-    items: []
+    validation: z.any().optional().or(z.literal('')),
   },
   discount: {
     value: 'discount',
@@ -266,8 +265,8 @@ export const enumFields: { [key: string]: EnumFieldT } = {
 export const contactFields: TableFieldT[] = [
   {
     value: 'name',
-    label: 'NOME',
-    validation: z.string().optional().or(z.literal('')),
+    label: 'NOME*',
+    validation: z.string().min(1, 'Campo não preenchido.'),
   },
   {
     value: 'detail',
@@ -276,8 +275,8 @@ export const contactFields: TableFieldT[] = [
   },
   {
     value: 'phone',
-    label: 'CELULAR',
-    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 10 || e.replace(/\D/g, "").length == 11, 'O celular deve ter 10-11 números.').optional().or(z.literal('')),
+    label: 'CELULAR*',
+    validation: z.string().min(1, 'Campo não preenchido.').refine((e: string) => e.replace(/\D/g, "").length == 10 || e.replace(/\D/g, "").length == 11, 'O celular deve ter 10-11 números.'),
     mask: ['(', /\d/, /\d/, ')', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/]
   },
   {

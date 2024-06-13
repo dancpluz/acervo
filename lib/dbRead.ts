@@ -35,10 +35,22 @@ export async function getFactory(): Promise<Types.FactoryT[]> {
     const querySnapshot = await getDocs(query(collection(db, "factory"), orderBy("last_updated", "desc")));
     const factoryData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
       const data = doc.data();
+      let representative = data.representative;
+      // MUITO TOSCO, MUDE DPS
+      if (representative) {
+        const representativeRef = await getDoc(data.representative);
+        const representativeData = representativeRef.data() as any;
+        representative = {
+          ref: representativeRef.id,
+          label: representativeData.info.fantasy_name ? representativeData.info.company_name + ' - ' + representativeData.info.fantasy_name : representativeData.info.company_name,
+          info_email: representativeData.info.info_email,
+          contact: representativeData.contact,
+        }
+      }
       const personRef = await getDoc(data.person);
       const person = personRef.data() as Types.PersonT;
       data.last_updated = new Date((data.last_updated as { seconds: number }).seconds * 1000);
-      return { ...data, person, refs: { person: personRef.id, factory: doc.id } };
+      return { ...data, person, representative, refs: { person: personRef.id, factory: doc.id } };
     }))
 
     return factoryData;
@@ -64,7 +76,23 @@ export async function getRepresentative(): Promise<Types.RepresentativeT[]> {
   } catch (error) {
     console.log(error);
     return [];
-    
+  }
+}
+
+export async function getRepresentativeItems(): Promise<Types.ReferenceT[]> {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, "representative"), orderBy("last_updated", "desc")));
+    const representativeData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
+      const data = doc.data();
+      const personRef = await getDoc(data.person);
+      const person = personRef.data() as Types.PersonT;
+      return { ref: personRef.id, label: person.info.fantasy_name ? person.info.company_name + ' - ' + person.info.fantasy_name : person.info.company_name, info_email: person.info.info_email, contact: person.contact } as Types.ReferenceT;
+    }))
+
+    return representativeData;
+  } catch (error) {
+    console.log(error);
+    return [];
   }
 }
 

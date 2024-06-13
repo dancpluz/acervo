@@ -8,7 +8,7 @@ import { Form } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
 import { Trash2 } from 'lucide-react';
 import { EditTinyTable, TinyTable } from "@/components/TinyTable";
-import { InputField, SearchField, SelectField, ShowField, RadioField } from "./AllFields";
+import { InputField, SearchField, SelectField, ShowField, RadioField, ReferenceField } from "./AllFields";
 import { fields, contactFields, enumFields } from "@/lib/fields";
 import { FormDiv, FieldDiv, TabDiv } from "@/components/ui/div";
 import { useEffect, useState } from 'react';
@@ -27,6 +27,7 @@ import { AlertDialog,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ReferenceT } from "@/lib/types";
 
 // Default values for the fields
 
@@ -50,12 +51,11 @@ const enumVerification = formatVerifications(enumFields);
 
 const formSchema = z.object({ ...fieldsVerification, contact: z.array(z.object(contactVerification)), ...enumVerification});
 
-export default function FormFactory({ data, show }: { data?: any, show?: boolean }) {
+export default function FormFactory({ data, show, representatives }: { data?: any, show?: boolean, representatives: ReferenceT[] }) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [initialValues, setInitialValues] = useState<{ [x: string]: any } | undefined>(undefined);
   const tabs = ['FÁBRICAS', 'REPRESENTAÇÃO', 'OUTRAS INFORMAÇÕES'];
-  let initalValue = null; 
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -68,6 +68,11 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
   });
 
   useEffect(() => {
+    console.log(form.getValues())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.watch('representative')])
+
+  useEffect(() => {
     if (data) {
       setFormValues(form, data);
       form.setValue('pricing', data.pricing.toString());
@@ -76,7 +81,7 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
-  
+
   async function addSubmit(values: z.infer<typeof formSchema>) {
     // Check if values already exists
     const check = {
@@ -126,11 +131,6 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
     router.refresh()
   }
 
-  const test = () => {
-    form.reset(initialValues)
-    console.log('test')
-  }
-
   return (
     <Tabs className='bg-secondary/20' defaultValue={tabs[0]}>
       <div className='flex'>
@@ -151,7 +151,7 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>CANCELAR</AlertDialogCancel>
-              <AlertDialogAction onClick={() => {deleteFactory(data.refs)}}>APAGAR</AlertDialogAction>
+              <AlertDialogAction onClick={() => { deleteFactory(data.refs) }}>APAGAR</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -209,11 +209,11 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
             <TabDiv>
               <div className='flex gap-8'>
                 <FormDiv>
-                  <SearchField customClass={'grow-0'} obj={fields.representative} form={form} hint={'Ex. Punto'} disabled={show && !isEditing} />
-                  <ShowField text={''} label={'EMAIL DA REPRESENTAÇÃO'} placeholder={'Selecione uma Representação'} />
+                  <ReferenceField customClass={'grow-0'} obj={fields.representative} references={representatives} form={form} hint={'Ex. Punto'} disabled={show && !isEditing} />
+                  <ShowField text={(show && !isEditing) ?? form.watch('representative.info_email') ?? ''} label={'EMAIL DA REPRESENTAÇÃO'} placeholder={'Selecione uma Representação'} />
                 </FormDiv>
                 <FormDiv>
-                  <TinyTable title='CONTATOS DA REPRESENTAÇÃO' columns={contactFields} placeholder='Selecione uma Representação' order={[]} />
+                  <TinyTable title='CONTATOS DA REPRESENTAÇÃO' columns={contactFields} rows={form.watch('representative.contact')} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} /> 
                   <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={initialValues ? () => form.reset(initialValues) : undefined}/>
                 </FormDiv>
               </div>
