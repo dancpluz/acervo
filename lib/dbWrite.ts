@@ -8,11 +8,13 @@ import { revalidatePath } from 'next/cache';
 export async function addFactory(values: any) {
   // Add a new factory to the database
   try {
+    const representativeRef = values.representative ? doc(db, 'person', values.representative.ref) : ''
+
     const person = await mapPerson(values, 'Jurídica');
   
     const personRef = await addDoc(collection(db, "person"), person);
 
-    const factory = await mapFactory(values, personRef);
+    const factory = await mapFactory({ ...values, representative: representativeRef }, personRef);
   
     await addDoc(collection(db, "factory"), factory);
     revalidatePath('/cadastros')
@@ -25,13 +27,15 @@ export async function addFactory(values: any) {
 export async function updateFactory(ids: { [key: string]: string }, values: any) {
   // Update a factory to the database
   try {
+    const representativeRef = values.representative ? doc(db, 'person', values.representative.ref) : ''
+
     const person = await mapPerson(values, 'Jurídica');
   
     const personRef = doc(db, 'person', ids.person);
 
     await updateDoc(personRef, person);
 
-    const factory = await mapFactory(values, personRef);
+    const factory = await mapFactory({ ...values, representative: representativeRef }, personRef);
 
     const factoryRef = doc(db, 'factory', ids.factory)
     await updateDoc(factoryRef, factory);

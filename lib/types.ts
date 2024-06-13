@@ -27,6 +27,13 @@ export enum TaxEnum {
   NContribuinte = "Não Contribuinte, que pode ou não possuir inscrição estadual no cadastro ICMS"
 }
 
+export type ReferenceT = {
+  contact: ContactT[];
+  info_email: string;
+  label: string;
+  ref: string;
+}
+
 export type PersonT = {
   contact: ContactT[];
   info: InfoT;
@@ -75,7 +82,7 @@ export type AddressT = {
 
 export type FactoryT = {
   person: PersonT | DocumentReference;
-  representative: string;
+  representative: ReferenceT;
   pricing: number;
   ambient: string;
   style: string;

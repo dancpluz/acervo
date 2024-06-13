@@ -80,6 +80,10 @@
   tfoot {
     inset-block-end: 0;
   }
+
+  thead {
+    inset-block-start: 0; /* "top" */
+  }
   body {
     @apply bg-background text-foreground;
   }

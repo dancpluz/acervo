@@ -74,17 +74,17 @@ export async function mapFactory(values: any, personRef: DocumentReference): Pro
 
 export async function mapRepresentative(values: any, personRef: DocumentReference): Promise<Types.RepresentativeT> {
   return {
-     person: personRef,
-     team: values.team,
-     last_updated: serverTimestamp(),
+    person: personRef,
+    team: values.team,
+    last_updated: serverTimestamp(),
   }
 }
 
 export async function mapOffice(values: any, personRef: DocumentReference): Promise<Types.OfficeT> {
   return {
-     person: personRef,
-     team: values.team,
-     last_updated: serverTimestamp(),
+    person: personRef,
+    team: values.team,
+    last_updated: serverTimestamp(),
   }
 }
 
