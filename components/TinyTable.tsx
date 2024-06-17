@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
-import { z } from "zod";
 import { CirclePlus, CircleX } from 'lucide-react';
 import { TableFieldT } from '@/lib/fields';
 
@@ -57,7 +56,7 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, pref
           {rows.map((row,index) => {
             return (
               <TableRow key={row.id}>
-                {Object.keys(row).sort((a, b) => { return order.indexOf(a) - order.indexOf(b); }).map((key, i) => {
+                {Object.keys(row).sort((a, b) => { return order.indexOf(a) - order.indexOf(b) }).map((key, i) => {
                   if (key === 'id') {return}
                   return (
                     <TableCell className='first:pl-4 px-2' key={key}>
@@ -86,7 +85,7 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, pref
           <tr>
             <th colSpan={columns.length + 1}>
               <div className='bg-[#ebe6dc]' >
-                <div className='flex z-10 hover:bg-secondary/20 w-full border-t border-secondary font-normal justify-center gap-2 cursor-pointer items-center py-2' onClick={() => append()}>
+                <div className='flex z-10 transition-colors hover:bg-secondary/20 w-full border-t border-secondary font-normal justify-center gap-2 cursor-pointer items-center py-2' onClick={() => append()}>
                   <CirclePlus className='text-primary w-5 h-5' />
                   Adicionar
                 </div>

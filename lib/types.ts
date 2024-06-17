@@ -143,3 +143,18 @@ export type ServiceT = {
   service: string;
   last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
 }
+
+export type MarkupT = {
+  ref?: string;
+  name: string;
+  observation: string;
+  "6x": number | string;
+  "12x": number | string;
+  cash: number | string;
+}
+
+export type FreightT = {
+  ref?: string;
+  region: string;
+  fee: number | string;
+}

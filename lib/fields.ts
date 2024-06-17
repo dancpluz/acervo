@@ -324,6 +324,64 @@ export const teamFields: TableFieldT[] = [
   },
 ];
 
+export const markupFields: TableFieldT[] = [
+  {
+    value: 'ref',
+    label: '',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  {
+    value: 'name',
+    label: 'NOME',
+    size: '250px',
+    placeholder: 'Ex. Pessoa Física',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  {
+    value: 'observation',
+    label: 'OBSERVAÇÃO',
+    size: '450px',
+    placeholder: 'Anotações, detalhes, informações',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  {
+    value: '12x',
+    label: '12X',
+    size: '50px',
+    placeholder: 'Ex. 1,20',
+    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O desconto deve ser maior que 0').lte(1, 'O desconto não pode ser maior que 100%.')),
+  },
+  {
+    value: '6x',
+    label: '6X',
+    size: '50px',
+    placeholder: 'Ex. 2',
+    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O desconto deve ser maior que 0').lte(1, 'O desconto não pode ser maior que 100%.')),
+  },
+  {
+    value: 'cash',
+    label: 'À VISTA',
+    size: '50px',
+    placeholder: 'Ex. 0,35',
+    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O desconto deve ser maior que 0').lte(1, 'O desconto não pode ser maior que 100%.')),
+  }
+];
+
+export const freightFields: { [key: string]: TableFieldT } = {
+  region: {
+    value: 'region',
+    label: '',
+    placeholder: 'Ex. 2',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  fee: {
+    value: 'fee',
+    label: '',
+    placeholder: 'Ex. 2',
+    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O taxa deve ser maior que 0, se quiser Grátis, apague').lte(1, 'O desconto não pode ser maior que 100%.')).or(z.literal('')),
+  },
+};
+
 
 export const orderFields: { [key: string]: FieldT } = {
   id_order: {

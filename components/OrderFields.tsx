@@ -46,7 +46,7 @@ export default function OrderFields({ title, rows, form, append, remove, update,
             <CirclePlus className='text-primary w-5 h-5' />
             Edite para Adicionar Pedidos
           </div> : 
-        <div className='flex bg-transparent hover:bg-secondary/20 border-t border-secondary font-normal justify-center gap-2 cursor-pointer items-center py-2' onClick={() => append()}>
+        <div className='flex bg-transparent transition-colors hover:bg-secondary/20 border-t border-secondary font-normal justify-center gap-2 cursor-pointer items-center py-2' onClick={() => append()}>
           <CirclePlus className='text-primary w-5 h-5' />
           Adicionar Pedido
         </div>}

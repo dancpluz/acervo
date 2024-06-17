@@ -231,6 +231,37 @@ export async function updateService(ids: { [key: string]: string }, values: any,
   }
 }
 
+export async function addConfig(value: any, subcollection: string) {
+  // Add a new service to the database
+  try {
+    await addDoc(collection(db, "config", "PtwUlMicmRBxL9Noe8K1", subcollection), value);
+
+    revalidatePath('/configuracoes')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function updateConfig(value: any, subcollection: string) {
+  // Add a new service to the database
+  try {
+    await updateDoc(doc(db, 'config', 'PtwUlMicmRBxL9Noe8K1', subcollection, value.ref), value);
+
+    revalidatePath('/configuracoes')
+  } catch (error) {
+    console.log(error);
+    throw new Error('Ocorreu um erro inesperado');
+  }
+}
+
+export async function deleteConfig(ref: string, subcollection: string) {
+  try {
+    await deleteDoc(doc(db, 'config', 'PtwUlMicmRBxL9Noe8K1', subcollection, ref))
+  } catch (error) {
+    console.log(error)
+  }
+}
 export async function deleteDocs(ids: { [key: string]: string }) {
   try {
     for (const [key, value] of Object.entries(ids)) {
