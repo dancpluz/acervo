@@ -1,9 +1,10 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 import * as Types from '@/lib/types';
 import { FieldT, TableFieldT, EnumFieldT } from '@/lib/fields';
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
+import { Poppins } from "next/font/google";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -176,7 +177,7 @@ export async function fillCepFields(inputCep: string, form: any) {
   }
 }
 
-type Fields = { [key: string]: EnumFieldT } | { [key: string]: FieldT } | TableFieldT[]
+type Fields = { [key: string]: EnumFieldT } | { [key: string]: FieldT } | TableFieldT[] | { [key: string]: TableFieldT }
 
 export const createDefaultValues = (fields: Fields) => Object.values(fields).map((field) => { return field.value }).reduce((acc, key) => ({ ...acc, [key]: '' }), {});
 
@@ -185,3 +186,19 @@ export const formatVerifications = (fields: Fields, filter?: string[]) => Object
   obj[e.value] = e.validation;
   return obj;
 }));
+
+export function calculateTextWidth(size: number, text: string ) {
+  let font = `${size}px verdana`;
+
+  let canvas = document.createElement('canvas');
+  let context = canvas.getContext("2d");
+  if (context !== null) {
+    context.font = font;
+    let width = context.measureText(text).width;
+    let formattedWidth = Math.ceil(width) + "px";
+
+    return formattedWidth;
+  } else {
+    return "";
+  }
+}

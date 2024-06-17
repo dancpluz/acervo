@@ -251,7 +251,7 @@ export function RadioField({ form, obj, bool, optional, disabled, defaultValue, 
                     <FormControl>
                       <RadioGroupItem
                         disabled={disabled}
-                        className={`data-[state=unchecked]:disabled:hover:bg-secondary disabled:cursor-default disabled:opacity-100 grow`}
+                        className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 grow`}
                         value={obj.items[0]}
                         onClick={setPersonType ? () => setPersonType(obj.items[0]) : undefined}
                       />
@@ -261,7 +261,7 @@ export function RadioField({ form, obj, bool, optional, disabled, defaultValue, 
                   <FormControl>
                     <RadioGroupItem
                       disabled={disabled}
-                      className={`data-[state=unchecked]:disabled:hover:bg-secondary disabled:cursor-default disabled:opacity-100 grow`}
+                      className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 grow`}
                       value={obj.items[1]}
                       onClick={setPersonType ? () => setPersonType(obj.items[1]) : undefined}
                     />
@@ -274,7 +274,7 @@ export function RadioField({ form, obj, bool, optional, disabled, defaultValue, 
                     <FormControl>
                       <RadioGroupItem
                         disabled={disabled}
-                        className={`data-[state=unchecked]:disabled:hover:bg-secondary disabled:cursor-default disabled:opacity-100`}
+                        className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100`}
                         value={item}
                         clear={optional ? ((e: ChangeEvent<HTMLInputElement>) => {
                           if (e.target.dataset.state === 'checked') {

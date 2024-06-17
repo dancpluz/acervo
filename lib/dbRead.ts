@@ -168,3 +168,36 @@ export async function getService(): Promise<Types.ServiceT[]> {
     return [];
   }
 }
+
+export async function getMarkup(): Promise<Types.MarkupT[]> {
+  try {
+    const markupCollection = collection(db, "config", "PtwUlMicmRBxL9Noe8K1", "markup");
+    const querySnapshot = await getDocs(markupCollection);
+    //console.log(querySnapshot)
+    const markupData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
+      const data = doc.data();
+      return {...data, ref: doc.id};
+    }))
+
+    return markupData;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
+
+export async function getFreight(): Promise<Types.FreightT[]> {
+  try {
+    const freightCollection = collection(db, "config", "PtwUlMicmRBxL9Noe8K1", "freight");
+    const querySnapshot = await getDocs(freightCollection);
+    const freightData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
+      const data = doc.data();
+      return { ...data, ref: doc.id};
+    }))
+
+    return freightData;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
