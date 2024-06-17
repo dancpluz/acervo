@@ -12,7 +12,7 @@ export const columns: ColumnDef<FactoryT>[] = [
   {
     accessorKey: "company_name",
     header: ({ column }) => {
-      return <SortHeader column={column} header='NOME/NOME FANTASIA'/>
+      return <SortHeader column={column} header='NOME'/>
     },
     size: 250,
   },

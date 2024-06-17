@@ -10,20 +10,15 @@ const icons = {
   collaborator: '/icons/people.svg',
 }
 
-export type Icon = keyof typeof icons | string;
+export type IconT = keyof typeof icons | string;
 
-type Props = {
-  page: string;
-  tab: Icon;
-}
-
-export default function Header({ page, tab }: Props) {
+export default function Header({ page, tab }: { page: string, tab?: IconT }) {
   const user = 'Thiago';
 
   return (
     <div className={`flex justify-between w-full items-center`} >
       <div className='flex gap-2'>
-        <Image src={icons[tab as keyof typeof icons]} alt={tab} width={32} height={32} />
+        {tab && <Image src={icons[tab as keyof typeof icons]} alt={tab} width={32} height={32} />}
         <h1 className='text-3xl'>{page}</h1>
       </div>
       <div className='flex gap-6 items-center'>

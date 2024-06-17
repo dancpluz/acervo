@@ -115,7 +115,7 @@ export default function FormCollaborator({ data, show }: { data?: any, show?: bo
   async function deleteCollaborator(ids: { [key: string]: string }) {
     await deleteDocs(ids)
     toast({
-      title: "colaborador apagado com sucesso!",
+      title: "Colaborador apagado com sucesso!",
     })
     router.refresh()
   }

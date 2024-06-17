@@ -75,6 +75,8 @@ export default function FormFactory({ data, show, representatives }: { data?: an
   useEffect(() => {
     if (data) {
       setFormValues(form, data);
+      form.setValue('direct_sale', data.direct_sale !== '' ? (data.direct_sale * 100).toString() : '')
+      form.setValue('discount', data.discount !== '' ? (data.discount * 100).toString() : '')
       form.setValue('pricing', data.pricing.toString());
       form.setValue('bool_direct_sale', data.direct_sale !== '' ? 'Sim' : 'Não');
       setInitialValues(form.getValues())
