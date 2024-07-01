@@ -9,14 +9,14 @@ export type FieldT = {
   placeholder: string;
   validation: z.ZodType<any, any>;
   mask?: (string | RegExp)[];
-  items?: string[] | { [key: string]: string[] };
 };
 
 export type EnumFieldT = {
   value: string;
   label: string;
   validation: z.ZodType<any, any>;
-  items: string[];
+  placeholder?: string;
+  items: { value: string, label: string }[];
 };
 
 export type TableFieldT = {
@@ -28,12 +28,40 @@ export type TableFieldT = {
   size?: string;
 };
 
+export const fieldItems: { [key: string] : { value: string, label: string }[] } = {
+  state: Object.keys(cidades).map((e) => ({ label: e, value: e })),
+  bank: bancos.map((e) => ({ label: e, value: e })),
+  tax_payer: [
+    { label: 'Não Informado', value: 'unknown' },
+    { label: 'Contribuinte isento de inscrição no cadastro de contribuintes do ICMS', value: 'yes' },
+    { label: 'Não Contribuinte, que pode ou não possuir inscrição estadual no cadastro ICMS', value: 'no' },
+  ],
+  pricing: [
+    { label: '$', value: '1' },
+    { label: '$$', value: '2' },
+    { label: '$$$', value: '3' },
+    { label: '$$$$', value: '4' },
+    { label: '$$$$$', value: '5' }
+  ],
+  style: [
+    { label: 'Contemporâneo', value: 'Contemporâneo' },
+    { label: 'Clássico', value: 'Clássico' },
+    { label: 'Rústico', value: 'Rústico' },
+    { label: 'Moderno', value: 'Moderno' }
+  ],
+  ambient: [
+    { label: 'Interno', value: 'internal' },
+    { label: 'Externo', value: 'external' },
+    { label: 'Int. e Externo', value: 'both' }
+  ],
+} as const;
+
 export const fields: { [key: string]: FieldT } = {
   company_name: {
     value: 'company_name',
     label: 'NOME OU RAZÃO SOCIAL*',
     placeholder: 'Ex. ACERVO MOBILIA COMERCIO VAREJISTA DE MOVEIS LTDA',
-    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.').nullable(),
+    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.'),
   },
   fantasy_name: {
     value: 'fantasy_name',
@@ -45,13 +73,13 @@ export const fields: { [key: string]: FieldT } = {
     value: 'name',
     label: 'NOME*',
     placeholder: 'Ex. Thiago',
-    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.').nullable(),
+    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.'),
   },
   surname: {
     value: 'surname',
     label: 'SOBRENOME*',
     placeholder: 'Ex. Turchi',
-    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.').nullable(),
+    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.'),
   },
   info_email: {
     value: 'info_email',
@@ -77,15 +105,8 @@ export const fields: { [key: string]: FieldT } = {
     value: 'cnpj',
     label: 'CNPJ*',
     placeholder: 'Ex. 00.000.000/0000-00',
-    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 14, 'O CNPJ deve ter 14 números.').nullable(),
+    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 14, 'O CNPJ deve ter 14 números.'),
     mask: [/\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/],
-  },
-  tax_payer: {
-    value: 'tax_payer',
-    label: 'CONTRIBUINTE*',
-    placeholder: 'Selecione contribuinte',
-    validation: z.nativeEnum(TaxEnum, { required_error: 'Campo não preenchido.' }).nullable(),
-    items: Object.values(TaxEnum),
   },
   state_register: {
     value: 'state_register',
@@ -120,13 +141,6 @@ export const fields: { [key: string]: FieldT } = {
     placeholder: 'Ex. 1659',
     validation: z.string().max(10, 'Máximo de 10 caracteres.').optional().or(z.literal('')),
   },
-  bank: {
-    value: 'bank',
-    label: 'BANCO',
-    placeholder: 'Selecione um banco',
-    validation: z.string().optional().or(z.literal('')),
-    items: bancos
-  },
   cep: {
     value: 'cep',
     label: 'CEP',
@@ -146,20 +160,6 @@ export const fields: { [key: string]: FieldT } = {
     placeholder: 'Ex. 123',
     validation: z.string().max(50, 'Máximo de 50 caracteres.').optional().or(z.literal('')),
   },
-  state: {
-    value: 'state',
-    label: 'ESTADO',
-    placeholder: 'Selecione estado',
-    validation: z.string().optional().or(z.literal('')),
-    items: Object.keys(cidades),
-  },
-  city: {
-    value: 'city',
-    label: 'CIDADE',
-    placeholder: 'Selecione cidade',
-    validation: z.string().optional().or(z.literal('')),
-    items: cidades,
-  },
   complement: {
     value: 'complement',
     label: 'COMPLEMENTO',
@@ -168,9 +168,9 @@ export const fields: { [key: string]: FieldT } = {
   },
   representative: {
     value: 'representative',
-    label: 'NOME DA REPRESENTAÇÃO',
+    label: 'REPRESENTAÇÃO VINCULADA',
     placeholder: 'Selecione uma Representação',
-    validation: z.any().optional().or(z.literal('')),
+    validation: z.string().optional().or(z.literal('')),
   },
   discount: {
     value: 'discount',
@@ -213,7 +213,6 @@ export const fields: { [key: string]: FieldT } = {
     label: 'ESCRITÓRIO VINCULADO',
     placeholder: 'Selecione um escritório',
     validation: z.string().optional().or(z.literal('')),
-    items: []
   },
   role: {
     value: 'role',
@@ -229,37 +228,60 @@ export const fields: { [key: string]: FieldT } = {
   },
 };
 
+
 export const enumFields: { [key: string]: EnumFieldT } = {
+  tax_payer: {
+    value: 'tax_payer',
+    label: 'CONTRIBUINTE*',
+    placeholder: 'Selecione contribuinte',
+    // @ts-ignore
+    validation: z.enum(fieldItems.tax_payer.map(item => item.value), { message: 'Campo não preenchido.' }), 
+    items: fieldItems.tax_payer,
+  },
+  bank: {
+    value: 'bank',
+    label: 'BANCO',
+    placeholder: 'Selecione um banco',
+    // @ts-ignore
+    validation: z.enum([...fieldItems.bank.map(item => item.value), '']),
+    items: fieldItems.bank,
+  },
+  state: {
+    value: 'state',
+    label: 'ESTADO',
+    placeholder: 'Selecione estado',
+    // @ts-ignore
+    validation: z.enum([...fieldItems.state.map(item => item.value), '']),
+    items: fieldItems.state,
+  },
+  city: {
+    value: 'city',
+    label: 'CIDADE',
+    placeholder: 'Selecione cidade',
+    validation: z.string().optional().or(z.literal('')),
+    items: [],
+  },
   pricing: {
     value: 'pricing',
     label: 'PADRÃO*',
-    validation: z.nativeEnum(PricingEnum, { required_error: 'Campo não preenchido.' }),
-    items: Object.values(PricingEnum),
+    // @ts-ignore
+    validation: z.enum(fieldItems.pricing.map(item => item.value), { message: 'Selecione um padrão.' }),
+    items: fieldItems.pricing,
   },
   style: {
     value: 'style',
     label: 'ESTILO',
-    validation: z.nativeEnum(StyleEnum).optional().or(z.literal('')),
-    items: Object.values(StyleEnum),
+    // @ts-ignore
+    validation: z.enum([...fieldItems.style.map(item => item.value), '']),
+    items: fieldItems.style,
   },
   ambient: {
     value: 'ambient',
     label: 'AMBIENTE*',
-    validation: z.nativeEnum(AmbientEnum, { required_error: 'Campo não preenchido.' }),
-    items: Object.values(AmbientEnum),
+    // @ts-ignore
+    validation: z.enum(fieldItems.ambient.map(item => item.value), { message: 'Selecione um ambiente.' }),
+    items: fieldItems.ambient,
   },
-  bool_direct_sale: {
-    value: 'bool_direct_sale',
-    label: 'VENDA DIRETA?',
-    validation: z.string({ required_error: 'Campo não preenchido.' }),
-    items: ['Sim', 'Não'],
-  },
-  bool_person_type: {
-    value: 'bool_person_type',
-    label: 'TIPO DE PESSOA',
-    validation: z.enum(['Física', 'Jurídica']).optional(),
-    items: ['Física', 'Jurídica'],
-  }
 };
 
 export const contactFields: TableFieldT[] = [
@@ -368,22 +390,27 @@ export const markupFields: TableFieldT[] = [
 ];
 
 export const freightFields: { [key: string]: TableFieldT } = {
+  ref: {
+    value: 'ref',
+    label: '',
+    validation: z.string().optional().or(z.literal('')),
+  },
   region: {
     value: 'region',
     label: '',
-    placeholder: 'Ex. 2',
+    placeholder: '',
     validation: z.string().min(1, 'Campo não preenchido.'),
   },
   fee: {
     value: 'fee',
     label: '',
-    placeholder: 'Ex. 2',
+    placeholder: '',
     validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O taxa deve ser maior que 0, se quiser Grátis, apague').lte(1, 'O desconto não pode ser maior que 100%.')).or(z.literal('')),
   },
 };
 
 
-export const orderFields: { [key: string]: FieldT } = {
+export const orderFields: { [key: string]: FieldT | EnumFieldT } = {
   id_order: {
     value: 'id_order',
     label: 'ID*',
@@ -400,62 +427,122 @@ export const orderFields: { [key: string]: FieldT } = {
   cep: fields.cep,
   address: fields.address,
   number: fields.number,
-  state: fields.state,
-  city: fields.city,
+  state: enumFields.state,
+  city: enumFields.city,
   complement: fields.complement
 };
 
-// const factory = {
-//   "representative": "",
-//   "discount": "",
-//   "direct_sale": "",
-//   "link_catalog": "https://exemplo.com.br",
-//   "link_table": "",
-//   "link_site": "",
-//   "pricing": 1,
-//   "style": "Contemporâneo",
-//   "ambient": "Interno"
-// }
+const addressFields = {
+  cep: fields.cep,
+  address: fields.address,
+  number: fields.number,
+  state: enumFields.state,
+  city: enumFields.city,
+  complement: fields.complement
+}
 
-// const contact = [
-//   {
-//     "name": "nome contato",
-//     "detail": "detalhe",
-//     "phone": "(00)00000-0000",
-//     "telephone": "(00)0000-0000"
-//   }
-// ]
+const paymentFields = {
+  account: fields.account,
+  agency: fields.agency,
+  bank: enumFields.bank,
+  pix: fields.pix
+}
 
-// const address = {
-//   "cep": "00000-000",
-//   "address": "endereço",
-//   "number": "000",
-//   "state": "DF",
-//   "city": "Brasília",
-//   "complement": "complemento",
-// }
+const fisicalPerson = {
+  contact: contactFields,
+  payment: paymentFields,
+  info: {
+    name: fields.name,
+    surname: fields.surname,
+    cpf: fields.cpf,
+    rg: fields.rg,
+    tax_address: addressFields,
+    info_email: fields.info_email,
+  },
+  observations: fields.observations,
+}
 
-// const payment = {
-//   "pix": "619982398",
-//   "account": "0000000-0",
-//   "agency": "",
-//   "bank": "banco",
-// }
+const juridicalPerson = {
+  contact: contactFields,
+  payment: paymentFields,
+  info: {
+    company_name: fields.company_name,
+    fantasy_name: fields.fantasy_name,
+    cnpj: fields.cnpj,
+    tax_address: addressFields,
+    info_email: fields.info_email,
+    tax_payer: enumFields.tax_payer,
+    municipal_register: fields.municipal_register,
+    state_register: fields.state_register,
+  },
+  observations: fields.observations,
+}
 
-// const info = {
-//   name: 'nome',
-//   fantasy_name: 'fantasia',
-//   info_email: '',
-//   cnpj: '00.000.000/0000-00',
-//   tax_payer: "Não Informado",
-//   state_register: "000.000.000.000",
-//   municipal_register: "000.000.000.000",
-//   address: address,
-// }
+export const collaboratorFields = {
+  person: fisicalPerson,
+  role: fields.role,
+}
 
-// const person = {
-//   contact: contact,
-//   info: info,
-//   payment: payment,
-//   observations: "observacoes",
-// }
+export const clientFisicalFields = {
+  person: { ...fisicalPerson, info: { ...fisicalPerson.info, shipping_address: addressFields }  },
+  order: orderFields,
+  office: fields.office,
+}
+
+export const clientJuridicalFields = {
+  person: { ...juridicalPerson, info: { ...juridicalPerson.info, shipping_address: addressFields } },
+  order: orderFields,
+  office: fields.office,
+}
+
+export const serviceFisicalFields = {
+  person: fisicalPerson,
+  service: fields.service,
+}
+
+export const serviceJuridicalFields = {
+  person: juridicalPerson,
+  service: fields.service,
+}
+
+export const representativeFields = {
+  person: juridicalPerson,
+  service: teamFields,
+}
+
+export const officeFields = {
+  person: juridicalPerson,
+  service: teamFields,
+}
+
+export const factoryFields = {
+  person: juridicalPerson,
+  representative: fields.representative,
+  pricing: enumFields.pricing,
+  ambient: enumFields.ambient,
+  style: enumFields.style,
+  direct_sale: fields.direct_sale,
+  discount: fields.discount,
+  link_table: fields.link_table,
+  link_catalog: fields.link_catalog,
+  link_site: fields.link_site,
+}
+
+type CollaboratorFieldsT = typeof collaboratorFields;
+type ClientFisicalFieldsT = typeof clientFisicalFields;
+type ClientJuridicalFieldsT = typeof clientJuridicalFields;
+type ServiceFisicalFieldsT = typeof serviceFisicalFields;
+type ServiceJuridicalFieldsT = typeof serviceJuridicalFields;
+type RepresentativeFieldsT = typeof representativeFields;
+type OfficeFieldsT = typeof officeFields;
+type FactoryFieldsT = typeof factoryFields;
+
+export type AllFieldTypes =
+  | CollaboratorFieldsT
+  | ClientFisicalFieldsT
+  | ClientJuridicalFieldsT
+  | ServiceFisicalFieldsT
+  | ServiceJuridicalFieldsT
+  | RepresentativeFieldsT
+  | OfficeFieldsT
+  | FactoryFieldsT;

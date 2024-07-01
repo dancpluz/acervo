@@ -47,6 +47,10 @@ export const columns: ColumnDef<ServiceT>[] = [
   {
     accessorKey: "pix",
     header: () => <div>PIX</div>,
+    cell: ({ row }) => {
+      const pix = row.getValue('pix');
+      return pix ? pix : '-';
+    },
     size: 200,
   },
 ]

@@ -6,6 +6,7 @@ import Chip from "@/components/Chip";
 import SortHeader from "@/components/SortHeader";
 import Image from "next/image";
 import Link from "next/link";
+import { fieldItems } from '@/lib/fields';
 import { formatPercent } from '@/lib/utils';
 
 export const columns: ColumnDef<FactoryT>[] = [
@@ -22,7 +23,7 @@ export const columns: ColumnDef<FactoryT>[] = [
       return <SortHeader column={column} header='PADRÃO' center numeric />
     },
     cell: ({ row }) => {
-      return <div className="text-center"><Chip label={row.getValue('pricing')} /></div>
+      return <div className="text-center"><Chip label={fieldItems.pricing.find(({ value }) => value === row.getValue('pricing'))?.label} /></div>
     },
     size: 100,
   },
@@ -30,7 +31,7 @@ export const columns: ColumnDef<FactoryT>[] = [
     accessorKey: "style",
     header: () => <div className="text-center">ESTILO</div>,
     cell: ({ row }) => {
-      return <div className="text-center"><Chip label={row.getValue('style')} /></div>
+      return <div className="text-center"><Chip label={fieldItems.style.find(({ value }) => value === row.getValue('style'))?.label} /></div>
     },
     size: 150,
   },
@@ -38,7 +39,7 @@ export const columns: ColumnDef<FactoryT>[] = [
     accessorKey: "ambient",
     header: () => <div className="text-center">AMBIENTE</div>,
     cell: ({ row }) => {
-      return <div className="text-center"><Chip label={row.getValue('ambient')} /></div>
+      return <div className="text-center"><Chip label={fieldItems.ambient.find(({ value }) => value === row.getValue('ambient'))?.label} /></div>
     },
     size: 100,
   },
@@ -46,6 +47,10 @@ export const columns: ColumnDef<FactoryT>[] = [
     accessorKey: "representative",
     header: ({ column }) => {
       return <SortHeader column={column} header='REPRESENTANTE'/>
+    },
+    cell: ({ row }) => {
+      const representative = row.getValue('representative');
+      return representative ? representative : '-';
     },
     size: 250,
   },

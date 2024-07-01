@@ -1,27 +1,71 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import * as Types from '@/lib/types';
-import { FieldT, TableFieldT, EnumFieldT } from '@/lib/fields';
-import { UseFormReturn } from "react-hook-form";
+import { FieldT, TableFieldT, AllFieldTypes, EnumFieldT } from '@/lib/fields';
 import { z } from "zod";
-import { Poppins } from "next/font/google";
+
+export const translationFields: { [key: string]: string } = {
+  company_name: 'Nome/Razão Social',
+  fantasy_name: 'Nome Fantasia',
+  name: 'Nome',
+  info_email: 'Email',
+  cpf: 'CPF',
+  rg: 'RG',
+  cnpj: 'CNPJ',
+}
+
+export type EntityTitleT = {
+  plural: string,
+  singular: string,
+  sufix: string
+};
+
+export const entityTitles: { [key: string]: EntityTitleT } = {
+  representative: {
+    plural: 'representações',
+    singular: 'representação',
+    sufix: 'a'
+  },
+  client: {
+    plural: 'clientes',
+    singular: 'cliente',
+    sufix: 'o'
+  },
+  service: {
+    plural: 'serviços',
+    singular: 'serviço',
+    sufix: 'o'
+  },
+  office: {
+    plural: 'escritórios',
+    singular: 'escritório',
+    sufix: 'o'
+  },
+  factory: {
+    plural: 'fábricas',
+    singular: 'fábrica',
+    sufix: 'a'
+  },
+  collaborator: {
+    plural: 'colaboradores',
+    singular: 'colaborador',
+    sufix: 'o'
+  },
+  markup: {
+    plural: 'marcações',
+    singular: 'marcação',
+    sufix: 'a'
+  },
+  freight: {
+    plural: 'fretes',
+    singular: 'frete',
+    sufix: 'o'
+  }
+}
+
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
-}
-
-export function setFormValues(form: UseFormReturn, data: any) {
-  for (const [key, value] of Object.entries(data)) {
-    // MUITO TOSCO, MUDE DPS
-    if (key === 'representative') {
-      form.setValue(key, value)
-    }
-    else if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
-      setFormValues(form, value)
-    } else if (value !== '') {
-      form.setValue(key, value)
-    }
-  }
 }
 
 export function formatPercent(float: number | '') {
@@ -34,6 +78,27 @@ export function formatPercent(float: number | '') {
   return formated;
 }
 
+export function formatRefEntity(entity: string, person: any) {
+  switch (entity) {
+    case 'representative':
+      return {
+        ref: person.ref,
+        label: person.info.fantasy_name ? person.info.company_name + ' - ' + person.info.fantasy_name : person.info.company_name,
+        info_email: person.info.info_email,
+        contact: person.contact,
+      }
+    case 'office':
+      return {
+        ref: person.ref,
+        label: person.info.fantasy_name ? person.info.company_name + ' - ' + person.info.fantasy_name : person.info.company_name,
+        info_email: person.info.info_email,
+        contact: person.contact,
+      }
+    default:
+      return {}
+  }
+}
+
 export function formatFactory(data: Types.FactoryT[]): any {
   try {
     return data.map((factory: Types.FactoryT) => {
@@ -43,7 +108,7 @@ export function formatFactory(data: Types.FactoryT[]): any {
         pricing: factory.pricing,
         style: factory.style,
         ambient: factory.ambient,
-        representative: factory.representative.label,
+        representative: factory.representative?.label,
         discount: factory.discount,
         direct_sale: factory.direct_sale,
         link_table: factory.link_table,
@@ -101,7 +166,7 @@ export function formatClient(data: Types.ClientT[]): any {
         info_email: person.info.info_email,
         phone: person.contact[0] ? person.contact[0].phone : '-',
         telephone: person.contact[0] ? person.contact[0].telephone : '-',
-        //office
+        office: client.office?.label,
       }
     })
   } catch (error) {
@@ -148,7 +213,7 @@ export function formatService(data: Types.ServiceT[]): any {
   }
 }
 
-export async function fillCepFields(inputCep: string, form: any) {
+export async function fillCepFields(inputCep: string, form: any, path: string) {
   try {
     const cep = inputCep.replace(/\D/g, '');
     if (cep.length === 8) {
@@ -159,17 +224,17 @@ export async function fillCepFields(inputCep: string, form: any) {
       const cepInfo = await res.json();
 
       if (cepInfo.erro) {
-        // form.resetField('address')
-        // form.resetField('state')
-        // form.resetField('city')
-        // form.resetField('complement')
+        form.resetField(path + 'address')
+        form.resetField(path + 'state')
+        form.resetField(path + 'city')
+        form.resetField(path + 'complement')
       } else {
         const { logradouro, complemento, bairro, localidade, uf } = cepInfo;
         
-        form.setValue('address', logradouro + ' ' + bairro, { shouldValidate: true });
-        form.setValue('state', uf, { shouldValidate: true });
-        form.setValue('city', localidade, { shouldValidate: true });
-        form.setValue('complement', complemento, { shouldValidate: true });
+        form.setValue(path + 'address', logradouro + ' ' + bairro, { shouldValidate: true });
+        form.setValue(path + 'state', uf, { shouldValidate: true });
+        form.setValue(path + 'city', localidade, { shouldValidate: true });
+        form.setValue(path + 'complement', complemento, { shouldValidate: true });
       }
     }
   } catch(error) {
@@ -177,15 +242,31 @@ export async function fillCepFields(inputCep: string, form: any) {
   }
 }
 
-type Fields = { [key: string]: EnumFieldT } | { [key: string]: FieldT } | TableFieldT[] | { [key: string]: TableFieldT }
+export function createDefaultArray(fields: TableFieldT[] | { [key: string]: FieldT | EnumFieldT }): { [key: string] : '' | [] } {
+  return Object.values(fields).map((field) => { return field.value }).reduce((acc, key) => ({ ...acc, [key]: '' }), {});
+}
 
-export const createDefaultValues = (fields: Fields) => Object.values(fields).map((field) => { return field.value }).reduce((acc, key) => ({ ...acc, [key]: '' }), {});
+// Retorna os valores vazios e as verificações de cada campo
 
-export const formatVerifications = (fields: Fields, filter?: string[]) => Object.assign({}, ...Object.values(fields).filter((e) => filter ? !filter.includes(e.value) : true).map((e) => {
-  const obj: { [key: string]: z.ZodType<any, any> } = {};
-  obj[e.value] = e.validation;
-  return obj;
-}));
+export function formatFields(fields: AllFieldTypes | { [key: string]: TableFieldT; }) : [any, z.ZodObject<any, any>]{
+  let defaultValues: { [key: string]: '' | [] } = {};
+  let validationValues: { [key: string]: z.ZodType<any, any> } = {};
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (value['value']) {
+      defaultValues[key] = '';
+      validationValues[key] = value.validation;
+    } else if (key === 'order' || Array.isArray(value)) {
+      // Se for vetor ou pedidos, tem que fazer um objeto com todos os campos
+      defaultValues[key] = [];
+      validationValues[key] = z.array(z.object(Object.values(value).reduce((acc: { [key: string]: z.ZodType<any, any> }, { value, validation }: any) => { acc[value] = validation; return acc; }, {}))).optional()
+    } else {
+      [defaultValues[key], validationValues[key]] = formatFields(value);
+    }
+  }
+
+  return [defaultValues, z.object(validationValues)];
+}
 
 export function calculateTextWidth(size: number, text: string ) {
   let font = `${size}px verdana`;
@@ -194,7 +275,7 @@ export function calculateTextWidth(size: number, text: string ) {
   let context = canvas.getContext("2d");
   if (context !== null) {
     context.font = font;
-    let width = context.measureText(text).width;
+    let width = context.measureText(text).width + 2;
     let formattedWidth = Math.ceil(width) + "px";
 
     return formattedWidth;

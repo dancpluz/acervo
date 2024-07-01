@@ -29,6 +29,7 @@ import { ChevronRight, Search } from 'lucide-react';
 import { FactoryT, RepresentativeT, OfficeT, ClientT, CollaboratorT, ServiceT } from "@/lib/types";
 import { Input } from '@/components/ui/input';
 import { Button } from "@/components/ui/button";
+import { EntityTitleT } from "@/lib/utils";
 
 
 interface DataTableProps<TData, TValue> {
@@ -37,7 +38,7 @@ interface DataTableProps<TData, TValue> {
   fullData: FactoryT[] | RepresentativeT[] | OfficeT[] | ClientT[] | CollaboratorT[] | ServiceT[]
   search: string
   children: ReactElement
-  found: {singular: string, plural: string, sufix: 'o' | 'a'}
+  found: EntityTitleT
 }
 
 export function DataTable<TData, TValue>({
