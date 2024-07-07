@@ -149,9 +149,9 @@ export type MarkupT = {
   ref?: string;
   name: string;
   observation: string;
-  "6x": number | string;
+  "x": number | string;
   "12x": number | string;
-  cash: number | string;
+  cash: number | string6;
 }
 
 export type FreightT = {

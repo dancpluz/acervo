@@ -50,6 +50,8 @@ export default function FreightForm({ data }: { data: FreightT[] }) {
     deleteSubmit,
   } = useConfigFormActions(form, 'markup_freight', 'freight');
 
+  console.log(data)
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -117,7 +119,7 @@ export default function FreightForm({ data }: { data: FreightT[] }) {
               Adicionar Frete
             </div>
             <div className='flex grow justify-end gap-2'>
-              <Button type="submit"><CircleCheck className='text-background' />SALVAR</Button>
+              <Button disabled={!form.formState.isDirty} type="submit"><CircleCheck className='text-background' />SALVAR</Button>
               <Button type="button" disabled variant='outline' onClick={()=> ''} className="border-primary"><Undo className='text-primary' />DESFAZER</Button>
             </div>
           </div>

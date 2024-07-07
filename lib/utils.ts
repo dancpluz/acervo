@@ -68,14 +68,27 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function unformatNumber(str: string) {
+  return parseFloat(str.replace('R$ ', '').replaceAll('.', '').replaceAll(',', '.'))
+}
+
+export function formatCurrency(value: number) {
+  return value.toLocaleString('pt-br', { maximumFractionDigits: 2, style: 'currency', currency: 'BRL' })
+}
+
 export function formatPercent(float: number | '') {
-  if (float === '') return "-";
-
-  const decimals: number = float.toString().split(".")[1]?.length || 0;
-  const minimumFractionDigits: number = decimals >= 3 ? 2 : 0;
-  const formated = float.toLocaleString('pt-BR', { style: 'percent', minimumFractionDigits });
-
-  return formated;
+  try {
+    if (float === '') return "-";
+    
+    const decimals: number = float.toString().split(".")[1]?.length || 0;
+    const minimumFractionDigits: number = decimals >= 3 ? 2 : 0;
+    const formated = float.toLocaleString('pt-BR', { style: 'percent', minimumFractionDigits });
+    
+    return formated;
+  } catch (error: any) {
+    console.log(error)
+    return 'NaN'
+  }
 }
 
 export function formatRefEntity(entity: string, person: any) {

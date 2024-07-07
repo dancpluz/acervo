@@ -90,6 +90,7 @@ export default function MarkupForm({ data }: { data: MarkupT[] }) {
                                 <FormControl>
                                   <div className='flex items-center gap-2 mr-6'>
                                     <Input id={`markup.${index}.${key}`} containerClassName={`${field.value === '' ? 'border-b' : ''} border-secondary`} className='px-0 focus-visible:rounded-sm border-0 focus-visible:ring-offset-4 h-4 focus-visible:bg-background' placeholder={markupFields[i + 1]?.placeholder} mask={markupFields[i + 1]?.mask} {...field} />
+                                    {i === 2 && <span className='text-tertiary'>x</span>}
                                     {i > 2 && <span className='text-tertiary'>%</span>}
                                   </div>
                                 </FormControl>

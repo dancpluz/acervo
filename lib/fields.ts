@@ -182,7 +182,7 @@ export const fields: { [key: string]: FieldT } = {
     value: 'direct_sale',
     label: 'VENDA DIRETA',
     placeholder: 'Ex. 3',
-    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O desconto deve ser maior que 0').lte(1, 'O desconto não pode ser maior que 100%.')).optional().or(z.literal('')),
+    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O desconto deve ser maior que 0').lte(100, 'Valor muito alto')).optional().or(z.literal('')),
   },
   observations: {
     value: 'observations',
@@ -371,7 +371,7 @@ export const markupFields: TableFieldT[] = [
     label: '12X',
     size: '50px',
     placeholder: 'Ex. 1,20',
-    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O desconto deve ser maior que 0').lte(1, 'O desconto não pode ser maior que 100%.')),
+    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", "."))).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O desconto deve ser maior que 0'))
   },
   {
     value: '6x',
@@ -405,7 +405,7 @@ export const freightFields: { [key: string]: TableFieldT } = {
     value: 'fee',
     label: '',
     placeholder: '',
-    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O taxa deve ser maior que 0, se quiser Grátis, apague').lte(1, 'O desconto não pode ser maior que 100%.')).or(z.literal('')),
+    validation: z.string().transform((val) => val === '' ? 0 : Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gte(0, 'O taxa deve ser maior que 0, se quiser Grátis, apague').lte(1, 'A taxa não pode ser maior que 100%.'))
   },
 };
 

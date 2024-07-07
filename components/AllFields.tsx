@@ -52,7 +52,7 @@ export function SelectField({ path, form, obj, disabled }: { path?: string, form
           <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} disabled={disabled}>
-                <SelectValue placeholder={disabled ? '' : !disabled ?? obj.placeholder} />
+                <SelectValue placeholder={disabled ? '' : disabled ?? obj.placeholder} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
@@ -94,7 +94,7 @@ export function ReferenceField({ path, form, obj, customClass, hint, setReferenc
                 >
                   {isLoading ? <LoaderCircle className='text-primary h-5 w-5 animate-spin' /> : field.value
                     ? items.find((item) => item.ref === field.value)?.label
-                    : !disabled ?? obj.placeholder
+                    : disabled ?? obj.placeholder
                   }
                   <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
                 </Button>
@@ -167,7 +167,7 @@ export function SearchField({ path, form, obj, customClass, hint, state, disable
                     ? obj.items.find(
                         ({ value }) => value === field.value
                       )?.label
-                    : !disabled ?? obj.placeholder}
+                    : disabled ?? obj.placeholder}
                   <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
                 </Button>
               </FormControl>
