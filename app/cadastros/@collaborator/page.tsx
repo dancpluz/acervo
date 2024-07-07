@@ -11,6 +11,8 @@ import {
 import FormCollaborator from "@/components/FormCollaborator";
 import { formatCollaborator, entityTitles } from "@/lib/utils";
 
+export const revalidate = 60;
+
 export default async function Collaborator() {
   const fullData = await getEntities('collaborator');
   

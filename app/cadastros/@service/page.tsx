@@ -11,6 +11,8 @@ import {
 import FormService from "@/components/FormService";
 import { formatService, entityTitles } from "@/lib/utils";
 
+export const revalidate = 60;
+
 export default async function Service() {
   const fullData = await getEntities('service');
 

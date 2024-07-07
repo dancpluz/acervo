@@ -11,6 +11,8 @@ import {
 import FormClient from "@/components/FormClient";
 import { formatClient, entityTitles } from "@/lib/utils";
 
+export const revalidate = 60;
+
 export default async function Client() {
   const fullData = await getEntities('client', 'office');
 

@@ -11,6 +11,8 @@ import {
 import FormOffice from "@/components/FormOffice";
 import { formatOffice, entityTitles } from "@/lib/utils";
 
+export const revalidate = 60;
+
 export default async function Office() {
   const fullData = await getEntities('office');
 
