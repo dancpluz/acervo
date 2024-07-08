@@ -24,7 +24,7 @@ export default function FormButton({ nextValue, backValue, submit, state, isEdit
   const error = state?.isValid ? false : undefined;
   const success = state?.isSubmitSuccessful && !isEditing;
   const loading = state?.isSubmitting;
-  //console.log(state.errors)
+
   function Icon() {
     if (loading) return <LoaderCircle className='text-background animate-spin' />
     else if (success) return <Check className='text-background' />

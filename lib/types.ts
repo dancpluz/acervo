@@ -35,6 +35,7 @@ export type ReferenceT = {
 }
 
 export type PersonT = {
+  ref?: string;
   contact: ContactT[];
   info: InfoT;
   payment: PaymentT;
@@ -116,7 +117,7 @@ export type OfficeT = {
 
 export type ClientT = {
   person: PersonT | DocumentReference;
-  office: OfficeT | DocumentReference;
+  office: ReferenceT;
   order: OrderT[];
   last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
 }
@@ -148,8 +149,9 @@ export type MarkupT = {
   ref?: string;
   name: string;
   observation: string;
-  "6x": number | string;
+  "x": number | string;
   "12x": number | string;
+  "6x": number | string;
   cash: number | string;
 }
 

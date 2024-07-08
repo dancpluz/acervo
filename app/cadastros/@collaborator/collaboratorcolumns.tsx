@@ -45,6 +45,10 @@ export const columns: ColumnDef<CollaboratorT>[] = [
   {
     accessorKey: "pix",
     header: () => <div>PIX</div>,
+    cell: ({ row }) => {
+      const pix = row.getValue('pix');
+      return pix ? pix : '-';
+    },
     size: 200,
   },
 ]

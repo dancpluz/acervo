@@ -42,6 +42,10 @@ export const columns: ColumnDef<ClientT>[] = [
     header: ({ column }) => {
       return <SortHeader column={column} header='ESCRITÓRIO' />
     },
+    cell: ({ row }) => {
+      const office = row.getValue('office');
+      return office ? office : '-';
+    },
     size: 200,
   },
 ]

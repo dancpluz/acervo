@@ -37,8 +37,22 @@ const TabDiv = React.forwardRef<
 ))
 TabDiv.displayName = "TabDiv"
 
+const BorderDiv = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col gap-4 p-4 border-secondary border rounded-lg", className)}
+    {...props}
+  />
+))
+
+BorderDiv.displayName = "BorderDiv"
+
 export {
   FormDiv,
   TabDiv,
+  BorderDiv,
   FieldDiv
 }

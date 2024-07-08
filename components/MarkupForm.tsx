@@ -8,10 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from 'react';
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
-import { deleteConfig, addConfig, updateConfig } from '@/lib/dbWrite';
 import { Form, FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { CirclePlus, CircleX, Pencil, Undo, CircleCheck } from 'lucide-react';
 import { markupFields } from "@/lib/fields";
@@ -30,21 +27,17 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { formatVerifications, createDefaultValues } from "@/lib/utils";
+import { createDefaultArray } from "@/lib/utils";
 import { MarkupT } from "@/lib/types";
-import { useRouter } from 'next/navigation';
+import { useConfigFormActions } from "@/lib/hooks";
 
-const markupDefaultValues = createDefaultValues(markupFields);
-const markupVerification = formatVerifications(markupFields);
-
-const markupSchema = z.object({ markup: z.array(z.object(markupVerification)) });
+const fieldValidations = z.object({ markup: z.array(z.object(Object.values(markupFields).reduce((acc, field) => ({ ...acc, [field.value]: field.validation }), {}))) })
+const defaultArrayValues = createDefaultArray(markupFields);
 
 export default function MarkupForm({ data }: { data: MarkupT[] }) {
-  const [initialValues, setInitialValues] = useState<MarkupT[] | null>(null);
-  const router = useRouter();
-
-  const form = useForm<z.infer<typeof markupSchema>>({
-    resolver: zodResolver(markupSchema),
+  const form = useForm<any>({
+    resolver: zodResolver(fieldValidations),
+    defaultValues: { markup: data },
   })
 
   const fieldArray = useFieldArray({
@@ -55,56 +48,15 @@ export default function MarkupForm({ data }: { data: MarkupT[] }) {
   const appendItem = async () => {
     await form.trigger('markup')
     if (!form.formState.errors.markup) {
-      fieldArray.append(markupDefaultValues)
-    }
-  }
-  
-  async function onSubmit(values: z.infer<typeof markupSchema>) {
-    //console.log(values)
-    values.markup.forEach((e) => {
-      if (e.ref) {
-        updateConfig(e, 'markup');
-      } else {
-        addConfig(e, 'markup');
-      }
-    })
-    toast({
-      title: "Salvo com sucesso!",
-    })
-
-    setInitialValues(null);
-    router.refresh()
-  }
-
-  async function onRemove(index: number, ref: string) {
-    //refs = initialValues.map((e) => e.ref)
-    try {
-      if (initialValues && initialValues.find((e) => e.ref === ref)) {
-        await deleteConfig(ref, 'markup');
-      }
-      fieldArray.remove(index);
-
-      toast({
-        title: "Marcação apagada com sucesso!",
-      })
-
-      router.refresh();
-    } catch (error) {
-      console.log(error)
-      toast({
-        variant: 'destructive',
-        title: "Ocorreu um erro inesperado",
-      })
+      fieldArray.append(defaultArrayValues)
     }
   }
 
-  useEffect(() => {
-    if (data) {
-      initialValues ?? setInitialValues(data)
-      form.setValue('markup', data)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialValues, data])
+  const {
+    onSubmit,
+    undoSubmit,
+    deleteSubmit,
+  } = useConfigFormActions(form, 'markup_freight', 'markup');
   
   const order = ["name", "observation", "12x", "6x", "cash"];
 
@@ -124,7 +76,7 @@ export default function MarkupForm({ data }: { data: MarkupT[] }) {
               </TableRow>
             </TableHeader>
             <TableBody className="overflow-y-auto">
-              {fieldArray.fields.length > 0 ? fieldArray.fields.map((row, index) => {
+              {fieldArray.fields.length > 0 ? fieldArray.fields.map((row: any, index) => {
                 return (
                   <TableRow className='odd:bg-background even:bg-secondary/20' key={row.id}>
                     {Object.keys(row).sort((a, b) => { return order.indexOf(a) - order.indexOf(b) }).slice(2).map((key, i) => {
@@ -138,6 +90,7 @@ export default function MarkupForm({ data }: { data: MarkupT[] }) {
                                 <FormControl>
                                   <div className='flex items-center gap-2 mr-6'>
                                     <Input id={`markup.${index}.${key}`} containerClassName={`${field.value === '' ? 'border-b' : ''} border-secondary`} className='px-0 focus-visible:rounded-sm border-0 focus-visible:ring-offset-4 h-4 focus-visible:bg-background' placeholder={markupFields[i + 1]?.placeholder} mask={markupFields[i + 1]?.mask} {...field} />
+                                    {i === 2 && <span className='text-tertiary'>x</span>}
                                     {i > 2 && <span className='text-tertiary'>%</span>}
                                   </div>
                                 </FormControl>
@@ -163,7 +116,7 @@ export default function MarkupForm({ data }: { data: MarkupT[] }) {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>CANCELAR</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => onRemove(index, row.ref)}>APAGAR</AlertDialogAction>
+                            <AlertDialogAction onClick={() => {deleteSubmit(row.ref); fieldArray.remove(index)}}>APAGAR</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -185,8 +138,8 @@ export default function MarkupForm({ data }: { data: MarkupT[] }) {
             Adicionar Marcação
           </div>
           <div className='flex grow justify-end gap-2'>
-            <Button type="submit"><CircleCheck className='text-background' />SALVAR</Button>
-            <Button type="button" variant='outline' onClick={initialValues ? () => form.setValue('markup', initialValues) : undefined} className="border-primary"><Undo className='text-primary'/>DESFAZER</Button>
+            <Button disabled={!form.formState.isDirty} type="submit"><CircleCheck className='text-background' />SALVAR</Button>
+            <Button disabled type="button" variant='outline' onClick={() =>  ''} className="border-primary"><Undo className='text-primary'/>DESFAZER</Button>
           </div>
         </div>
       </form>

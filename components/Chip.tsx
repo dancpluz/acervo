@@ -1,5 +1,5 @@
-export default function Chip({ label }: { label: string | number }) {
-  if (label === '') {
+export default function Chip({ label }: { label?: string | number }) {
+  if (!label) {
     return '-'
   }
 

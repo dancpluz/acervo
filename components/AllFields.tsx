@@ -1,4 +1,7 @@
 'use client';
+
+import cidades from '@/lib/cidades.json';
+import { useEffect, useState, ChangeEvent } from 'react';
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,17 +33,18 @@ import {
   CommandItem
 } from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
-import { ChangeEvent } from "react";
-import { ReferenceT } from "@/lib/types"
+import { ReferenceT } from "@/lib/types";
+import { getEntitiesOptions } from "@/lib/dbRead";
 
-export function SelectField({ form, obj, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, disabled?: boolean }) {
+export function SelectField({ path, form, obj, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: EnumFieldT, disabled?: boolean }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
       control={form.control}
-      name={obj.value}
+      name={fieldPath}
       render={({ field }) => (
         <FormItem>
           <FormMessage />
@@ -48,11 +52,11 @@ export function SelectField({ form, obj, disabled }: { form: ReturnType<typeof u
           <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} disabled={disabled}>
-                <SelectValue placeholder={disabled ? '' : obj.placeholder} />
+                <SelectValue placeholder={disabled ? '' : disabled ?? obj.placeholder} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {(obj.items as string[]).map((item: string) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+              {(obj.items).map(({ value, label }) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
             </SelectContent>
           </Select>
         </FormItem>
@@ -60,12 +64,19 @@ export function SelectField({ form, obj, disabled }: { form: ReturnType<typeof u
   );
 }
 
-export function ReferenceField({ form, obj, references, customClass, hint, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, references: ReferenceT[], customClass?: string, hint: string, disabled?: boolean }) {
-  let items = references.map((item) => item.label);
+export function ReferenceField({ path, form, obj, customClass, hint, setReferenceInfo, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, setReferenceInfo: React.Dispatch<React.SetStateAction<ReferenceT | undefined>>, disabled?: boolean }) {
+  const [items, setItems] = useState<ReferenceT[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    getEntitiesOptions(obj.value).then((data) => { setItems(data), setIsLoading(false) });
+  }, [obj.value])
+
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
       control={form.control}
-      name={obj.value}
+      name={fieldPath}
       render={({ field }) => (
         <FormItem className={customClass}>
           <FormMessage />
@@ -81,9 +92,10 @@ export function ReferenceField({ form, obj, references, customClass, hint, disab
                     !field.value && "text-tertiary"
                   )}
                 >
-                  {field.value
-                    ? items.find((item: string) => item === field.value.label)
-                    : disabled ? undefined : obj.placeholder}
+                  {isLoading ? <LoaderCircle className='text-primary h-5 w-5 animate-spin' /> : field.value
+                    ? items.find((item) => item.ref === field.value)?.label
+                    : disabled ?? obj.placeholder
+                  }
                   <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
                 </Button>
               </FormControl>
@@ -91,30 +103,30 @@ export function ReferenceField({ form, obj, references, customClass, hint, disab
             <PopoverContent className="p-0">
               <Command>
                 <CommandInput placeholder={hint} />
-                <CommandEmpty>{'Não encontrado'}</CommandEmpty>
+                <CommandEmpty>{isLoading ? 'Carregando...' : 'Não encontrado'}</CommandEmpty>
                 <CommandGroup>
                   <CommandList>
-                    {items ?
-                      items.map((item: string, n) => (
+                    {items.map((item) => 
                         <CommandItem
-                          value={item}
-                          key={item}
-                          onSelect={() => {
-                            form.setValue(obj.value, references[n]);
+                          value={item.label}
+                          key={item.ref}
+                          onSelect={item.ref === field.value ? () => {
+                            form.setValue(fieldPath, ''); setReferenceInfo(undefined);
+                          } : () => {
+                            form.setValue(fieldPath, item.ref); setReferenceInfo(item);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              item === field.value.label
+                              item.ref === field.value
                                 ? "opacity-100"
                                 : "opacity-0"
                             )} />
-                          {item}
+                          {item.label}
                         </CommandItem>
                       )
-                      )
-                       : ''}
+                    }
                   </CommandList>
                 </CommandGroup>
               </Command>
@@ -125,25 +137,17 @@ export function ReferenceField({ form, obj, references, customClass, hint, disab
   );
 }
 
-export function SearchField({ form, obj, customClass, hint, unlock, disabled }: { form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, unlock?: string, disabled?: boolean }) {
-  let items: (string[] | { [key: string]: string[]; }) = [];
-  if (unlock === undefined) {
-    // Search with items defined, no Unlock
-    items = obj.items as string[];
-  } else {
-    // If there is an unlock, check if the values are there
-    if (obj.items) {
-      // If there is unlock set the icons as Objects
-      if (unlock !== '') {
-        items = (obj.items as { [key: string]: string[]; })[unlock];
-      }
-    }
+export function SearchField({ path, form, obj, customClass, hint, state, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: EnumFieldT, customClass?: string, hint: string, state?: string, disabled?: boolean }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
+  
+  if (state && state !== 'reset') {
+    obj.items = (cidades as { [key: string] : string[] })[state].map((e: string) => ({ label: e, value: e }));
   }
 
   return (
     <FormField
       control={form.control}
-      name={obj.value}
+      name={fieldPath}
       render={({ field }) => (
         <FormItem className={customClass}>
           <FormMessage />
@@ -160,8 +164,10 @@ export function SearchField({ form, obj, customClass, hint, unlock, disabled }: 
                   )}
                 >
                   {field.value
-                    ? items.find((item: string) => item === field.value) 
-                    : disabled ? undefined : obj.placeholder}
+                    ? obj.items.find(
+                        ({ value }) => value === field.value
+                      )?.label
+                    : disabled ?? obj.placeholder}
                   <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
                 </Button>
               </FormControl>
@@ -169,28 +175,29 @@ export function SearchField({ form, obj, customClass, hint, unlock, disabled }: 
             <PopoverContent className="p-0">
               <Command>
                 <CommandInput placeholder={hint} />
-                <CommandEmpty>{items.length === 0 && unlock !== undefined ? 'Selecione o campo anterior' : 'Não encontrado'}</CommandEmpty>
+                <CommandEmpty>{obj.items.length === 0 && state !== undefined ? 'Selecione o campo anterior' : 'Não encontrado'}</CommandEmpty>
                 <CommandGroup>
                   <CommandList>
-                    {items ? items.map((item: string) => (
+                    {obj.items.map(({ value, label }) => (
                       <CommandItem
-                        value={item}
-                        key={item}
+                        value={value}
+                        key={value}
                         onSelect={() => {
-                          form.setValue(obj.value, item);
+                          form.setValue(fieldPath, value);
+                          state === 'reset' && form.resetField(path ? path + '.' + 'city' : 'city');
                         }}
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            item === field.value
+                            value === field.value
                               ? "opacity-100"
                               : "opacity-0"
                           )} />
-                        {item}
+                        {label}
                       </CommandItem>
                       )
-                    ) : ''}
+                    )}
                   </CommandList>
                 </CommandGroup>
               </Command>
@@ -210,18 +217,19 @@ export function ShowField({ text, placeholder, label }: {  text?: string, placeh
   )
 }
 
-export function InputField({ form, obj, autofill, customClass, percent, long, disabled, update }: { form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any }) {
+export function InputField({ path, form, obj, autofill, customClass, percent, long, disabled, update }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
       control={form.control}
-      name={obj.value}
+      name={fieldPath}
       render={({ field }) => (
         <FormItem className={customClass}>
           <FormMessage />
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <div className='flex items-center gap-1'>
-              <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(obj.value).isDirty, clear: () => form.resetField(obj.value, { keepError: false, defaultValue: '' }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {field.onChange(e); autofill ? autofill(e.target.value, form) : ''; update ? update(obj.value, e.target.value) : ''}} disabled={disabled} />
+              <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(fieldPath).isDirty, clear: () => form.resetField(fieldPath, { keepError: false, defaultValue: '' }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {field.onChange(e); autofill ? autofill(e.target.value, form, path + '.') : ''; update ? update(fieldPath, e.target.value) : ''}} disabled={disabled} />
               {percent ? <span className='text-tertiary'>%</span> : ''}
             </div>
           </FormControl>
@@ -230,58 +238,36 @@ export function InputField({ form, obj, autofill, customClass, percent, long, di
   )
 }
 
-export function RadioField({ form, obj, bool, optional, disabled, defaultValue, setPersonType }: { form: ReturnType<typeof useForm>, obj: EnumFieldT, bool?: boolean, optional?: boolean, disabled?: boolean, defaultValue?: string, setPersonType?: React.Dispatch<React.SetStateAction<string>> }) {
+export function RadioField({ path, form, obj, optional, disabled, defaultValue }: { path?: string, form: ReturnType<typeof useForm>, obj: EnumFieldT, optional?: boolean, disabled?: boolean, defaultValue?: string }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
       control={form.control}
-      name={obj.value}
+      name={fieldPath}
       render={({ field }) => (
-        <FormItem className={bool ? 'max-w-56' : ''}>
+        <FormItem>
           <FormMessage />
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <RadioGroup
-              className={bool ? 'p-0 border-0 grow gap-1' : ''}
               onValueChange={field.onChange}
               defaultValue={defaultValue}
             >
-              {bool && obj.items ?
-                <>
-                  <FormItem key={obj.items[0]} className={`flex-initial p-0 border-0 grow`}>
-                    <FormControl>
-                      <RadioGroupItem
-                        disabled={disabled}
-                        className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 grow`}
-                        value={obj.items[0]}
-                        onClick={setPersonType ? () => setPersonType(obj.items[0]) : undefined}
-                      />
-                    </FormControl>
-                  </FormItem>
-                  <FormItem key={obj.items[1]} className={`flex-initial p-0 border-0 grow`}>
-                  <FormControl>
-                    <RadioGroupItem
-                      disabled={disabled}
-                      className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 grow`}
-                      value={obj.items[1]}
-                      onClick={setPersonType ? () => setPersonType(obj.items[1]) : undefined}
-                    />
-                  </FormControl>
-                </FormItem>
-                </>
-              : (obj.items).map((item) => {
+              {(obj.items).map(({ value, label }) => {
                 return (
-                  <FormItem key={item} className={'flex-initial'}>
+                  <FormItem key={value} className={'flex-initial'}>
                     <FormControl>
                       <RadioGroupItem
                         disabled={disabled}
                         className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100`}
-                        value={item}
+                        value={value}
+                        label={label}
                         clear={optional ? ((e: ChangeEvent<HTMLInputElement>) => {
                           if (e.target.dataset.state === 'checked') {
-                            form.resetField(obj.value, { keepError: false });
+                            form.resetField(fieldPath, { keepError: false });
                             e.target.setAttribute('data-state', 'unchecked');
                           } else {
-                            form.setValue(obj.value, item);
+                            form.setValue(fieldPath, value);
                             e.target.setAttribute('data-state', 'checked');
                           }
                         }): undefined}

@@ -2,23 +2,24 @@ import { Button } from "@/components/ui/button"
 import { columns } from "./factorycolumns";
 import { DataTable } from "@/components/DataTable"
 import { CirclePlus } from "lucide-react";
-import { getFactory, getRepresentativeItems } from "@/lib/dbRead";
+import { getEntities } from "@/lib/dbRead";
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import FormFactory from "@/components/FormFactory";
-import { formatFactory } from "@/lib/utils";
+import { formatFactory, entityTitles } from "@/lib/utils";
+
+export const revalidate = 60;
 
 export default async function Factory() {
-  const fullData = Object.values(await getFactory());
-  const representatives = await getRepresentativeItems();
+  const fullData = await getEntities('factory', 'representative');
 
   return (
     <div className="flex flex-col gap-4 py-4">
-      <DataTable search={'company_name'} columns={columns} data={fullData ? formatFactory(fullData) : []} fullData={fullData ? fullData : []} found={{plural: 'fábricas', singular: 'fábrica', sufix: 'a'}}>
-        <FormFactory representatives={representatives} show />
+      <DataTable search={'company_name'} columns={columns} data={fullData ? formatFactory(fullData) : []} fullData={fullData ? fullData : []} found={entityTitles.factory}>
+        <FormFactory show />
       </DataTable>
       <div className="flex justify-between">
         <Dialog>
@@ -28,7 +29,7 @@ export default async function Factory() {
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <FormFactory representatives={representatives} />
+            <FormFactory />
           </DialogContent>
         </Dialog>
       </div>

@@ -1,10 +1,7 @@
-'use client'
-
 import Header from "@/components/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function Layout({ general, markup } : { general: React.ReactNode, markup: React.ReactNode }) {
-  
   return (
     <div className="flex flex-col gap-4 px-20 py-10 h-full">
       <Header page='Configurações' />

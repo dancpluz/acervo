@@ -1,18 +1,20 @@
 import MarkupForm from "@/components/MarkupForm";
 import FreightForm from "@/components/FreightForm";
-import { getMarkup, getFreight } from '@/lib/dbRead';
+import { getConfig } from '@/lib/dbRead';
 import { formatPercent } from '@/lib/utils'
 import { FreightT, MarkupT } from "@/lib/types";
 
-export default async function Markup() {
-  const [markup,freight]: [MarkupT[], FreightT[]] = await Promise.all([getMarkup(), getFreight()])
+export const revalidate = 30;
 
-  const markupData = markup.map((e: MarkupT) => {
-    return { ...e, '6x': formatPercent(e['6x'] as number).replace('%', ''), '12x': formatPercent(e['12x'] as number).replace('%', ''), cash: formatPercent(e['cash'] as number).replace('%','')}
+export default async function Markup() {
+  const [markups,freights]: [MarkupT[], FreightT[]] = await Promise.all([getConfig('markup_freight', 'markup'), getConfig('markup_freight', 'freight')])
+
+  const markupData = markups.map((e: MarkupT) => {
+    return { ...e, '12x': e['12x'].toString().replace('.', ','), '6x': formatPercent(e['6x'] as number).replace('%', ''), cash: formatPercent(e['cash'] as number).replace('%','')}
   })
 
-  const freightData = freight.map((e: FreightT) => {
-    return { region: e.region, fee: e.fee === 0 ? '' : formatPercent(e.fee as number).replace('%', '') }
+  const freightData = freights.map((e: FreightT) => {
+    return { ...e, region: e.region, fee: e.fee === 0 ? '' : formatPercent(e.fee as number).replace('%', '') }
   })
 
   return (
