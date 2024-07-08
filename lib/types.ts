@@ -151,7 +151,8 @@ export type MarkupT = {
   observation: string;
   "x": number | string;
   "12x": number | string;
-  cash: number | string6;
+  "6x": number | string;
+  cash: number | string;
 }
 
 export type FreightT = {

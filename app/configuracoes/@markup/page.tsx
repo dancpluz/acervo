@@ -17,9 +17,6 @@ export default async function Markup() {
     return { ...e, region: e.region, fee: e.fee === 0 ? '' : formatPercent(e.fee as number).replace('%', '') }
   })
 
-  console.log(freightData)
-  console.log(freights)
-
   return (
     <div className="flex pt-4 flex-col flex-1 gap-6">
       <div className="flex flex-col gap-2 py-4 px-6 border border-secondary rounded-lg">

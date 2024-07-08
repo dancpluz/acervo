@@ -7,7 +7,6 @@ import { FreightT, MarkupT } from "@/lib/types";
 export const revalidate = 30;
 
 export default async function Orcamento() {
-  const fullData = await getEntities('factory', 'representative');
   const [factories, markups, freights]: [any, MarkupT[], FreightT[]] = await Promise.all([getEntities('factory'), getConfig('markup_freight', 'markup'), getConfig('markup_freight', 'freight')])
 
   return (
