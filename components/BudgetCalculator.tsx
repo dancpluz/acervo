@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { BorderDiv } from "@/components/ui/div";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
 import { formatPercent, unformatNumber, formatCurrency } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
-import { FreightT, MarkupT } from "@/lib/types";
+import { FreightT, MarkupT, ProspectionT } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -28,16 +28,17 @@ import {
   CommandItem
 } from "@/components/ui/command";
 import { Button } from './ui/button';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import createNumberMask from 'text-mask-addons/dist/createNumberMask'
-import { Copy } from 'lucide-react';
+import { Check, ChevronsUpDown, Copy } from 'lucide-react';
+import createNumberMask from 'text-mask-addons/dist/createNumberMask';
+import SelectableChips from '@/components/SelectableChips';
 
-export default function BudgetCalculator({ factories, markups, freights }: { factories: any[], markups: MarkupT[], freights: FreightT[] }) {
+export default function BudgetCalculator({ factories, markups, freights, prospections }: { factories: any[], markups: MarkupT[], freights: FreightT[], prospections: ProspectionT[] }) {
   const [cost, setCost] = useState('');
   const [useDirectSale, setUseDirectSale] = useState<boolean>(false);
   const [selectedFactory, setSelectedFactory] = useState<{refs: { factory: string }, person: {info: {company_name: string, fantasy_name: string}}, direct_sale: number | '', discount: number | ''} | undefined>(undefined);
   const [selectedMarkup, setSelectedMarkup] = useState<MarkupT | undefined>(undefined);
   const [selectedFreight, setSelectedFreight] = useState<FreightT | undefined>(undefined);
+  const [selectedProspection, setSelectedProspection] = useState<ProspectionT | undefined>(undefined);
   
   // useEffect(() => {
   //   console.log(selectedFreight)
@@ -59,11 +60,12 @@ export default function BudgetCalculator({ factories, markups, freights }: { fac
   const direct_sale = useDirectSale && selectedFactory?.direct_sale ? selectedFactory.direct_sale : 0;
   const discount = selectedFactory?.discount ? selectedFactory.discount : 0;
   const freight = selectedFreight?.fee ? selectedFreight.fee as number : 0;
+  const prospection = selectedProspection?.tax ? selectedProspection.tax as number : 0;
   const costBase = cost && selectedMarkup ? (unformatNumber(cost) - multiplyCost(discount) + multiplyCost(direct_sale)) * Number(selectedMarkup['12x']) : 0
   const result = selectedMarkup ? {
-    '12x': costBase * (1 + freight),
-    '6x': (costBase * (1 + freight)) * (1 - Number(selectedMarkup['6x'])),
-    'cash': (costBase * (1 + freight)) * (1 - Number(selectedMarkup['cash']))
+    '12x': costBase * (1 + freight + prospection),
+    '6x': (costBase * (1 + freight + prospection)) * (1 - Number(selectedMarkup['6x'])),
+    'cash': (costBase * (1 + freight + prospection)) * (1 - Number(selectedMarkup['cash']))
   } : undefined
 
   return (
@@ -153,12 +155,12 @@ export default function BudgetCalculator({ factories, markups, freights }: { fac
             <div className='flex flex-col grow items-center border-r border-l border-secondary'>
               <h3 className='text-base'>6x</h3>
               <p className='text-sm text-tertiary'>{selectedMarkup ? formatPercent(selectedMarkup['6x'] as number) : '-'}</p>
-              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * (selectedMarkup['6x'] as number + freight)) : ''}</p>
+              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * (selectedMarkup['6x'] as number + freight + prospection)) : ''}</p>
             </div>
             <div className='flex flex-col grow items-center'>
               <h3 className='text-base'>à vista</h3>
               <p className='text-sm text-tertiary'>{selectedMarkup ? formatPercent(selectedMarkup['cash'] as number) : '-'}</p>
-              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * (selectedMarkup['cash'] as number + freight)) : ''}</p>
+              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * (selectedMarkup['cash'] as number + freight + prospection)) : ''}</p>
             </div>
           </div>
         </BorderDiv>
@@ -167,16 +169,14 @@ export default function BudgetCalculator({ factories, markups, freights }: { fac
             <h2 className='text-2xl'>Frete</h2>
             <p className='text-base text-tertiary'>{selectedFreight && costBase ? `(+${formatCurrency(costBase * freight)})` : ''}</p>
           </div>
-          <div className='flex w-full flex-wrap gap-2'>
-            {freights.map((fre) => 
-              <div key={fre.region} onClick={() => setSelectedFreight(fre)} className={`flex border transition-colors rounded-lg cursor-pointer h-10 border-secondary gap-1 items-center px-2 ${fre === selectedFreight ? 'bg-primary border-primary text-background [&>div]:text-foreground [&>div]:bg-background' : 'hover:bg-secondary/20'}`}>
-                {fre.region}
-                <div className='bg-secondary transition-colors rounded-sm px-1 text-sm'>
-                  {fre.fee === 0 ? 'Grátis' : formatPercent(fre.fee as number)}
-                </div>
-              </div>
-            )}
+          <SelectableChips chips={freights} chipText='region' chipNumber='fee' placeholder='Sem fretes cadastrados...' selectedChip={selectedFreight} setFunction={setSelectedFreight} />
+        </BorderDiv>
+        <BorderDiv>
+          <div className='flex justify-between items-center'>
+            <h2 className='text-2xl'>Prospecção</h2>
+            <p className='text-base text-tertiary'>{selectedProspection && costBase ? `(+${formatCurrency(costBase * prospection)})` : ''}</p>
           </div>
+          <SelectableChips chips={prospections} chipText='title' chipNumber='tax' placeholder='Sem prospecções cadastradas...' selectedChip={selectedProspection} setFunction={setSelectedProspection} />
         </BorderDiv>
       </div>
       <div className='flex flex-col gap-4 w-full'>

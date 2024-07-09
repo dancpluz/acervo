@@ -409,6 +409,25 @@ export const freightFields: { [key: string]: TableFieldT } = {
   },
 };
 
+export const prospectionFields: { [key: string]: TableFieldT } = {
+  ref: {
+    value: 'ref',
+    label: '',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  title: {
+    value: 'title',
+    label: '',
+    placeholder: '',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  tax: {
+    value: 'tax',
+    label: '',
+    placeholder: '',
+    validation: z.string().transform((val) => val === '' ? 0 : Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gte(0, 'O taxa deve ser maior que 0, se quiser Grátis, apague').lte(1, 'A taxa não pode ser maior que 100%.'))
+  },
+};
 
 export const orderFields: { [key: string]: FieldT | EnumFieldT } = {
   id_order: {

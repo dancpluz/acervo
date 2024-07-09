@@ -60,9 +60,13 @@ export const entityTitles: { [key: string]: EntityTitleT } = {
     plural: 'fretes',
     singular: 'frete',
     sufix: 'o'
+  },
+  prospection: {
+    plural: 'prospecções',
+    singular: 'prospecção',
+    sufix: 'o' 
   }
 }
-
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
