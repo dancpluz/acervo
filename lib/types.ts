@@ -160,3 +160,9 @@ export type FreightT = {
   region: string;
   fee: number | string;
 }
+
+export type ProspectionT = {
+  ref?: string;
+  title: string;
+  tax: number | string;
+}
