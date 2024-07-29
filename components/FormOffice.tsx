@@ -17,7 +17,7 @@ import { useFormActions } from "@/lib/hooks";
 const [defaultValues, fieldValidations] = formatFields(officeFields);
 
 export default function FormOffice({ data, show }: { data?: any, show?: boolean }) {
-  const tabs = ['ESCRITÓRIO', 'EQUIPE','CONTATO E ENDEREÇO'];
+  const tabs = ['ESCRITÓRIO', 'CONTATO','ENDEREÇO'];
 
   const form = useForm<z.infer<typeof fieldValidations>>({
     resolver: zodResolver(fieldValidations),
@@ -25,14 +25,9 @@ export default function FormOffice({ data, show }: { data?: any, show?: boolean 
     shouldFocusError: false,
   })
 
-  const contactForm = useFieldArray({
-    control: form.control,
-    name: 'person.contact',
-  });
-
   const teamForm = useFieldArray({
     control: form.control,
-    name: 'team',
+    name: 'person.contact',
   });
 
   const checkPaths = [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
@@ -84,7 +79,6 @@ export default function FormOffice({ data, show }: { data?: any, show?: boolean 
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
-                  <InputField path='person' obj={fields.observations} form={form} long disabled={show && !isEditing} />
                   <FieldDiv>
                     <SearchField path='person.payment' obj={enumFields.bank} form={form} hint={'Ex. Bradesco'} customClass={'overflow-hidden text-ellipsis'} disabled={show && !isEditing} />
                     <InputField path='person.payment' obj={fields.pix} form={form} disabled={show && !isEditing} />
@@ -101,7 +95,7 @@ export default function FormOffice({ data, show }: { data?: any, show?: boolean 
           <TabsContent value={tabs[1]}>
             <TabDiv>
               {show && !isEditing ? <TinyTable title='' columns={teamFields} rows={teamForm.fields} placeholder={'Sem funcionários'} order={["name", "telephone", "phone", "email", "role", "detail"]} />
-                : <EditTinyTable title='' columns={teamFields} rows={teamForm.fields} append={() => contactForm.append(createDefaultArray(teamFields))} remove={teamForm.remove} prefix='team' form={form} order={["name", "telephone", "phone", "email", "role", "detail"]} />}
+                : <EditTinyTable title='' columns={teamFields} rows={teamForm.fields} append={() => teamForm.append(createDefaultArray(teamFields))} remove={teamForm.remove} prefix='person.contact' form={form} order={["name", "telephone", "phone", "email", "role", "detail"]} />}
               <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} />
             </TabDiv>
           </TabsContent>
@@ -121,8 +115,7 @@ export default function FormOffice({ data, show }: { data?: any, show?: boolean 
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
-                  {show && !isEditing ? <TinyTable title='' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
-                    : <EditTinyTable title='' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(createDefaultArray(contactFields))} remove={contactForm.remove} prefix='person.contact' form={form} order={["name", "detail", "phone", "telephone"]} /> }
+                  <InputField path='person' obj={fields.observations} form={form} long disabled={show && !isEditing} />
                   <FormButton backValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} submit={!show} />
                 </FormDiv>
               </div>

@@ -14,7 +14,8 @@ import { formatFactory, entityTitles } from "@/lib/utils";
 export const revalidate = 60;
 
 export default async function Factory() {
-  const fullData = await getEntities('factory', 'representative');
+  let fullData = await getEntities('factory', 'representative');
+  fullData = fullData.map((data) => ({...data, direct_sale: data.direct_sale * 100, discount: data.discount * 100})) 
 
   return (
     <div className="flex flex-col gap-4 py-4">

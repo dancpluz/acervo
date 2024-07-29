@@ -17,7 +17,7 @@ import { useFormActions } from "@/lib/hooks";
 const [defaultValues, fieldValidations] = formatFields(representativeFields);
 
 export default function FormRepresentative({ data, show }: { data?: any, show?: boolean }) {
-  const tabs = ['REPRESENTAÇÃO', 'EQUIPE','ENDEREÇO E CONTATO'];
+  const tabs = ['REPRESENTAÇÃO', 'CONTATO'];
 
   const form = useForm<z.infer<typeof fieldValidations>>({
     resolver: zodResolver(fieldValidations),
@@ -25,14 +25,9 @@ export default function FormRepresentative({ data, show }: { data?: any, show?: 
     shouldFocusError: false,
   })
 
-  const contactForm = useFieldArray({
-    control: form.control,
-    name: 'person.contact',
-  });
-
   const teamForm = useFieldArray({
     control: form.control,
-    name: 'team',
+    name: 'person.contact',
   });
 
   const checkPaths = [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
@@ -84,23 +79,6 @@ export default function FormRepresentative({ data, show }: { data?: any, show?: 
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
-                  <InputField path='person' obj={fields.observations} form={form} long disabled={show && !isEditing} />
-                  <FormButton nextValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} />
-                </FormDiv>
-              </div>
-            </TabDiv>
-          </TabsContent>
-          <TabsContent value={tabs[1]}>
-            <TabDiv>
-              {show && !isEditing ? <TinyTable title='' columns={teamFields} rows={teamForm.fields} placeholder={'Sem funcionários'} order={["name", "telephone", "phone", "email", "role", "detail"]} />
-                : <EditTinyTable title='' columns={teamFields} rows={teamForm.fields} append={() => contactForm.append(createDefaultArray(teamFields))} remove={teamForm.remove} prefix='team' form={form} order={["name", "telephone", "phone", "email", "role", "detail"]} />}
-              <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} />
-            </TabDiv>
-          </TabsContent>
-          <TabsContent value={tabs[2]}>
-            <TabDiv>
-              <div className='flex gap-8'>
-                <FormDiv>
                   <FieldDiv>
                     <InputField path='person.info.tax_address' obj={fields.cep} autofill={fillCepFields} form={form} customClass={'grow-0 min-w-36'} disabled={show && !isEditing} />
                     <InputField path='person.info.tax_address' obj={fields.address} form={form} customClass={'grow'} disabled={show && !isEditing} />
@@ -111,13 +89,17 @@ export default function FormRepresentative({ data, show }: { data?: any, show?: 
                     <SearchField path='person.info.tax_address' obj={enumFields.city} form={form} hint={'Ex. Brasília'} state={form.watch('person.info.tax_address.state')} customClass={'grow-0 min-w-44'} disabled={show && !isEditing} />
                     <InputField path='person.info.tax_address' obj={fields.complement} form={form} customClass={'grow'} disabled={show && !isEditing} />
                   </FieldDiv>
-                </FormDiv>
-                <FormDiv>
-                  {show && !isEditing ? <TinyTable title='' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
-                    : <EditTinyTable title='' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(createDefaultArray(contactFields))} remove={contactForm.remove} prefix='person.contact' form={form} order={["name", "detail", "phone", "telephone"]} /> }
-                  <FormButton backValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} submit={!show} />
+
+                  <FormButton nextValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} />
                 </FormDiv>
               </div>
+            </TabDiv>
+          </TabsContent>
+          <TabsContent value={tabs[1]}>
+            <TabDiv>
+              {show && !isEditing ? <TinyTable title='' columns={teamFields} rows={teamForm.fields} placeholder={'Sem funcionários'} order={["name", "telephone", "phone", "email", "role", "detail"]} />
+                : <EditTinyTable title='' columns={teamFields} rows={teamForm.fields} append={() => teamForm.append(createDefaultArray(teamFields))} remove={teamForm.remove} prefix='person.contact' form={form} order={["name", "telephone", "phone", "email", "role", "detail"]} />}
+              <FormButton backValue={tabs[0]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} submit={!show} />
             </TabDiv>
           </TabsContent>
         </form>

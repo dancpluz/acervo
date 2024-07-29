@@ -50,8 +50,6 @@ export default function FreightForm({ data }: { data: FreightT[] }) {
     deleteSubmit,
   } = useConfigFormActions(form, 'markup_freight', 'freight');
 
-  console.log(data)
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -66,7 +64,7 @@ export default function FreightForm({ data }: { data: FreightT[] }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input id={`freight.${index}.${freightFields.region.value}`} style={{ width: calculateTextWidth(16, field.value) }} className='p-0 border-none h-10 text-base min-w-5 focus-visible:ring-transparent focus-visible:ring-offset-0' mask={freightFields.region.mask} {...field} />
+                          <Input placeholder='Região' id={`freight.${index}.${freightFields.region.value}`} style={{ width: calculateTextWidth(16, field.value ? field.value : 'Regiao') }} className='p-0 border-none h-10 text-base min-w-5 focus-visible:ring-transparent focus-visible:ring-offset-0' mask={freightFields.region.mask} {...field} />
                         </FormControl>
                         <FormMessage className='top-0.5' />
                       </FormItem>
