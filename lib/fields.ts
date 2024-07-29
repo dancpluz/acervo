@@ -8,6 +8,7 @@ export type FieldT = {
   label: string;
   placeholder: string;
   validation: z.ZodType<any, any>;
+  optional?: z.ZodType<any, any>;
   mask?: (string | RegExp)[];
 };
 
@@ -15,6 +16,7 @@ export type EnumFieldT = {
   value: string;
   label: string;
   validation: z.ZodType<any, any>;
+  optional?: z.ZodType<any, any>;
   placeholder?: string;
   items: { value: string, label: string }[];
 };
@@ -85,7 +87,7 @@ export const fields: { [key: string]: FieldT } = {
     value: 'info_email',
     label: 'E-MAIL*',
     placeholder: 'Ex. acervomobilia@gmail.com',
-    validation: z.string().min(1, 'Campo não preenchido.').email('E-mail inválido.')
+    validation: z.string().min(1, 'Campo não preenchido.').email('E-mail inválido.'),
   },
   cpf: {
     value: 'cpf',
@@ -216,9 +218,9 @@ export const fields: { [key: string]: FieldT } = {
   },
   role: {
     value: 'role',
-    label: 'CARGO*',
+    label: 'CARGO',
     placeholder: 'Ex. Estagiário',
-    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.'),
+    validation: z.string().optional().or(z.literal('')),
   },
   service: {
     value: 'service',
@@ -235,7 +237,7 @@ export const enumFields: { [key: string]: EnumFieldT } = {
     label: 'CONTRIBUINTE*',
     placeholder: 'Selecione contribuinte',
     // @ts-ignore
-    validation: z.enum(fieldItems.tax_payer.map(item => item.value), { message: 'Campo não preenchido.' }), 
+    validation: z.enum(fieldItems.tax_payer.map(item => item.value), { message: 'Campo não preenchido.' }),
     items: fieldItems.tax_payer,
   },
   bank: {
@@ -525,13 +527,11 @@ export const serviceJuridicalFields = {
 }
 
 export const representativeFields = {
-  person: juridicalPerson,
-  service: teamFields,
+  person: { ...juridicalPerson, contact: teamFields },
 }
 
 export const officeFields = {
-  person: juridicalPerson,
-  service: teamFields,
+  person: { ...juridicalPerson, contact: teamFields },
 }
 
 export const factoryFields = {

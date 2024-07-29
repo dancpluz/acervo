@@ -60,7 +60,7 @@ export const columns: ColumnDef<FactoryT>[] = [
       return <SortHeader column={column} header='V.DIR.' center numeric />
     },
     cell: ({ row }) => {
-      return <div className="text-center">{formatPercent(row.getValue("direct_sale"))}</div>
+      return <div className="text-center">{formatPercent(row.getValue("direct_sale") as number/100)}</div>
     },
     size: 50,
   },
@@ -70,7 +70,7 @@ export const columns: ColumnDef<FactoryT>[] = [
       return <SortHeader column={column} header='DESC.' center numeric />
     },
     cell: ({ row }) => {
-      return <div className="text-center">{formatPercent(row.getValue("discount"))}</div>
+      return <div className="text-center">{formatPercent(row.getValue("discount") as number /100)}</div>
     },
     size: 50,
   },

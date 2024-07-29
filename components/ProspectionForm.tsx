@@ -50,8 +50,6 @@ export default function ProspectionForm({ data }: { data: ProspectionT[] }) {
     deleteSubmit,
   } = useConfigFormActions(form, 'markup_freight', 'prospection');
 
-  console.log(data)
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -66,7 +64,7 @@ export default function ProspectionForm({ data }: { data: ProspectionT[] }) {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Input id={`prospection.${index}.${prospectionFields.title.value}`} style={{ width: calculateTextWidth(16, field.value) }} className='p-0 border-none h-10 text-base min-w-5 focus-visible:ring-transparent focus-visible:ring-offset-0' mask={prospectionFields.title.mask} {...field} />
+                          <Input id={`prospection.${index}.${prospectionFields.title.value}`} placeholder='Título' style={{ width: calculateTextWidth(16, field.value ? field.value : 'Titulo') }} className='p-0 border-none h-10 text-base min-w-5 focus-visible:ring-transparent focus-visible:ring-offset-0' mask={prospectionFields.title.mask} {...field} />
                         </FormControl>
                         <FormMessage className='top-0.5' />
                       </FormItem>

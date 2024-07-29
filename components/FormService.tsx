@@ -17,9 +17,9 @@ import FormButton from '@/components/FormButton';
 import { fillCepFields, formatFields, createDefaultArray } from "@/lib/utils";
 import { useFormActions } from "@/lib/hooks";
 
-const [fisicalDefaultValues, fisicalFieldValidations] = formatFields(serviceFisicalFields);
+const [fisicalDefaultValues, fisicalFieldValidations] = formatFields(serviceFisicalFields, ['name', 'surname', 'info_email']);
 
-const [juridicalDefaultValues, juridicalFieldValidations] = formatFields(serviceJuridicalFields);
+const [juridicalDefaultValues, juridicalFieldValidations] = formatFields(serviceJuridicalFields, ['cnpj', 'company_name', 'info_email', 'tax_payer'])
 
 const defaultValues = { ...juridicalDefaultValues, person: { ...juridicalDefaultValues.person, info: { ...juridicalDefaultValues.person.info, ...fisicalDefaultValues.person.info } } }
 
@@ -90,19 +90,19 @@ export default function FormService({ data, show }: { data?: any, show?: boolean
                   <FieldDiv>
                   {personType === 'Jurídica' ?
                     <>
-                      <InputField path='person.info' obj={fields.company_name} form={form} disabled={show && !isEditing} />
+                      <InputField path='person.info' obj={{...fields.company_name, label: 'NOME OU RAZÃO SOCIAL'}} form={form} disabled={show && !isEditing} />
                       <InputField path='person.info' obj={fields.fantasy_name} form={form} disabled={show && !isEditing} />
                     </> :
                     <>
-                      <InputField path='person.info' obj={fields.name} form={form} disabled={show && !isEditing} />
-                      <InputField path='person.info' obj={fields.surname} form={form} disabled={show && !isEditing} />
+                      <InputField path='person.info' obj={{...fields.name, label: 'NOME'}} form={form} disabled={show && !isEditing} />
+                      <InputField path='person.info' obj={{...fields.surname, label: 'SOBRENOME'}} form={form} disabled={show && !isEditing} />
                     </>}
                   </FieldDiv>
                   <FieldDiv>
-                    <InputField path='person.info' obj={fields.info_email} form={form} disabled={show && !isEditing} />
+                    <InputField path='person.info' obj={{...fields.info_email, label: 'EMAIL'}} form={form} disabled={show && !isEditing} />
                     {personType === 'Jurídica' ?
                     <>
-                      <InputField path='person.info' obj={fields.cnpj} form={form} disabled={show && !isEditing} />
+                      <InputField path='person.info' obj={{...fields.cnpj, label: 'CNPJ'}} form={form} disabled={show && !isEditing} />
                     </> :
                     <>
                       <InputField path='person.info' obj={fields.rg} form={form} disabled={show && !isEditing} customClass={'grow-0 min-w-40'} />
@@ -112,7 +112,7 @@ export default function FormService({ data, show }: { data?: any, show?: boolean
                   <FieldDiv>
                     {personType === 'Jurídica' &&
                     <>
-                      <SelectField path='person.info' obj={enumFields.tax_payer} form={form} disabled={show && !isEditing} />
+                      <SelectField path='person.info' obj={{...enumFields.tax_payer, label: 'CONTRIBUINTE'}} form={form} disabled={show && !isEditing} />
                       <InputField path='person.info' obj={fields.state_register} form={form} disabled={show && !isEditing} />
                       <InputField path='person.info' obj={fields.municipal_register} form={form} disabled={show && !isEditing} />
                     </>}
@@ -151,7 +151,7 @@ export default function FormService({ data, show }: { data?: any, show?: boolean
                 <FormDiv>
                 {show && !isEditing ? <TinyTable title='' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
                   : <EditTinyTable title='' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(createDefaultArray(contactFields))} remove={contactForm.remove} prefix='person.contact' form={form} order={["name", "detail", "phone", "telephone"]} />}
-                  <FormButton backValue={tabs[0]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} submit/>
+                  <FormButton backValue={tabs[0]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} submit={!show} />
                 </FormDiv>
               </div>
             </TabDiv>

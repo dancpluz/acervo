@@ -265,20 +265,20 @@ export function createDefaultArray(fields: TableFieldT[] | { [key: string]: Fiel
 
 // Retorna os valores vazios e as verificações de cada campo
 
-export function formatFields(fields: AllFieldTypes | { [key: string]: TableFieldT; }) : [any, z.ZodObject<any, any>]{
+export function formatFields(fields: AllFieldTypes | { [key: string]: TableFieldT; }, optionals:string[]=[]) : [any, z.ZodObject<any, any>]{
   let defaultValues: { [key: string]: '' | [] } = {};
   let validationValues: { [key: string]: z.ZodType<any, any> } = {};
 
   for (const [key, value] of Object.entries(fields)) {
     if (value['value']) {
       defaultValues[key] = '';
-      validationValues[key] = value.validation;
+      validationValues[key] = optionals.includes(key) ? value.validation.optional().or(z.literal('')) : value.validation;
     } else if (key === 'order' || Array.isArray(value)) {
       // Se for vetor ou pedidos, tem que fazer um objeto com todos os campos
       defaultValues[key] = [];
       validationValues[key] = z.array(z.object(Object.values(value).reduce((acc: { [key: string]: z.ZodType<any, any> }, { value, validation }: any) => { acc[value] = validation; return acc; }, {}))).optional()
     } else {
-      [defaultValues[key], validationValues[key]] = formatFields(value);
+      [defaultValues[key], validationValues[key]] = formatFields(value, optionals);
     }
   }
 
