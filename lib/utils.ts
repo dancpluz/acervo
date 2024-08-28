@@ -65,6 +65,11 @@ export const entityTitles: { [key: string]: EntityTitleT } = {
     plural: 'prospecções',
     singular: 'prospecção',
     sufix: 'o' 
+  },
+  proposal: {
+    plural: 'propostas',
+    singular: 'proposta',
+    sufix: 'a' 
   }
 }
 

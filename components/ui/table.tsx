@@ -6,7 +6,7 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement> & { containerClassName?: string }
 >(({ className, containerClassName, ...props }, ref) => (
-  <div className={cn("relative w-full rounded-lg border border-secondary overflow-hidden", containerClassName)}>
+  <div className={cn("relative w-full rounded-lg border border-primary overflow-hidden", containerClassName)}>
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}
@@ -20,7 +20,7 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b bg-secondary", className)} {...props} />
+  <thead ref={ref} className={cn("[&_tr]:border-b bg-primary text-background", className)} {...props} />
 ))
 TableHeader.displayName = "TableHeader"
 
@@ -43,7 +43,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "sticky border-secondary text-base [&>tr]:last:border-b-0",
+      "sticky border-primary text-base [&>tr]:last:border-b-0",
       className
     )}
     {...props}
@@ -58,7 +58,7 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      "border-b border-secondary transition-colors",
+      "border-b border-primary transition-colors",
       className
     )}
     {...props}

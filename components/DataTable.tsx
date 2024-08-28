@@ -35,9 +35,9 @@ import { EntityTitleT } from "@/lib/utils";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  fullData: FactoryT[] | RepresentativeT[] | OfficeT[] | ClientT[] | CollaboratorT[] | ServiceT[]
+  fullData?: FactoryT[] | RepresentativeT[] | OfficeT[] | ClientT[] | CollaboratorT[] | ServiceT[]
   search: string
-  children: ReactElement
+  children?: ReactElement
   found: EntityTitleT
 }
 
@@ -87,7 +87,7 @@ export function DataTable<TData, TValue>({
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead className='first:pl-10' style={{ width: header.getSize() }} key={header.id}>
+                  <TableHead className={children ? 'first:pl-10' : ''} style={{ width: header.getSize() }} key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -100,8 +100,10 @@ export function DataTable<TData, TValue>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody className='last:border-b last:border-secondary'>
-          {table.getRowModel().rows?.length ? (
+        <TableBody className='last:border-b last:border-primary'>
+          {table.getRowModel().rows?.length ? 
+           children && fullData ?
+          (
             table.getRowModel().rows.map((row) => (
               <Collapsible key={row.id} asChild>
                 <>
@@ -131,6 +133,20 @@ export function DataTable<TData, TValue>({
               </Collapsible>
             ))
           ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )
+          : (
             <TableRow>
               <TableCell colSpan={columns.length + 1} className="h-16 text-center text-base text-tertiary">
                 Não foi encontrado nenhum resultado...
@@ -140,7 +156,7 @@ export function DataTable<TData, TValue>({
         </TableBody>
       </Table>
       <div className='flex justify-between'>
-        {fullData ? fullData.length === 0 ? <p className="text-sm">{`Adicione um${found.sufix === 'a' ? 'a' : ''} nov${found.sufix} ${found.singular}!`}</p> : <p className="text-sm">{`${fullData.length} ${fullData.length > 1 ? `${found.plural} encontrad${found.sufix}s` : `${found.singular} encontrad${found.sufix}`}`}</p> : <p>Procurando ${found.plural}</p>}
+        {data ? data.length === 0 ? <p className="text-sm">{`Adicione um${found.sufix === 'a' ? 'a' : ''} nov${found.sufix} ${found.singular}!`}</p> : <p className="text-sm">{`${data.length} ${data.length > 1 ? `${found.plural} encontrad${found.sufix}s` : `${found.singular} encontrad${found.sufix}`}`}</p> : <p>Procurando {found.plural}</p>}
         <div className="flex items-center justify-end gap-2">
           <Button
             variant="outline"

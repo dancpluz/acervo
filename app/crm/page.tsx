@@ -1,6 +1,30 @@
+import Header from "@/components/Header";
+import { ChangeTab, StatusFilter } from "@/components/StatusButtons";
+import { columns } from "./proposalcolumns";
+import { DataTable } from "@/components/DataTable";
+import { entityTitles } from "@/lib/utils";
 
 export default function CRM() {
+  const data = [{ id: 4, title: 'asfgasg'}]
+
   return (
-    <div>CRM</div>
+    <div className="flex flex-col gap-4 px-20 py-10 h-full">
+      <Header page='CRM'>
+        <div className='flex gap-2'>
+          <ChangeTab text='Propostas' count={33} route='/propostas' money={200000} active={true} />
+          <ChangeTab text='Propostas' count={63} route='/propostas' money={200000} active={false} />
+        </div>
+      </Header>
+      <div className='flex gap-2'>
+        <StatusFilter text='Todos' count={33} route='/propostas' money={2000} active={false} />
+        <StatusFilter type='front' text='Solicitado' count={33} route='/propostas' money={2000} active={true} />
+        <StatusFilter type='both' text='Revisão' count={33} route='/propostas' money={2000} active={true} />
+        <StatusFilter type='both' text='Esperando' count={33} route='/propostas' money={2000} active={false} />
+        <StatusFilter type='both' text='Negociação' count={33} route='/propostas' money={2000} active={false} />
+        <StatusFilter type='back' text='Fechado' count={33} route='/propostas' money={2000} active={false} />
+        <StatusFilter type='lost' text='Perdido' count={33} route='/propostas' money={2000} active={false} />
+      </div>
+      <DataTable search={'company_name'} columns={columns} data={data} found={entityTitles.proposal} />
+    </div>
   )
 }
