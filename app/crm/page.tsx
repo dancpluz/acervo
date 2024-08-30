@@ -15,7 +15,7 @@ export default function CRM() {
           <ChangeTab text='Propostas' count={63} route='/propostas' money={200000} active={false} />
         </div>
       </Header>
-      <div className='flex gap-2'>
+      <div className='flex gap-2 py-3'>
         <StatusFilter text='Todos' count={33} route='/propostas' money={2000} active={false} />
         <StatusFilter type='front' text='Solicitado' count={33} route='/propostas' money={2000} active={true} />
         <StatusFilter type='both' text='Revisão' count={33} route='/propostas' money={2000} active={true} />

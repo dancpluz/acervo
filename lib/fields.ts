@@ -1,7 +1,6 @@
 import { z } from "zod";
 import cidades from '@/lib/cidades.json';
 import bancos from '@/lib/bancos.json';
-import { PricingEnum, StyleEnum, AmbientEnum, TaxEnum } from "./types";
 
 export type FieldT = {
   value: string;
@@ -55,6 +54,33 @@ export const fieldItems: { [key: string] : { value: string, label: string }[] } 
     { label: 'Interno', value: 'internal' },
     { label: 'Externo', value: 'external' },
     { label: 'Int. e Externo', value: 'both' }
+  ],
+  priority: [
+    { label: '1', value: 'high' },
+    { label: '2', value: 'medium' },
+    { label: '3', value: 'low' },
+  ],
+  origin: [
+    { label: 'Whatsapp', value: 'Whatsapp' },
+    { label: 'Instagram', value: 'Instagram'},
+    { label: 'Indicação', value: 'Indicação'},
+  ],
+  client_type: [
+    { label: 'Família', value: 'Família' },
+    { label: 'Amigos', value: 'Amigos' },
+  ],
+  project_type: [
+    { label: 'Casa', value: 'Casa' },
+    { label: 'Apartamento', value: 'Apartamento' },
+    { label: 'Prédio', value: 'Prédio' },
+  ],
+  status_proposal: [
+    { label: 'Solicitado', value: 'requested' },
+    { label: 'Enviado', value: 'sent' },
+    { label: 'Revisão', value: 'revision' },
+    { label: 'Esperando', value: 'waiting' },
+    { label: 'Fechado', value: 'closed' },
+    { label: 'Perdido', value: 'lost' },
   ],
 } as const;
 
