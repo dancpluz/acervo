@@ -91,3 +91,30 @@ export async function getConfig(subcollection: string, config: string) {
     return [];
   }
 }
+
+export async function getProposals(entity: string, refEntities: string[]=[]) {
+  try {
+    const querySnapshot = await getDocs(query(collection(db, entity), orderBy("last_updated", "desc")));
+    const entityData = await Promise.all(querySnapshot.docs.map(async (doc: any) => {
+      const data = doc.data();
+
+      const test = await Promise.all(refEntities.map(async (refEntity) => {
+        const ref = await getDoc(data[refEntity])
+        return ref.data()
+      }))
+
+      console.log(await test)
+      
+      
+      const client = await getDoc(data.client);
+
+      return data;
+    }))
+
+    //console.log(entityData)
+    
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+}
