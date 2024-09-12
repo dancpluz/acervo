@@ -2,14 +2,14 @@ import { FactoryT, RepresentativeT, OfficeT, ClientT, CollaboratorT, ServiceT } 
 import { Column } from "@tanstack/react-table";
 import { ArrowUpDown, ArrowUpAZ, ArrowDownZA, ArrowUp01, ArrowDown10 } from "lucide-react";
 
-type Props = {
-  column: Column<FactoryT> | Column<RepresentativeT> | Column<OfficeT> | Column<ClientT> | Column<CollaboratorT> | Column<ServiceT>
+type Props<T> = {
+  column: Column<T>,
   header: string,
   center?: boolean,
   numeric?: boolean,
 }
 
-export default function SortHeader({column, header, center, numeric} : Props) {
+export default function SortHeader<T>({ column, header, center, numeric }: Props<T>) {
   if (numeric) {
     return (
       <div className={`flex ${center ? 'justify-center' : ''}`}>

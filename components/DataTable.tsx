@@ -26,31 +26,34 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronRight, Search } from 'lucide-react';
-import { FactoryT, RepresentativeT, OfficeT, ClientT, CollaboratorT, ServiceT } from "@/lib/types";
 import { Input } from '@/components/ui/input';
 import { Button } from "@/components/ui/button";
 import { EntityTitleT } from "@/lib/utils";
+import { useRouter } from 'next/navigation'
 
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData, TValue, TFullData> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  fullData?: FactoryT[] | RepresentativeT[] | OfficeT[] | ClientT[] | CollaboratorT[] | ServiceT[]
+  fullData?: TFullData[]
   search: string
   children?: ReactElement
   found: EntityTitleT
+  link?: string
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData, TValue, TFullData>({
   columns,
   data,
   fullData,
   search,
   children,
   found,
-}: DataTableProps<TData, TValue>) {
+  link,
+}: DataTableProps<TData, TValue, TFullData>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const router = useRouter()
   
   const table = useReactTable({
     data,
@@ -135,6 +138,8 @@ export function DataTable<TData, TValue>({
           ) : (
                 table.getRowModel().rows.map((row) => (
                   <TableRow
+                    className={link ? 'cursor-pointer hover:bg-secondary/20' : ''}
+                    onClick={link ? () => router.push(link + (data[row.index] as any).ref) : undefined}
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
                   >
