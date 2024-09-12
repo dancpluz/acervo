@@ -145,8 +145,8 @@ export type FinishT = {
   height: number;
   depth: number;
   designer?: string;
-  fabric: string;
   frame: string;
+  fabric: string;
   extra: string;
   // fabric_img?: string;
   // frame_img?: string;
@@ -159,21 +159,22 @@ export type ProductT = {
   ref?: string; // Numero_categoria_nome do produto_custo_data de criação
   name: string;
   ambient?: string;
-  //enabled: boolean;
+  enabled: boolean;
+  quantity: number;
   category: string;
   finish: FinishT;
   //image: string;
   observations?: string;
   factory: FactoryT | DocumentReference;
   freight: FreightT | DocumentReference;
-  price: number;
+  cost: number;
   markup: MarkupT | DocumentReference;
   created_at: Date | { seconds: number, nanoseconds: number };
 }
 
 export type ActionT = {
   date: Date | { seconds: number, nanoseconds: number };
-  description: string;
+  description?: string;
   collaborator: CollaboratorT | DocumentReference;
 }
 
@@ -191,7 +192,7 @@ export type ProposalT = {
   observations?: string;
   actions?: ActionT[];
   products?: ProductT[];
-  value: number;
+  total: number;
   created_at: Date | { seconds: number, nanoseconds: number };
   last_updated: Date | { seconds: number, nanoseconds: number };
 }
