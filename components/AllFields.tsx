@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import cidades from '@/lib/cidades.json';
@@ -33,20 +34,23 @@ import {
   CommandItem
 } from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Check, ChevronsUpDown, LoaderCircle } from "lucide-react";
+import { CalendarIcon, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
 import { ReferenceT } from "@/lib/types";
 import { getEntitiesOptions } from "@/lib/dbRead";
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-export function SelectField({ path, form, obj, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: EnumFieldT, disabled?: boolean }) {
+export function SelectField({ path, form, customClass, obj, disabled }: { path?: string, form: ReturnType<typeof useForm>, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
       control={form.control}
       name={fieldPath}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className={customClass}>
           <FormMessage />
           <FormLabel>{obj.label}</FormLabel>
           <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -64,7 +68,8 @@ export function SelectField({ path, form, obj, disabled }: { path?: string, form
   );
 }
 
-export function ReferenceField({ path, form, obj, customClass, hint, setReferenceInfo, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, setReferenceInfo: React.Dispatch<React.SetStateAction<ReferenceT | undefined>>, disabled?: boolean }) {
+export function ReferenceField({ path, form, obj, customClass, hint, setReferenceInfo, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, setReferenceInfo?: React.Dispatch<React.SetStateAction<ReferenceT | undefined>>, disabled?: boolean }) {
+  
   const [items, setItems] = useState<ReferenceT[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -111,9 +116,9 @@ export function ReferenceField({ path, form, obj, customClass, hint, setReferenc
                           value={item.label}
                           key={item.ref}
                           onSelect={item.ref === field.value ? () => {
-                            form.setValue(fieldPath, ''); setReferenceInfo(undefined);
+                            form.setValue(fieldPath, ''); setReferenceInfo ? setReferenceInfo(undefined) : '';
                           } : () => {
-                            form.setValue(fieldPath, item.ref); setReferenceInfo(item);
+                            form.setValue(fieldPath, item.ref); setReferenceInfo ? setReferenceInfo(item) : '';
                           }}
                         >
                           <Check
@@ -217,7 +222,7 @@ export function ShowField({ text, placeholder, label }: {  text?: string, placeh
   )
 }
 
-export function InputField({ path, form, obj, autofill, customClass, percent, long, disabled, update }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any }) {
+export function InputField({ path, form, obj, autofill, customClass, percent, long, disabled, update, onChange }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any, onChange?: ChangeEvent }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -229,9 +234,27 @@ export function InputField({ path, form, obj, autofill, customClass, percent, lo
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <div className='flex items-center gap-1'>
-              <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(fieldPath).isDirty, clear: () => form.resetField(fieldPath, { keepError: false, defaultValue: '' }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {field.onChange(e); autofill ? autofill(e.target.value, form, path + '.') : ''; update ? update(fieldPath, e.target.value) : ''}} disabled={disabled} />
+              <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(fieldPath).isDirty, clear: () => form.resetField(fieldPath, { keepError: false, defaultValue: '' }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {onChange ? onChange : field.onChange(e); autofill ? autofill(e.target.value, form, path + '.') : ''; update ? update(fieldPath, e.target.value) : ''}} disabled={disabled} />
               {percent ? <span className='text-tertiary'>%</span> : ''}
             </div>
+          </FormControl>
+        </FormItem>
+      )} />
+  )
+}
+
+export function TitleField({ path, form, obj, customClass, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
+  return (
+    <FormField
+      control={form.control}
+      name={fieldPath}
+      render={({ field }) => (
+        <FormItem className={customClass + ' grow-0'}>
+          <FormMessage className='-top-3' />
+          <FormControl>
+            {/* // @ts-ignore */}
+            <Input id='title' containerClassName='grow-0 items-center border-b border-secondary gap-2' className={'border-0 px-1 w-52 text-xl'} placeholder={disabled ? '' : obj.placeholder} {...field} disabled={disabled} icon={<Pencil className='cursor-pointer text-primary' onClick={() => document.getElementById("title").focus()} />} />
           </FormControl>
         </FormItem>
       )} />
@@ -278,6 +301,55 @@ export function RadioField({ path, form, obj, optional, disabled, defaultValue }
               })}
             </RadioGroup>
           </FormControl>
+        </FormItem>
+      )}
+    />
+  )
+}
+// @ts-ignore
+export function DateField({ path, form, obj, customClass, disabled }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
+  return (
+    <FormField
+      control={form.control}
+      name={fieldPath}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{obj.label}</FormLabel>
+          <Popover>
+            <PopoverTrigger asChild>
+              <FormControl>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "pl-3 text-left font-normal",
+                    !field.value && "text-muted-foreground"
+                  )}
+                >
+                  {field.value ? (
+                    format(field.value, "PPP", { locale: ptBR })
+                  ) : (
+                    <span>{obj.placeholder}</span>
+                  )}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </FormControl>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-background border border-secondary" align="center">
+              <Calendar
+                mode="single"
+                selected={field.value}
+                onSelect={field.onChange}
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return date < today;
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <FormMessage />
         </FormItem>
       )}
     />

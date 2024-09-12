@@ -20,7 +20,7 @@ interface InputCustom extends InputProps {
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputCustom>(
-  ({ className, containerClassName, long, mask, type, icon, actions, ...props }, ref) => {
+  ({ className, containerClassName, long, mask, type, icon, actions, children, ...props }, ref) => {
 
     const { isDirty, clear, copy } = actions || {};
 
