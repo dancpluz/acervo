@@ -28,7 +28,7 @@ export default function SideBar() {
       <TooltipProvider delayDuration={200}>
         <Tooltip disableHoverableContent={true}>
           <TooltipTrigger asChild>
-            <Link href={slug}>
+            <Link href={'/' + slug}>
               <div className={`w-full flex items-center p-3 gap-4 rounded-lg ${expanded ? "justify-start" : ""} ${active ? "bg-primary" : "hover:outline outline-secondary outline-1 active:bg-secondary/20"}`}>
                 <Image className={`absolute ${active ? "brightness-0 invert" : ""}`} alt={"Acessar Página de " + title} src={icon} width={32} height={32} />
                 <h2 className={`overflow-hidden transition-all ml-12 text-lg ${active ? "text-background font-medium" : ""} ${expanded ? "" : "w-0"}`}>{title}</h2>

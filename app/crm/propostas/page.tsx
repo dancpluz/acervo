@@ -1,0 +1,55 @@
+// @ts-nocheck
+'use client'
+import Header from "@/components/Header";
+import { ChangeTab, StatusFilter } from "@/components/StatusButtons";
+import { columns } from "./proposalcolumns";
+import { DataTable } from "@/components/DataTable";
+import { entityTitles } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { CirclePlus } from "lucide-react";
+import ProposalForm from "@/components/ProposalForm";
+import useGetCollection from '@/hooks/useGetCollection'
+
+export default function CRM() {
+  const data = [{ id: 4, ref: 'teste', title: 'asfgasg' }]
+  // const proposals = await getProposals('proposal', ['office','client','collaborator'])
+  //console.log(proposals)
+  // @ts-ignore
+  const [snapshots, loading, error] = useGetCollection('proposal');
+
+
+  return (
+    <div className="flex flex-col gap-4 px-20 py-10 h-full">
+      <Header page='CRM'>
+        <div className='flex gap-2'>
+          <ChangeTab text='Propostas' count={33} route='/propostas' money={200000} active={true} />
+          <ChangeTab text='Pedidos' count={63} route='/pedidos' money={200000} active={false} />
+        </div>
+      </Header>
+      <div className='flex gap-2 py-3'>
+        <StatusFilter text='Todos' count={33} route='/propostas' money={2000} active={false} />
+        <StatusFilter type='front' text='Solicitado' count={33} route='/propostas' money={2000} active={true} />
+        <StatusFilter type='both' text='Revisão' count={33} route='/propostas' money={2000} active={true} />
+        <StatusFilter type='both' text='Esperando' count={33} route='/propostas' money={2000} active={false} />
+        <StatusFilter type='both' text='Negociação' count={33} route='/propostas' money={2000} active={false} />
+        <StatusFilter type='back' text='Fechado' count={33} route='/propostas' money={2000} active={false} />
+        <StatusFilter type='lost' text='Perdido' count={33} route='/propostas' money={2000} active={false} />
+      </div>
+      <DataTable search={'title'} columns={columns} data={snapshots} link={'/crm/propostas/'} found={entityTitles.proposal} />
+      
+      <div className="flex justify-between">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <CirclePlus />NOVA PROPOSTA
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='w-[680px]'>
+            <ProposalForm />
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  )
+}

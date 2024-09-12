@@ -1,7 +1,7 @@
 'use server'
 
 import db from "@/lib/firebase";
-import { collection, addDoc, deleteDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, setDoc, deleteDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { revalidatePath } from 'next/cache';
 
 
@@ -85,9 +85,9 @@ export async function updateConfig(value: any, subcollection: string, config: st
   try {
     const ref = value.ref
     delete value.ref
-
+    
     await updateDoc(doc(db, 'config', subcollection, config, ref), value);
-
+    
     revalidatePath('/configuracoes')
   } catch (error) {
     console.log(error);
@@ -100,5 +100,18 @@ export async function deleteConfig(ref: string, subcollection: string, config: s
     await deleteDoc(doc(db, 'config', subcollection, config, ref))
   } catch (error) {
     console.log(error)
+  }
+}
+export async function addProposal(values: any, id: string, entity: string, refEntities: string[]=[]) {
+  try {
+    refEntities.forEach((entityValue) => { values[entityValue] ? values[entityValue] = {person: doc(db, 'person', values[entityValue])} : ''})
+
+    await setDoc(doc(db, entity, id), { ...values, created_at: serverTimestamp(), last_updated: serverTimestamp() });
+
+    revalidatePath('/crm');
+
+  } catch (error) {
+    console.log(error);
+    throw new Error('Erro ao adicionar no banco de dados')
   }
 }

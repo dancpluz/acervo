@@ -41,7 +41,7 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, pref
   return (
     <div className='flex flex-col gap-1'>
       <Label>{title}</Label>
-      <Table containerClassName="max-h-[180px] overflow-y-auto">
+      <Table containerClassName="border-secondary max-h-[180px] overflow-y-auto">
         <TableHeader className='bg-transparent border-b border-secondary'>
           <TableRow className='border-0'>
             {columns.map((column) => {
@@ -102,7 +102,7 @@ export function TinyTable({ columns, title, rows, placeholder, order }: Props) {
   return (
     <div className='flex flex-1 flex-col gap-1'>
       <Label>{title}</Label>
-      <Table>
+      <Table containerClassName="border-secondary">
         <TableHeader className='bg-transparent border-b border-secondary'>
           <TableRow className='border-0'>
             {columns.sort((a, b) => { return order.indexOf(a.value) - order.indexOf(b.value); }).map((column) => {

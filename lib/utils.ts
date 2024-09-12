@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 import * as Types from '@/lib/types';
 import { FieldT, TableFieldT, AllFieldTypes, EnumFieldT } from '@/lib/fields';
 import { z } from "zod";
+import slugify from 'slugify';
 
 export const translationFields: { [key: string]: string } = {
   company_name: 'Nome/Razão Social',
@@ -65,6 +66,11 @@ export const entityTitles: { [key: string]: EntityTitleT } = {
     plural: 'prospecções',
     singular: 'prospecção',
     sufix: 'o' 
+  },
+  proposal: {
+    plural: 'propostas',
+    singular: 'proposta',
+    sufix: 'a' 
   }
 }
 
@@ -110,6 +116,16 @@ export function formatRefEntity(entity: string, person: any) {
         label: person.info.fantasy_name ? person.info.company_name + ' - ' + person.info.fantasy_name : person.info.company_name,
         info_email: person.info.info_email,
         contact: person.contact,
+      }
+    case 'collaborator':
+      return {
+        ref: person.ref,
+        label: `${person.info.name} ${person.info.surname}`
+      }
+    case 'client':
+      return {
+        ref: person.ref,
+        label: person.info.company_name ? person.info.company_name : `${person.info.name} ${person.info.surname}`,
       }
     default:
       return {}
@@ -265,7 +281,7 @@ export function createDefaultArray(fields: TableFieldT[] | { [key: string]: Fiel
 
 // Retorna os valores vazios e as verificações de cada campo
 
-export function formatFields(fields: AllFieldTypes | { [key: string]: TableFieldT; }, optionals:string[]=[]) : [any, z.ZodObject<any, any>]{
+export function formatFields(fields: AllFieldTypes | { [key: string]: TableFieldT; }, arrayKeys: string[]=[], optionals:string[]=[]) : [any, z.ZodObject<any, any>]{
   let defaultValues: { [key: string]: '' | [] } = {};
   let validationValues: { [key: string]: z.ZodType<any, any> } = {};
 
@@ -273,7 +289,7 @@ export function formatFields(fields: AllFieldTypes | { [key: string]: TableField
     if (value['value']) {
       defaultValues[key] = '';
       validationValues[key] = optionals.includes(key) ? value.validation.optional().or(z.literal('')) : value.validation;
-    } else if (key === 'order' || Array.isArray(value)) {
+    } else if (arrayKeys.includes(key) || Array.isArray(value)) {
       // Se for vetor ou pedidos, tem que fazer um objeto com todos os campos
       defaultValues[key] = [];
       validationValues[key] = z.array(z.object(Object.values(value).reduce((acc: { [key: string]: z.ZodType<any, any> }, { value, validation }: any) => { acc[value] = validation; return acc; }, {}))).optional()
@@ -300,3 +316,10 @@ export function calculateTextWidth(size: number, text: string ) {
     return "";
   }
 }
+
+export const stringToSlug = (str: string) => {
+  return slugify(str, {
+    lower: true, // Convert to lowercase
+    strict: true, // Remove special characters
+  });
+};

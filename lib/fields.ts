@@ -1,7 +1,6 @@
 import { z } from "zod";
 import cidades from '@/lib/cidades.json';
 import bancos from '@/lib/bancos.json';
-import { PricingEnum, StyleEnum, AmbientEnum, TaxEnum } from "./types";
 
 export type FieldT = {
   value: string;
@@ -55,6 +54,43 @@ export const fieldItems: { [key: string] : { value: string, label: string }[] } 
     { label: 'Interno', value: 'internal' },
     { label: 'Externo', value: 'external' },
     { label: 'Int. e Externo', value: 'both' }
+  ],
+  priority: [
+    { label: '1', value: '1' },
+    { label: '2', value: '2' },
+    { label: '3', value: '3' },
+  ],
+  origin: [
+    { label: 'Whatsapp', value: 'Whatsapp' },
+    { label: 'Instagram', value: 'Instagram'},
+    { label: 'Indicação', value: 'Indicação'},
+  ],
+  client_type: [
+    { label: 'Família', value: 'Família' },
+    { label: 'Amigos', value: 'Amigos' },
+  ],
+  project_type: [
+    { label: 'Casa', value: 'Casa' },
+    { label: 'Apartamento', value: 'Apartamento' },
+    { label: 'Prédio', value: 'Prédio' },
+  ],
+  status_proposal: [
+    { label: 'Perdido', value: '0' },
+    { label: 'Solicitado', value: '1' },
+    { label: 'Enviado', value: '2' },
+    { label: 'Revisão', value: '3' },
+    { label: 'Esperando', value: '4' },
+    { label: 'Fechado', value: '5' },
+  ],
+  product_ambient: [
+    { label: 'Cozinha', value: 'Cozinha' },
+    { label: 'Sala de Estar', value: 'Sala de Estar' },
+    { label: 'Quarto', value: 'Quarto' },
+  ],
+  product_category: [
+    { label: 'Sofá', value: 'Sofá' },
+    { label: 'Mesa', value: 'Mesa' },
+    { label: 'Cadeira', value: 'Cadeira' },
   ],
 } as const;
 
@@ -547,6 +583,233 @@ export const factoryFields = {
   link_site: fields.link_site,
 }
 
+export const actionFields = {
+  date: {
+    value: 'date',
+    label: 'DATA*',
+    placeholder: 'Escolha uma data',
+    validation: z.date({ invalid_type_error: 'Selecione uma data' }),
+  },
+  description: {
+    value: 'description',
+    label: 'DESCRIÇÃO',
+    placeholder: 'Ex. Reunião com o cliente',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  collaborator: {
+    value: 'collaborator',
+    label: 'COLABORADOR',
+    placeholder: 'Selecione um Colaborador',
+    validation: z.string().optional().or(z.literal('')),
+  },
+}
+
+const finishFields = {
+  width: {
+    value: 'width',
+    label: 'LARGURA*',
+    placeholder: 'Ex. 100',
+    validation: z.string().transform((val) => Number(val)).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'A largura deve ser maior que 0')),
+  },
+  depth: {
+    value: 'depth',
+    label: 'PROFUNDIDADE*',
+    placeholder: 'Ex. 100',
+    validation: z.string().transform((val) => Number(val)).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'A profundidade deve ser maior que 0')),
+  },
+  height: {
+    value: 'height',
+    label: 'ALTURA*',
+    placeholder: 'Ex. 100',
+    validation: z.string().transform((val) => Number(val)).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'A altura deve ser maior que 0')),
+  },
+  designer: {
+    value: 'designer',
+    label: 'DESIGNER',
+    placeholder: 'Ex. João',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  frame: {
+    value: 'frame',
+    label: 'BASE/ESTRUTURA*',
+    placeholder: 'Ex. Estrutura em madeira cumaru',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  fabric: {
+    value: 'fabric',
+    label: 'TAMPO/TECIDO*',
+    placeholder: 'Ex. Tule branco',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  extra: {
+    value: 'extra',
+    label: 'EXTRA',
+    placeholder: 'Ex. Acabamento em laminas de madeira',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  link_finishes: {
+    value: 'link_finishes',
+    label: 'LINK ACABAMENTOS',
+    placeholder: 'Ex. https://exemplo.com.br',
+    validation: z.string().url({ message: 'Link inválida' }).optional().or(z.literal('')),
+  },
+  link_3d: {
+    value: 'link_3d',
+    label: 'LINK 3D',
+    placeholder: 'Ex. https://exemplo.com.br',
+    validation: z.string().url({ message: 'Link inválida' }).optional().or(z.literal('')),
+  },
+}
+
+const productFields = {
+  ref: {
+    value: 'ref',
+    label: '',
+    placeholder: '',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  name: {
+    value: 'name',
+    label: 'NOME*',
+    placeholder: 'Ex. Cadeira',
+    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.'),
+  },
+  ambient: {
+    value: 'ambient',
+    label: 'AMBIENTE',
+    // @ts-ignore
+    validation: z.enum([fieldItems.product_ambient.map(item => item.value), '']),
+    items: fieldItems.product_ambient,
+  },
+  enabled: {
+    value: 'enabled',
+    label: '',
+    validation: z.boolean(),
+  },
+  quantity: {
+    value: 'quantity',
+    label: 'QUANTIDADE*',
+    placeholder: 'Ex. 10',
+    validation: z.string().transform((val) => Number(val)).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'A quantidade deve ser maior que 0')),
+  },
+  category: {
+    value: 'category',
+    label: 'CATEGORIA*',
+    // @ts-ignore
+    validation: z.enum(fieldItems.product_category.map(item => item.value)),
+    items: fieldItems.product_category,
+  },
+  finish: finishFields,
+  observations: fields.observations,
+  factory: {
+    value: 'factory',
+    label: 'FÁBRICA*',
+    placeholder: 'Selecione uma Fábrica',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  freight: {
+    value: 'freight',
+    label: 'FRETE*',
+    placeholder: 'Selecione um Frete',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  cost: {
+    value: 'cost',
+    label: 'VALOR DE CUSTO*',
+    placeholder: 'Ex. 100,00',
+    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", "."))).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O preço deve ser maior que 0')),
+  },
+  markup: {
+    value: 'markup',
+    label: 'MARCAÇÃO*',
+    placeholder: 'Selecione uma Marcação',
+    validation: z.string().min(1, 'Campo não preenchido.'),
+  },
+  created_at: {
+    value: 'created_at',
+    label: 'CRIADO EM',
+    validation: z.string().optional().or(z.literal('')),
+  },
+}
+
+export const proposalFields = {
+  name: {
+    value: 'name',
+    label: 'NOME*',
+    placeholder: 'Nome do Projeto',
+    validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.'),
+  },
+  priority: {
+    value: 'priority',
+    label: 'PRIORIDADE*',
+    // @ts-ignore
+    validation: z.enum(fieldItems.priority.map(item => item.value), { message: 'Selecione uma prioridade.' }),
+    items: fieldItems.priority,
+  },
+  status: {
+    value: 'status',
+    label: 'STATUS*',
+    // @ts-ignore
+    validation: z.enum(fieldItems.status_proposal.map(item => item.value), { message: 'Selecione um status.' }),
+    items: fieldItems.status_proposal,
+  },
+  client: {
+    value: 'client',
+    label: 'CLIENTE*',
+    placeholder: 'Selecione um Cliente',
+    validation: z.string().min(1, 'Selecione um Cliente.'),
+  },
+  collaborator: {
+    value: 'collaborator',
+    label: 'COLABORADOR*',
+    placeholder: 'Selecione um Colaborador',
+    validation: z.string().min(1, 'Selecione um Colaborador.'),
+  },
+  office: {
+    value: 'office',
+    label: 'ESCRITÓRIO*',
+    placeholder: 'Selecione um Escritório',
+    validation: z.string().min(1, 'Selecione um Escritório.'),
+  },
+  client_type: {
+    value: 'client_type',
+    label: 'TIPO DE CLIENTE',
+    placeholder: 'Selecione um Tipo de Cliente',
+    // @ts-ignore
+    validation: z.enum([...fieldItems.client_type.map(item => item.value), '']),
+    items: fieldItems.client_type,
+  },
+  project_type: {
+    value: 'project_type',
+    label: 'TIPO DE PROJETO',
+    placeholder: 'Selecione um Tipo de Projeto',
+    // @ts-ignore
+    validation: z.enum([...fieldItems.project_type.map(item => item.value), '']),
+    items: fieldItems.project_type,
+  },
+  origin: {
+    value: 'origin',
+    label: 'ORIGEM',
+    placeholder: 'Selecione a Origem do Cliente',
+    // @ts-ignore
+    validation: z.enum([...fieldItems.origin.map(item => item.value), '']),
+    items: fieldItems.origin,
+  },
+  observations: fields.observations,
+  actions: actionFields,
+  // products: productFields,
+  // total: {
+  //   value: 'total',
+  //   label: '',
+  //   validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", "."))).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O preço deve ser maior que 0')),
+  // },
+  created_at: {
+    value: 'created_at',
+    label: 'CRIADO EM',
+    validation: z.string().optional().or(z.literal('')),
+  },
+}
+
 type CollaboratorFieldsT = typeof collaboratorFields;
 type ClientFisicalFieldsT = typeof clientFisicalFields;
 type ClientJuridicalFieldsT = typeof clientJuridicalFields;
@@ -564,4 +827,4 @@ export type AllFieldTypes =
   | ServiceJuridicalFieldsT
   | RepresentativeFieldsT
   | OfficeFieldsT
-  | FactoryFieldsT;
+  | FactoryFieldsT

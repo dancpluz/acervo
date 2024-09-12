@@ -29,7 +29,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createDefaultArray } from "@/lib/utils";
 import { MarkupT } from "@/lib/types";
-import { useConfigFormActions } from "@/lib/hooks";
+import useConfigFormActions from "@/hooks/useConfigFormActions";
 
 const fieldValidations = z.object({ markup: z.array(z.object(Object.values(markupFields).reduce((acc, field) => ({ ...acc, [field.value]: field.validation }), {}))) })
 const defaultArrayValues = createDefaultArray(markupFields);

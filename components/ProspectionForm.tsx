@@ -21,7 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ProspectionT } from "@/lib/types";
-import { useConfigFormActions } from "@/lib/hooks";
+import useConfigFormActions from "@/hooks/useConfigFormActions";
 
 const fieldValidations = z.object({ prospection: z.array(z.object(Object.values(prospectionFields).reduce((acc, field) => ({ ...acc, [field.value]: field.validation }), {}))) })
 const [defaultArrayValues,] = formatFields(prospectionFields);

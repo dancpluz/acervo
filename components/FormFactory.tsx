@@ -12,10 +12,10 @@ import { EditTinyTable, TinyTable } from "@/components/TinyTable";
 import { InputField, RadioField, SearchField, ShowField, SelectField, ReferenceField } from "./AllFields";
 import { factoryFields, fields, enumFields, contactFields } from "@/lib/fields";
 import { FormDiv, FieldDiv, TabDiv } from "@/components/ui/div";
-import { ConfirmAlert, DeleteAlert } from "@/components/AllAlerts";
+import { ConfirmAlert, DeleteAlert } from "@/components/AllPopups";
 import FormButton from '@/components/FormButton';
 import { fillCepFields, formatFields, createDefaultArray } from "@/lib/utils";
-import { useFormActions } from "@/lib/hooks";
+import useEntityFormActions from "@/hooks/useEntityFormActions";
 import { ReferenceT } from "@/lib/types";
 
 const [defaultValues, fieldValidations] = formatFields(factoryFields);
@@ -48,7 +48,7 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
     popupOpen,
     setPopupOpen,
     conflicts 
-  } = useFormActions(form, data, 'factory', checkPaths, 'representative');
+  } = useEntityFormActions(form, data, 'factory', checkPaths, 'representative');
 
   return (
     <Tabs className='bg-secondary/20' defaultValue={tabs[0]}>

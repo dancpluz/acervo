@@ -1,32 +1,5 @@
 import { DocumentReference, FieldValue } from "firebase/firestore";
 
-export enum PricingEnum {
-  $ = '1',
-  $$ = '2',
-  $$$ = '3',
-  $$$$ = '4',
-  $$$$$ = '5',
-}
-
-export enum StyleEnum {
-  Contemporaneo = 'Contemporâneo',
-  Classico = 'Clássico',
-  Rustico = 'Rústico',
-  Moderno = 'Moderno'
-}
-
-export enum AmbientEnum {
-  Interno = 'Interno',
-  Externo = 'Externo',
-  Int_Externo = 'Int. e Externo'
-}
-
-export enum TaxEnum {
-  NaoInfo = "Não Informado",
-  Contribuinte = "Contribuinte isento de inscrição no cadastro de contribuintes do ICMS",
-  NContribuinte = "Não Contribuinte, que pode ou não possuir inscrição estadual no cadastro ICMS"
-}
-
 export type ReferenceT = {
   contact: ContactT[];
   info_email: string;
@@ -67,7 +40,7 @@ export type InfoT = {
   company_name?: string;
   fantasy_name?: string;
   cnpj?: string;
-  tax_payer?: TaxEnum;
+  tax_payer?: string;
   municipal_register?: string;
   state_register?: string;
 }
@@ -165,4 +138,61 @@ export type ProspectionT = {
   ref?: string;
   title: string;
   tax: number | string;
+}
+
+export type FinishT = {
+  width: number;
+  height: number;
+  depth: number;
+  designer?: string;
+  frame: string;
+  fabric: string;
+  extra: string;
+  // fabric_img?: string;
+  // frame_img?: string;
+  // extra_img?: string;
+  link_finishes?: string;
+  link_3d?: string;
+}
+
+export type ProductT = {
+  ref?: string; // Numero_categoria_nome do produto_custo_data de criação
+  name: string;
+  ambient?: string;
+  enabled: boolean;
+  quantity: number;
+  category: string;
+  finish: FinishT;
+  //image: string;
+  observations?: string;
+  factory: FactoryT | DocumentReference;
+  freight: FreightT | DocumentReference;
+  cost: number;
+  markup: MarkupT | DocumentReference;
+  created_at: Date | { seconds: number, nanoseconds: number };
+}
+
+export type ActionT = {
+  date: Date | { seconds: number, nanoseconds: number };
+  description?: string;
+  collaborator: CollaboratorT | DocumentReference;
+}
+
+export type ProposalT = {
+  ref?: string; // Numero_nome do projeto_cliente_escritório_colaborador_data de criação 
+  name: string;
+  priority: string;
+  status: string;
+  collaborator: CollaboratorT | DocumentReference;
+  client: ClientT | DocumentReference;
+  office: OfficeT | DocumentReference;
+  client_type?: string;
+  project_type?: string;
+  origin?: string;
+  observations?: string;
+  actions?: ActionT[];
+  products?: ProductT[];
+  total: number;
+  created_at: Date | { seconds: number, nanoseconds: number };
+  last_updated: Date | { seconds: number, nanoseconds: number };
 }
