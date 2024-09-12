@@ -9,10 +9,10 @@ import { EditTinyTable, TinyTable } from "@/components/TinyTable";
 import { InputField, SearchField } from "./AllFields";
 import { collaboratorFields, contactFields, fields, enumFields } from "@/lib/fields";
 import { FormDiv, FieldDiv, TabDiv } from "@/components/ui/div";
-import { ConfirmAlert, DeleteAlert } from "@/components/AllAlerts";
+import { ConfirmAlert, DeleteAlert } from "@/components/AllPopups";
 import FormButton from '@/components/FormButton';
 import { fillCepFields, formatFields, createDefaultArray } from "@/lib/utils";
-import { useFormActions } from "@/lib/hooks";
+import useEntityFormActions from "@/hooks/useEntityFormActions";
 
 const [defaultValues, fieldValidations] = formatFields(collaboratorFields);
 
@@ -41,7 +41,7 @@ export default function FormCollaborator({ data, show }: { data?: any, show?: bo
     popupOpen,
     setPopupOpen,
     conflicts 
-  } = useFormActions(form, data, 'collaborator', checkPaths);
+  } = useEntityFormActions(form, data, 'collaborator', checkPaths);
 
   return (
     <Tabs className='bg-secondary/20' defaultValue={tabs[0]}>

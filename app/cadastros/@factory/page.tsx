@@ -29,7 +29,7 @@ export default async function Factory() {
               <CirclePlus />ADICIONAR FÁBRICA
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className='w-10/12 top-[30%] translate-y-[0%]'>
             <FormFactory />
           </DialogContent>
         </Dialog>
