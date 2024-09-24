@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import cidades from '@/lib/cidades.json';
@@ -37,11 +36,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { CalendarIcon, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
-import { ReferenceT } from "@/lib/types";
-import { getEntitiesOptions } from "@/lib/dbRead";
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import useGetEntities from '@/hooks/useGetEntities';
+import { converters, ConverterKey } from '@/lib/converters';
 
 export function SelectField({ path, form, customClass, obj, disabled }: { path?: string, form: ReturnType<typeof useForm>, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
@@ -68,16 +67,12 @@ export function SelectField({ path, form, customClass, obj, disabled }: { path?:
   );
 }
 
-export function ReferenceField({ path, form, obj, customClass, hint, setReferenceInfo, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, setReferenceInfo?: React.Dispatch<React.SetStateAction<ReferenceT | undefined>>, disabled?: boolean }) {
+export function ReferenceField({ path, form, obj, customClass, hint, setReferenceInfo, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, setReferenceInfo?: '', disabled?: boolean }) {
   
-  const [items, setItems] = useState<ReferenceT[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    getEntitiesOptions(obj.value).then((data) => { setItems(data), setIsLoading(false) });
-  }, [obj.value])
+  const [data, loading, error] = useGetEntities(obj.value, converters[obj.value]);
 
   const fieldPath = path ? path + '.' + obj.value : obj.value;
+  
   return (
     <FormField
       control={form.control}
@@ -97,8 +92,8 @@ export function ReferenceField({ path, form, obj, customClass, hint, setReferenc
                     !field.value && "text-tertiary"
                   )}
                 >
-                  {isLoading ? <LoaderCircle className='text-primary h-5 w-5 animate-spin' /> : field.value
-                    ? items.find((item) => item.ref === field.value)?.label
+                  {loading ? <LoaderCircle className='text-primary h-5 w-5 animate-spin' /> : field.value
+                    ? data.find((item) => item.id === field.value)?.label
                     : disabled ?? obj.placeholder
                   }
                   <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
@@ -108,27 +103,27 @@ export function ReferenceField({ path, form, obj, customClass, hint, setReferenc
             <PopoverContent className="p-0">
               <Command>
                 <CommandInput placeholder={hint} />
-                <CommandEmpty>{isLoading ? 'Carregando...' : 'Não encontrado'}</CommandEmpty>
+                <CommandEmpty>{loading ? 'Carregando...' : 'Não encontrado'}</CommandEmpty>
                 <CommandGroup>
                   <CommandList>
-                    {items.map((item) => 
+                    {data.map((item) => 
                         <CommandItem
-                          value={item.label}
-                          key={item.ref}
-                          onSelect={item.ref === field.value ? () => {
+                          value={item.person.label}
+                          key={item.id}
+                          onSelect={item.id === field.value ? () => {
                             form.setValue(fieldPath, ''); setReferenceInfo ? setReferenceInfo(undefined) : '';
                           } : () => {
-                            form.setValue(fieldPath, item.ref); setReferenceInfo ? setReferenceInfo(item) : '';
+                            form.setValue(fieldPath, item.id); setReferenceInfo ? setReferenceInfo(item) : '';
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              item.ref === field.value
+                              item.id === field.value
                                 ? "opacity-100"
                                 : "opacity-0"
                             )} />
-                          {item.label}
+                          {item.person.label}
                         </CommandItem>
                       )
                     }
@@ -253,8 +248,7 @@ export function TitleField({ path, form, obj, customClass, disabled }: { path?: 
         <FormItem className={customClass + ' grow-0'}>
           <FormMessage className='-top-3' />
           <FormControl>
-            {/* // @ts-ignore */}
-            <Input id='title' containerClassName='grow-0 items-center border-b border-secondary gap-2' className={'border-0 px-1 w-52 text-xl'} placeholder={disabled ? '' : obj.placeholder} {...field} disabled={disabled} icon={<Pencil className='cursor-pointer text-primary' onClick={() => document.getElementById("title").focus()} />} />
+            <Input id='title' containerClassName='grow-0 items-center border-b border-secondary gap-2' className={'border-0 px-1 w-52 text-xl'} placeholder={disabled ? '' : obj.placeholder} {...field} disabled={disabled} icon={<Pencil className='cursor-pointer text-primary' onClick={() => document.getElementById("title")?.focus()} />} />
           </FormControl>
         </FormItem>
       )} />
@@ -306,8 +300,8 @@ export function RadioField({ path, form, obj, optional, disabled, defaultValue }
     />
   )
 }
-// @ts-ignore
-export function DateField({ path, form, obj, customClass, disabled }) {
+
+export function DateField({ path, form, obj }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -353,5 +347,26 @@ export function DateField({ path, form, obj, customClass, disabled }) {
         </FormItem>
       )}
     />
+  )
+}
+
+export function PriorityField({ form, obj, priority }: { form: ReturnType<typeof useForm>, obj: EnumFieldT, priority: string }) {
+  return (
+    <FormField
+      control={form.control}
+      name={obj.value}
+      render={() => (
+        <FormItem>
+          <FormMessage className='top-4' />
+          <FormLabel>{obj.label}</FormLabel>
+          <div className='flex gap-0.5'>
+            {Array(3).fill(null).map((_, i) => {
+              return (
+                <Button type='button' onClick={() => priority === (i + 1).toString() ? '' : form.setValue(obj.value, (i + 1).toString())} key={i} className={`w-5 h-5 p-0 bg-background transition-colors border border-primary rounded-full ${i < Number(priority) ? 'bg-primary hover:bg-primary/80' : 'hover:bg-secondary/20'}`} />
+              )
+            })}
+          </div>
+        </FormItem>
+      )} />
   )
 }

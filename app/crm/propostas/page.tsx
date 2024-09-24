@@ -1,24 +1,13 @@
-// @ts-nocheck
-'use client'
 import Header from "@/components/Header";
 import { ChangeTab, StatusFilter } from "@/components/StatusButtons";
 import { columns } from "./proposalcolumns";
 import { DataTable } from "@/components/DataTable";
-import { entityTitles } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { CirclePlus } from "lucide-react";
 import ProposalForm from "@/components/ProposalForm";
-import useGetCollection from '@/hooks/useGetCollection'
 
 export default function CRM() {
-  const data = [{ id: 4, ref: 'teste', title: 'asfgasg' }]
-  // const proposals = await getProposals('proposal', ['office','client','collaborator'])
-  //console.log(proposals)
-  // @ts-ignore
-  const [snapshots, loading, error] = useGetCollection('proposal');
-
-
   return (
     <div className="flex flex-col gap-4 px-20 py-10 h-full">
       <Header page='CRM'>
@@ -36,8 +25,7 @@ export default function CRM() {
         <StatusFilter type='back' text='Fechado' count={33} route='/propostas' money={2000} active={false} />
         <StatusFilter type='lost' text='Perdido' count={33} route='/propostas' money={2000} active={false} />
       </div>
-      <DataTable search={'title'} columns={columns} data={snapshots} link={'/crm/propostas/'} found={entityTitles.proposal} />
-      
+      <DataTable entity={'proposal'} search={'name'} columns={columns} link={'/crm/propostas/'} />
       <div className="flex justify-between">
         <Dialog>
           <DialogTrigger asChild>

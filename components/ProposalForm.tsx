@@ -1,7 +1,5 @@
-// @ts-nocheck
 'use client'
 
-import PriorityIndicator from "@/components/PriorityIndicator";
 import { StatusButton } from "@/components/StatusButtons";
 import { SetStateAction, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +8,7 @@ import { z } from "zod";
 import { fields, proposalFields, actionFields } from "@/lib/fields";
 import { formatFields, stringToSlug } from "@/lib/utils";
 import useCRMFormActions from "@/hooks/useCRMFormActions";
-import { ReferenceField, InputField, SelectField, TitleField } from "@/components/AllFields";
+import { ReferenceField, InputField, SelectField, TitleField, PriorityField } from "@/components/AllFields";
 import { Form, FormLabel } from "@/components/ui/form";
 import { FormDiv, FieldDiv } from "@/components/ui/div";
 import { Button } from "@/components/ui/button";
@@ -23,13 +21,13 @@ import {
   PopoverClose
 } from "@/components/ui/popover"
 import ActionForm from "@/components/ActionForm";
-import { ReferenceT } from "@/lib/types";
 
 const [defaultValues, fieldValidations] = formatFields(proposalFields, ['actions', 'products'])
-defaultValues['status'] = '1'
-defaultValues['priority'] = '1'
+defaultValues['status'] = '1';
+defaultValues['priority'] = '1';
+defaultValues['total'] = 0.0;
 
-export default function ProposalForm() {  
+export default function ProposalForm() {
   const form = useForm<z.infer<typeof fieldValidations>>({
     resolver: zodResolver(fieldValidations),
     defaultValues,
@@ -76,7 +74,7 @@ export default function ProposalForm() {
           <div className='flex justify-between w-full'>
             <TitleField path='' obj={proposalFields.name} form={form} />
             <div className='flex flex-col gap-1'>
-              <PriorityIndicator form={form} obj={proposalFields.priority} priority={form.watch('priority')} />
+              <PriorityField form={form} obj={proposalFields.priority} priority={form.watch('priority')} />
             </div>
           </div>
           <div className='flex gap-2 py-3'>

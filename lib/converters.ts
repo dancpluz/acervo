@@ -257,6 +257,57 @@ const prospectionConverter: FirestoreDataConverter<ProspectionT> = {
   },
 };
 
+const proposalConverter: FirestoreDataConverter<ProposalT> = {
+  toFirestore(proposal: WithFieldValue<ProposalT>): DocumentData {
+    return {
+      name: proposal.name,
+      priority: proposal.priority,
+      status: proposal.status,
+      collaborator: proposal.collaborator,
+      client: proposal.client,
+      office: proposal.office,
+      client_type: proposal.client_type,
+      project_type: proposal.project_type,
+      origin: proposal.origin,
+      observations: proposal.observations,
+      actions: proposal.actions,
+      products: proposal.products,
+      total: proposal.total,
+      last_updated: proposal.last_updated,
+      created_at: proposal.created_at,
+    };
+  },
+  // @ts-ignore because its async
+  async fromFirestore(
+    snapshot: QueryDocumentSnapshot,
+    options: SnapshotOptions
+  ): Promise<ProposalT> {
+    const data = snapshot.data(options);
+    const collaborator = data.collaborator ? await getDoc(data.collaborator.withConverter(collaboratorConverter)) : '';
+    const client = data.client ? await getDoc(data.client.withConverter(clientConverter)) : '';
+    const office = data.office ? await getDoc(data.office.withConverter(officeConverter)) : '';
+    return {
+      id: snapshot.id,
+      num: data.num,
+      name: data.name,
+      priority: data.priority,
+      status: data.status,
+      collaborator: collaborator ? collaborator.data() as CollaboratorT : '',
+      client: client ? client.data() as ClientT : '',
+      office: office ? office.data() as OfficeT : '',
+      client_type: data.client_type,
+      project_type: data.project_type,
+      origin: data.origin,
+      observations: data.observations,
+      actions: data.actions,
+      products: data.products,
+      total: data.total,
+      last_updated: data.last_updated.toDate(),
+      created_at: data.created_at.toDate(),
+    };
+  },
+};
+
 export const converters = {
   collaborator: collaboratorConverter,
   factory: factoryConverter,
@@ -266,7 +317,8 @@ export const converters = {
   service: serviceConverter,
   markup: markupConverter,
   freight: freightConverter,
-  prospection: prospectionConverter
+  prospection: prospectionConverter,
+  proposal: proposalConverter,
 }
 
 export type ConverterKey = keyof typeof converters; 
