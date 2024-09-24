@@ -20,21 +20,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ProspectionT } from "@/lib/types";
 import useConfigFormActions from "@/hooks/useConfigFormActions";
+import useGetEntities from '@/hooks/useGetEntities';
+import { converters } from '@/lib/converters';
 
 const fieldValidations = z.object({ prospection: z.array(z.object(Object.values(prospectionFields).reduce((acc, field) => ({ ...acc, [field.value]: field.validation }), {}))) })
 const [defaultArrayValues,] = formatFields(prospectionFields);
 
-export default function ProspectionForm({ data }: { data: ProspectionT[] }) {
+export default function ProspectionForm() {
+  const [data, loading, error] = useGetEntities('config, markup_freight, prospection', converters['prospection']);
+
   const form = useForm<any>({
     resolver: zodResolver(fieldValidations),
-    defaultValues: { prospection: data },
   })
 
   const fieldArray = useFieldArray({
     control: form.control,
     name: 'prospection',
+    keyName: 'uuid',
   });
 
   const appendItem = async () => {
@@ -48,7 +51,7 @@ export default function ProspectionForm({ data }: { data: ProspectionT[] }) {
     onSubmit,
     undoSubmit,
     deleteSubmit,
-  } = useConfigFormActions(form, 'markup_freight', 'prospection');
+  } = useConfigFormActions(form, data, 'markup_freight', 'prospection');
 
   return (
     <Form {...form}>
@@ -57,7 +60,7 @@ export default function ProspectionForm({ data }: { data: ProspectionT[] }) {
           <div className='flex w-full flex-wrap gap-2'>
             {fieldArray.fields.length > 0 ? fieldArray.fields.map((row: any, index) => {
               return (
-                <div key={row.id} onClick={() => document.getElementById(`prospection.${index}.${prospectionFields.title.value}`)?.focus()} className='flex border rounded-lg cursor-pointer h-10 hover:bg-secondary/20 border-secondary gap-1 items-center px-2'>
+                <div key={row.uuid} onClick={() => document.getElementById(`prospection.${index}.${prospectionFields.title.value}`)?.focus()} className='flex border rounded-lg cursor-pointer h-10 hover:bg-secondary/20 border-secondary gap-1 items-center px-2'>
                   <FormField
                     control={form.control}
                     name={`prospection.${index}.${prospectionFields.title.value}`}

@@ -20,21 +20,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FreightT } from "@/lib/types";
 import useConfigFormActions from "@/hooks/useConfigFormActions";
+import useGetEntities from '@/hooks/useGetEntities';
+import { converters } from '@/lib/converters';
 
 const fieldValidations = z.object({ freight: z.array(z.object(Object.values(freightFields).reduce((acc, field) => ({ ...acc, [field.value]: field.validation }), {}))) })
 const [defaultArrayValues, ] = formatFields(freightFields);
 
-export default function FreightForm({ data }: { data: FreightT[] }) {
+export default function FreightForm() {
+  const [data, loading, error] = useGetEntities('config, markup_freight, freight', converters['freight']);
+
   const form = useForm<any>({
     resolver: zodResolver(fieldValidations),
-    defaultValues: { freight: data },
   })
 
   const fieldArray = useFieldArray({
     control: form.control,
     name: 'freight',
+    keyName: 'uuid',
   });
 
   const appendItem = async () => {
@@ -48,7 +51,7 @@ export default function FreightForm({ data }: { data: FreightT[] }) {
     onSubmit,
     undoSubmit,
     deleteSubmit,
-  } = useConfigFormActions(form, 'markup_freight', 'freight');
+  } = useConfigFormActions(form, data, 'markup_freight', 'freight');
 
   return (
     <Form {...form}>
@@ -57,7 +60,7 @@ export default function FreightForm({ data }: { data: FreightT[] }) {
           <div className='flex w-full flex-wrap gap-2'>
             {fieldArray.fields.length > 0 ? fieldArray.fields.map((row: any, index) => {
               return (
-                <div key={row.id} onClick={() => document.getElementById(`freight.${index}.${freightFields.region.value}`)?.focus()} className='flex border rounded-lg cursor-pointer h-10 hover:bg-secondary/20 border-secondary gap-1 items-center px-2'>
+                <div key={row.uuid} onClick={() => document.getElementById(`freight.${index}.${freightFields.region.value}`)?.focus()} className='flex border rounded-lg cursor-pointer h-10 hover:bg-secondary/20 border-secondary gap-1 items-center px-2'>
                   <FormField
                     control={form.control}
                     name={`freight.${index}.${freightFields.region.value}`}
@@ -83,7 +86,7 @@ export default function FreightForm({ data }: { data: FreightT[] }) {
                         <FormMessage />
                       </FormItem>
                     )} />
-                  {row.ref ?
+                  {row.id ?
                     <AlertDialog>
                       <AlertDialogTrigger>
                         <CircleX className='w-5 h-5 text-destructive cursor-pointer' />
@@ -97,7 +100,7 @@ export default function FreightForm({ data }: { data: FreightT[] }) {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>CANCELAR</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => { deleteSubmit(row.ref); fieldArray.remove(index) }}>APAGAR</AlertDialogAction>
+                          <AlertDialogAction onClick={() => { deleteSubmit(row.id); fieldArray.remove(index) }}>APAGAR</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

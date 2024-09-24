@@ -11,9 +11,13 @@ import { formatPercent } from '@/lib/utils';
 
 export const columns: ColumnDef<FactoryT>[] = [
   {
-    accessorKey: "company_name",
+    accessorKey: "person.label",
+    id: 'name',
     header: ({ column }) => {
-      return <SortHeader column={column} header='NOME'/>
+      return <SortHeader column={column} header='NOME' />
+    },
+    cell: ({ row }) => {
+      return <div>{row.getValue('name')}</div>;
     },
     size: 250,
   },
@@ -44,13 +48,13 @@ export const columns: ColumnDef<FactoryT>[] = [
     size: 100,
   },
   {
-    accessorKey: "representative",
+    accessorKey: "representative.person.label",
+    id: 'representative',
     header: ({ column }) => {
       return <SortHeader column={column} header='REPRESENTANTE'/>
     },
     cell: ({ row }) => {
-      const representative = row.getValue('representative');
-      return representative ? representative : '-';
+      return row.getValue('representative') ? row.getValue('representative') : '-';
     },
     size: 250,
   },

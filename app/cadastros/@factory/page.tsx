@@ -2,24 +2,17 @@ import { Button } from "@/components/ui/button"
 import { columns } from "./factorycolumns";
 import { DataTable } from "@/components/DataTable"
 import { CirclePlus } from "lucide-react";
-import { getEntities } from "@/lib/dbRead";
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import FormFactory from "@/components/FormFactory";
-import { formatFactory, entityTitles } from "@/lib/utils";
-
-export const revalidate = 60;
 
 export default async function Factory() {
-  let fullData = await getEntities('factory', 'representative');
-  fullData = fullData.map((data) => ({...data, direct_sale: data.direct_sale * 100, discount: data.discount * 100})) 
-
   return (
     <div className="flex flex-col gap-4 py-4">
-      <DataTable search={'company_name'} columns={columns} data={fullData ? formatFactory(fullData) : []} fullData={fullData ? fullData : []} found={entityTitles.factory}>
+      <DataTable entity={'factory'} search={'name'} columns={columns}>
         <FormFactory show />
       </DataTable>
       <div className="flex justify-between">

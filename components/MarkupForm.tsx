@@ -28,21 +28,24 @@ import {
 } from "@/components/ui/alert-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createDefaultArray } from "@/lib/utils";
-import { MarkupT } from "@/lib/types";
 import useConfigFormActions from "@/hooks/useConfigFormActions";
+import useGetEntities from '@/hooks/useGetEntities';
+import { converters } from '@/lib/converters';
 
 const fieldValidations = z.object({ markup: z.array(z.object(Object.values(markupFields).reduce((acc, field) => ({ ...acc, [field.value]: field.validation }), {}))) })
 const defaultArrayValues = createDefaultArray(markupFields);
 
-export default function MarkupForm({ data }: { data: MarkupT[] }) {
+export default function MarkupForm() {
+  const [data, loading, error] = useGetEntities('config, markup_freight, markup', converters['markup']);
+
   const form = useForm<any>({
     resolver: zodResolver(fieldValidations),
-    defaultValues: { markup: data },
   })
 
   const fieldArray = useFieldArray({
     control: form.control,
     name: 'markup',
+    keyName: 'uuid',
   });
 
   const appendItem = async () => {
@@ -56,7 +59,7 @@ export default function MarkupForm({ data }: { data: MarkupT[] }) {
     onSubmit,
     undoSubmit,
     deleteSubmit,
-  } = useConfigFormActions(form, 'markup_freight', 'markup');
+  } = useConfigFormActions(form, data, 'markup_freight', 'markup');
   
   const order = ["name", "observation", "12x", "6x", "cash"];
 
@@ -77,8 +80,9 @@ export default function MarkupForm({ data }: { data: MarkupT[] }) {
             </TableHeader>
             <TableBody className="overflow-y-auto">
               {fieldArray.fields.length > 0 ? fieldArray.fields.map((row: any, index) => {
+                console.log(row)
                 return (
-                  <TableRow className='odd:bg-background even:bg-secondary/20' key={row.id}>
+                  <TableRow className='odd:bg-background even:bg-secondary/20' key={row.uuid}>
                     {Object.keys(row).sort((a, b) => { return order.indexOf(a) - order.indexOf(b) }).slice(2).map((key, i) => {
                       return (
                         <TableCell className='first:pl-4 transition-colors hover:cursor-pointer hover:bg-secondary/10' onClick={() => document.getElementById(`markup.${index}.${key}`)?.focus()} key={key}>
@@ -102,7 +106,7 @@ export default function MarkupForm({ data }: { data: MarkupT[] }) {
                       )
                     })}
                     <TableCell className='flex justify-center pl-2 pr-4'>
-                      {row.ref ? 
+                      {row.id ? 
                       <AlertDialog>
                         <AlertDialogTrigger>
                           <CircleX className='text-destructive cursor-pointer' />
@@ -116,7 +120,7 @@ export default function MarkupForm({ data }: { data: MarkupT[] }) {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>CANCELAR</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => {deleteSubmit(row.ref); fieldArray.remove(index)}}>APAGAR</AlertDialogAction>
+                            <AlertDialogAction onClick={() => {deleteSubmit(row.id); fieldArray.remove(index)}}>APAGAR</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>

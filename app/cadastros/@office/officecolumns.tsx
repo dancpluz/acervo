@@ -6,16 +6,24 @@ import SortHeader from "@/components/SortHeader";
 
 export const columns: ColumnDef<OfficeT>[] = [
   {
-    accessorKey: "company_name",
+    accessorKey: "person.label",
+    id: 'name',
     header: ({ column }) => {
       return <SortHeader column={column} header='NOME' />
+    },
+    cell: ({ row }) => {
+      return <div>{row.getValue('name')}</div>;
     },
     size: 200,
   },
   {
-    accessorKey: "info_email",
+    accessorKey: "person.info.info_email",
+    id: 'info_email',
     header: ({ column }) => {
       return <SortHeader column={column} header='EMAIL' />
+    },
+    cell: ({ row }) => {
+      return <div>{row.getValue('info_email')}</div>;
     },
     size: 200,
   },

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateConfig, addConfig, deleteConfig } from '@/lib/dbWrite';
 import { UseFormReturn } from 'react-hook-form';
@@ -7,15 +8,20 @@ import { deleteToast } from '@/hooks/general';
 
 export default function useConfigFormActions(
   form: UseFormReturn<any>,
+  data: any,
   subcollection: string,
   config: string,
 ) {
   const router = useRouter();
   const entityTitle = entityTitles[config];
 
-  // useEffect(() => {
-  //   console.log(form.getValues());
-  // }, [form.formState]);
+  useEffect(() => {
+    console.log(form.getValues());
+  }, [form.formState]);
+
+  useEffect(() => {
+    form.reset({ [config]: data });
+  }, [data]);
 
   async function onSubmit(values: any) {
     try {
@@ -39,6 +45,7 @@ export default function useConfigFormActions(
   }
 
   async function undoSubmit() {
+    // WIP
     try {
       form.reset({ keepDirty: true, keepDirtyValues: false });
     } catch (error) {
