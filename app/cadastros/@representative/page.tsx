@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import FormRepresentative from "@/components/FormRepresentative";
 
-export default async function Representative() {
+export default function Representative() {
   return (
     <div className="flex flex-col gap-4 py-4">
       <DataTable entity={'representative'} search={'name'} columns={columns}>

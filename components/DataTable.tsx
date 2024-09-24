@@ -28,7 +28,7 @@ import {
 import { ChevronRight, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from "@/components/ui/button";
-import { entityTitles, EntityTitleT } from "@/lib/utils";
+import { entityTitles } from "@/lib/utils";
 import { useRouter } from 'next/navigation';
 import useGetEntities from '@/hooks/useGetEntities';
 import { converters, ConverterKey } from '@/lib/converters';
@@ -52,7 +52,7 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const router = useRouter();
   const found = entityTitles[entity];
-  const [data, loading, error] = useGetEntities(entity, converters[entity]);
+  const [data, loading, error] = useGetEntities<TData>(entity, converters[entity]);
   
   const table = useReactTable({
     data,
@@ -138,7 +138,7 @@ export function DataTable<TData, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     className={link ? 'cursor-pointer hover:bg-secondary/20' : ''}
-                    onClick={link ? () => router.push(link + (data[row.index] as any).ref) : undefined}
+                    onClick={link && data ? () => router.push(link + (data[row.index]).id) : undefined}
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
                   >

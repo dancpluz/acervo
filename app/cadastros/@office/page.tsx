@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import FormOffice from "@/components/FormOffice";
 
-export default async function Office() {
+export default function Office() {
   return (
     <div className="flex flex-col gap-4 py-4">
       <DataTable entity={'office'} search={'name'} columns={columns}>

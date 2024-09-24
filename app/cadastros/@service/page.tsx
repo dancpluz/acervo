@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import FormService from "@/components/FormService";
 
-export default async function Service() {
+export default function Service() {
   return (
     <div className="flex flex-col gap-4 py-4">
       <DataTable entity={'service'} search={'name'} columns={columns}>

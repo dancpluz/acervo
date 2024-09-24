@@ -186,6 +186,7 @@ export type ActionT = {
 
 export type ProposalT = {
   id: string; // Numero_nome do projeto_cliente_escritório_colaborador_data de criação 
+  num: number;
   name: string;
   priority: string;
   status: string;
