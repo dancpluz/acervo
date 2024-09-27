@@ -733,6 +733,12 @@ const productFields = {
 }
 
 export const proposalFields = {
+  num: {
+    value: 'num',
+    label: '',
+    placeholder: '',
+    validation: z.number()
+  },
   name: {
     value: 'name',
     label: 'NOME*',
@@ -798,16 +804,6 @@ export const proposalFields = {
   observations: fields.observations,
   actions: actionFields,
   // products: productFields,
-  total: {
-    value: 'total',
-    label: '',
-    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", "."))).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' })),
-  },
-  created_at: {
-    value: 'created_at',
-    label: 'CRIADO EM',
-    validation: z.string().optional().or(z.literal('')),
-  },
 }
 
 type CollaboratorFieldsT = typeof collaboratorFields;
@@ -818,6 +814,7 @@ type ServiceJuridicalFieldsT = typeof serviceJuridicalFields;
 type RepresentativeFieldsT = typeof representativeFields;
 type OfficeFieldsT = typeof officeFields;
 type FactoryFieldsT = typeof factoryFields;
+type ProposalFieldsT = typeof proposalFields;
 
 export type AllFieldTypes =
   | CollaboratorFieldsT
@@ -828,3 +825,4 @@ export type AllFieldTypes =
   | RepresentativeFieldsT
   | OfficeFieldsT
   | FactoryFieldsT
+  | ProposalFieldsT

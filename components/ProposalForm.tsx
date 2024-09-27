@@ -1,11 +1,11 @@
 'use client'
 
 import { StatusButton } from "@/components/StatusButtons";
-import { SetStateAction, useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
-import { fields, proposalFields, actionFields } from "@/lib/fields";
+import { fields, proposalFields } from "@/lib/fields";
 import { formatFields, stringToSlug } from "@/lib/utils";
 import useCRMFormActions from "@/hooks/useCRMFormActions";
 import { ReferenceField, InputField, SelectField, TitleField, PriorityField } from "@/components/AllFields";
@@ -13,6 +13,9 @@ import { Form, FormLabel } from "@/components/ui/form";
 import { FormDiv, FieldDiv } from "@/components/ui/div";
 import { Button } from "@/components/ui/button";
 import { CirclePlus, X } from 'lucide-react';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc } from 'firebase/firestore';
+import db from '@/lib/firebase';
 import { format } from 'date-fns';
 import {
   Popover,
@@ -21,13 +24,15 @@ import {
   PopoverClose
 } from "@/components/ui/popover"
 import ActionForm from "@/components/ActionForm";
+import { ClientT, CollaboratorT, OfficeT } from "@/lib/types";
 
 const [defaultValues, fieldValidations] = formatFields(proposalFields, ['actions', 'products'])
 defaultValues['status'] = '1';
 defaultValues['priority'] = '1';
-defaultValues['total'] = 0.0;
 
 export default function ProposalForm() {
+  const [shard, loading, error] = useDocumentData(doc(db, 'shard', 'proposal'));
+
   const form = useForm<z.infer<typeof fieldValidations>>({
     resolver: zodResolver(fieldValidations),
     defaultValues,
@@ -39,16 +44,22 @@ export default function ProposalForm() {
     name: 'actions',
   });
   
-  const [referenceInfo, setReferenceInfo] = useState({});
+  const [referenceInfo, setReferenceInfo] = useState<{ [key: string] : '' | CollaboratorT | ClientT | OfficeT }>({ client: '', collaborator: '', office: '' });
   const [popoverOpen, setPopoverOpen] = useState(false);
   const today = new Date();
-  const id = `1${form.watch('name') ? '_' + stringToSlug(form.watch('name')) : ''}${referenceInfo.client ? '_' + stringToSlug(referenceInfo.client.label) : ''}${referenceInfo.office ? '_' + stringToSlug(referenceInfo.office.label) : ''}${referenceInfo.collaborator ? '_' + stringToSlug(referenceInfo.collaborator.label) : ''}_${format(today, "dd-MM-yyyy")}`
+  const id = `${loading ? '' : shard.index + 1}${form.watch('name') ? '_' + stringToSlug(form.watch('name')) : ''}${referenceInfo.client ? '_' + stringToSlug(referenceInfo.client.person.label) : ''}${referenceInfo.office ? '_' + stringToSlug(referenceInfo.office.person.label) : ''}${referenceInfo.collaborator ? '_' + stringToSlug(referenceInfo.collaborator.person.label) : ''}_${format(today, "dd-MM-yyyy")}`
   
   const {
     addSubmit,
-  } = useCRMFormActions(form, undefined, 'proposal', id, ['client', 'office', 'collaborator']);
+  } = useCRMFormActions(form, undefined, 'proposal', id);
 
   // const checkPaths = [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
+
+  useEffect(() => {
+    if (!loading && shard) {
+      form.setValue('num', shard.index + 1)
+    }
+  }, [shard, loading]);
 
   const appendItem = async () => {
     await form.trigger('temp')
@@ -59,12 +70,12 @@ export default function ProposalForm() {
     }
   }
 
-  const updateReferenceInfo = (key: string, value: SetStateAction<ReferenceT | undefined>) => {
-    setReferenceInfo((prevState) => ({
-      ...prevState,
-      [key]: value,
-    }));
-  };
+  const updateReferenceInfo = (key: string, value: '' | CollaboratorT | ClientT | OfficeT) => {
+      setReferenceInfo((prevState) => ({
+        ...prevState,
+        [key]: value,
+      }));
+    };
   
   return (
     <div className='flex flex-col bg-background gap-4 p-4 rounded-lg'>
@@ -87,12 +98,12 @@ export default function ProposalForm() {
           </div>
           <FormDiv className='flex-row gap-4 w-full'>
             <FieldDiv className='flex-col gap-4 w-full'>
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.collaborator} form={form} setReferenceInfo={(e) => updateReferenceInfo('collaborator', e)} hint={'Ex. Punto'} />
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.client} form={form} setReferenceInfo={(e) => updateReferenceInfo('client', e)} hint={'Ex. Punto'} />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.collaborator} onSelect={(e) => updateReferenceInfo('collaborator', e)} form={form} hint={'Ex. Punto'} />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.client} form={form} onSelect={(e) => updateReferenceInfo('client', e)} hint={'Ex. Punto'} />
               <InputField customClass={'grow-0'} path='' obj={fields.observations} form={form} long />
             </FieldDiv>
             <FieldDiv className='flex-col gap-4 w-full grow-0'>
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.office} form={form} setReferenceInfo={(e) => updateReferenceInfo('office', e)} hint={'Ex. Punto'} />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.office} form={form} onSelect={(e) => updateReferenceInfo('office', e)} hint={'Ex. Punto'} />
               <div className='flex gap-2'>
                 <SelectField path='' obj={proposalFields.client_type} form={form} />
                 <SelectField path='' obj={proposalFields.project_type} form={form} />

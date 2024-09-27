@@ -1,5 +1,6 @@
-import { FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot, getDoc, SnapshotOptions } from "firebase/firestore";
-import { ClientT, CollaboratorT, FactoryT, FreightT, MarkupT, OfficeT, PersonT, ProspectionT, RepresentativeT, ServiceT } from "@/lib/types";
+import db from "@/lib/firebase";
+import { FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot, serverTimestamp, getDoc, SnapshotOptions, doc } from "firebase/firestore";
+import { ClientT, CollaboratorT, FactoryT, FreightT, MarkupT, OfficeT, PersonT, ProposalT, ProspectionT, RepresentativeT, ServiceT } from "@/lib/types";
 import { formatPercent } from '@/lib/utils';
 
 const personConverter: FirestoreDataConverter<PersonT> = {
@@ -260,21 +261,22 @@ const prospectionConverter: FirestoreDataConverter<ProspectionT> = {
 const proposalConverter: FirestoreDataConverter<ProposalT> = {
   toFirestore(proposal: WithFieldValue<ProposalT>): DocumentData {
     return {
+      num: proposal.num,
       name: proposal.name,
       priority: proposal.priority,
       status: proposal.status,
-      collaborator: proposal.collaborator,
-      client: proposal.client,
-      office: proposal.office,
+      collaborator: doc(db, 'collaborator', proposal.collaborator as string),
+      client: doc(db, 'client', proposal.client as string),
+      office: doc(db, 'office', proposal.office as string),
       client_type: proposal.client_type,
       project_type: proposal.project_type,
       origin: proposal.origin,
       observations: proposal.observations,
       actions: proposal.actions,
-      products: proposal.products,
-      total: proposal.total,
-      last_updated: proposal.last_updated,
-      created_at: proposal.created_at,
+      products: proposal.products ? proposal.products : [],
+      total: proposal.total ? proposal.total : 0,
+      last_updated: serverTimestamp(),
+      created_at: proposal.created_at ? proposal.created_at : serverTimestamp(),
     };
   },
   // @ts-ignore because its async

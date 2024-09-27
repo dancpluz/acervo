@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { addProposal, updateEntity, deleteEntity } from '@/lib/dbWrite';
+import { addProposal } from '@/lib/dbWrite';
 import { checkExistingFields } from '@/lib/dbRead';
 import { UseFormReturn } from 'react-hook-form';
 import { entityTitles } from '@/lib/utils';
@@ -23,7 +23,6 @@ export default function useCRMFormActions(
   data: any,
   entity: string,
   id: string,
-  refEntities: string[],
 ): FormActionsT {
 
   const router = useRouter();
@@ -46,10 +45,8 @@ export default function useCRMFormActions(
   }, [data]);
 
   async function addSubmit(values: any) {
-    delete values.temp
-    values.num = 1
     try {
-      await addProposal(values, id, entity, refEntities)
+      await addProposal(values, id)
     
       toast({
         title: `${entityTitle.singular[0].toUpperCase() + entityTitle.singular.slice(1)} adicionad${entityTitle.sufix} com sucesso!`,

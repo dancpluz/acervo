@@ -1,15 +1,7 @@
 import { DocumentReference, FieldValue } from "firebase/firestore";
 
-// export type ReferenceT = {
-//   contact: ContactT[];
-//   info_email: string;
-//   label: string;
-//   ref: string;
-// }
-
 export type PersonT = {
   id: string;
-  ref?: string | DocumentReference;
   label?: string
   contact: ContactT[];
   info: InfoT;
@@ -190,9 +182,9 @@ export type ProposalT = {
   name: string;
   priority: string;
   status: string;
-  collaborator: CollaboratorT | DocumentReference;
-  client: ClientT | DocumentReference;
-  office: OfficeT | DocumentReference;
+  collaborator: string | CollaboratorT | DocumentReference;
+  client: string | ClientT | DocumentReference;
+  office: string | OfficeT | DocumentReference;
   client_type?: string;
   project_type?: string;
   origin?: string;
