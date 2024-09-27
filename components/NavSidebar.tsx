@@ -17,7 +17,7 @@ type Props = {
   slug: string;
 }
 
-export default function SideBar() {
+export default function NavSidebar() {
   const [expanded, setExpanded] = useState(false);
   const currentPage = usePathname().split('/')[1];
 

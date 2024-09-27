@@ -67,9 +67,9 @@ export function SelectField({ path, form, customClass, obj, disabled }: { path?:
   );
 }
 
-export function ReferenceField({ path, form, obj, customClass, hint, setReferenceInfo, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, setReferenceInfo?: '', disabled?: boolean }) {
+export function ReferenceField<EntityT>({ path, form, obj, customClass, hint, onSelect, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, onSelect?: any, disabled?: boolean }) {
   
-  const [data, loading, error] = useGetEntities(obj.value, converters[obj.value]);
+  const [data, loading, error] = useGetEntities<EntityT>(obj.value, converters[obj.value]);
 
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   
@@ -93,7 +93,7 @@ export function ReferenceField({ path, form, obj, customClass, hint, setReferenc
                   )}
                 >
                   {loading ? <LoaderCircle className='text-primary h-5 w-5 animate-spin' /> : field.value
-                    ? data.find((item) => item.id === field.value)?.label
+                    ? data.find((item) => item.id === field.value)?.person?.label
                     : disabled ?? obj.placeholder
                   }
                   <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
@@ -106,14 +106,14 @@ export function ReferenceField({ path, form, obj, customClass, hint, setReferenc
                 <CommandEmpty>{loading ? 'Carregando...' : 'Não encontrado'}</CommandEmpty>
                 <CommandGroup>
                   <CommandList>
-                    {data.map((item) => 
+                    {data && data.map((item) => 
                         <CommandItem
-                          value={item.person.label}
+                          value={item.id}
                           key={item.id}
                           onSelect={item.id === field.value ? () => {
-                            form.setValue(fieldPath, ''); setReferenceInfo ? setReferenceInfo(undefined) : '';
+                            form.setValue(fieldPath, ''); onSelect ? onSelect(undefined) : '';
                           } : () => {
-                            form.setValue(fieldPath, item.id); setReferenceInfo ? setReferenceInfo(item) : '';
+                            form.setValue(fieldPath, item.id); onSelect ? onSelect(item) : '';
                           }}
                         >
                           <Check
