@@ -86,8 +86,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function unformatNumber(str: string) {
-  return parseFloat(str.replace('R$ ', '').replaceAll('.', '').replaceAll(',', '.'))
+export function unformatNumber(str: string, percent: boolean = false) {
+  return parseFloat(str.replace('R$ ', '').replaceAll('.', '').replaceAll(',', '.')) * (percent ? 0.01 : 1)
 }
 
 export function formatCurrency(value: number) {

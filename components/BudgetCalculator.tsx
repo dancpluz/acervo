@@ -82,13 +82,13 @@ export default function BudgetCalculator() {
 
   const direct_sale = useDirectSale && selectedFactory.direct_sale ? selectedFactory.direct_sale : 0;
   const discount = selectedFactory?.discount ? selectedFactory.discount : 0;
-  const freight = selectedFreight?.fee ? selectedFreight.fee as number : 0;
-  const prospection = selectedProspection?.tax ? selectedProspection.tax as number : 0;
-  const costBase = cost && selectedMarkup ? (unformatNumber(cost) - multiplyCost(discount) + multiplyCost(direct_sale)) * unformatNumber(selectedMarkup['12x']) : 0
+  const freight = selectedFreight?.fee ? unformatNumber(selectedFreight.fee as string, true) : 0;
+  const prospection = selectedProspection?.tax ? unformatNumber(selectedProspection.tax as string, true) : 0;
+  const costBase = cost && selectedMarkup ? (unformatNumber(cost) - multiplyCost(discount) + multiplyCost(direct_sale)) * unformatNumber(selectedMarkup['12x'] as string) : 0
   const result = selectedMarkup ? {
     '12x': costBase * (1 + freight + prospection),
-    '6x': (costBase * (1 + freight + prospection)) * (1 - (unformatNumber(selectedMarkup['6x']) * 0.01)),
-    'cash': (costBase * (1 + freight + prospection)) * (1 - (unformatNumber(selectedMarkup['cash'])* 0.01))
+    '6x': (costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['6x'] as string, true)),
+    'cash': (costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['cash'] as string, true))
   } : undefined
 
   return (
@@ -178,12 +178,12 @@ export default function BudgetCalculator() {
             <div className='flex flex-col grow items-center border-r border-l border-secondary'>
               <h3 className='text-base'>6x</h3>
               <p className='text-sm text-tertiary'>{selectedMarkup ? selectedMarkup['6x'] + '%' : '-'}</p>
-              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * ((unformatNumber(selectedMarkup['6x']) * 0.01) + freight + prospection)) : ''}</p>
+              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * (unformatNumber(selectedMarkup['6x'], true) + freight + prospection)) : ''}</p>
             </div>
             <div className='flex flex-col grow items-center'>
               <h3 className='text-base'>à vista</h3>
               <p className='text-sm text-tertiary'>{selectedMarkup ? selectedMarkup['cash'] + '%' : '-'}</p>
-              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * ((unformatNumber(selectedMarkup['cash']) * 0.01) + freight + prospection)) : ''}</p>
+              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * (unformatNumber(selectedMarkup['cash'], true) + freight + prospection)) : ''}</p>
             </div>
           </div>
         </BorderDiv>
