@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BorderDiv } from "@/components/ui/div";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
 import { formatPercent, unformatNumber, formatCurrency } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
-import { FreightT, MarkupT, ProspectionT } from "@/lib/types";
+import { FactoryT, FreightT, MarkupT, ProspectionT, PersonT } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -31,20 +31,43 @@ import { Button } from './ui/button';
 import { Check, ChevronsUpDown, Copy } from 'lucide-react';
 import createNumberMask from 'text-mask-addons/dist/createNumberMask';
 import SelectableChips from '@/components/SelectableChips';
+import useGetEntities from '@/hooks/useGetEntities';
+import { converters } from './../lib/converters';
 
-export default function BudgetCalculator({ factories, markups, freights, prospections }: { factories: any[], markups: MarkupT[], freights: FreightT[], prospections: ProspectionT[] }) {
+export default function BudgetCalculator() {
+  const [factories, factoriesLoading, factoriesError] = useGetEntities('factory', converters['factory']);
+  const [markups, markupsLoading, markupsError] = useGetEntities('config, markup_freight, markup', converters['markup']);
+  const [freights, freightsLoading, freightsError] = useGetEntities('config, markup_freight, freight', converters['freight']);
+  const [prospections, prospectionsLoading, prospectionsError] = useGetEntities('config, markup_freight, prospection', converters['prospection']);
+  const loading = factoriesLoading || markupsLoading || freightsLoading || prospectionsLoading;
+  const error = factoriesError || markupsError || freightsError || prospectionsError;
+
   const [cost, setCost] = useState('');
   const [useDirectSale, setUseDirectSale] = useState<boolean>(false);
-  const [selectedFactory, setSelectedFactory] = useState<{refs: { factory: string }, person: {info: {company_name: string, fantasy_name: string}}, direct_sale: number | '', discount: number | ''} | undefined>(undefined);
-  const [selectedMarkup, setSelectedMarkup] = useState<MarkupT | undefined>(undefined);
-  const [selectedFreight, setSelectedFreight] = useState<FreightT | undefined>(undefined);
-  const [selectedProspection, setSelectedProspection] = useState<ProspectionT | undefined>(undefined);
+  // const [selectedFactory, setSelectedFactory] = useState<{refs: { factory: string }, person: {info: {company_name: string, fantasy_name: string}}, direct_sale: number | '', discount: number | ''} | undefined>(undefined);
+
+  const [referenceInfo, setReferenceInfo] = useState<{ [key: string]: '' | FactoryT | FreightT | MarkupT | ProspectionT }>({ factory: '',freight: '', markup: '', prospection: '' });
+
+  const updateReferenceInfo = (key: string, value: '' | FreightT | MarkupT | ProspectionT) => {
+    setReferenceInfo((prevState) => ({
+      ...prevState,
+      [key]: value,
+    }));
+  };
+
   
-  // useEffect(() => {
-  //   console.log(selectedFreight)
-  //   console.log(selectedMarkup)
-  //   console.log(selectedFactory)
-  // }, [selectedFreight, selectedFactory, selectedMarkup])
+  const selectedFactory = referenceInfo.factory as FactoryT;
+  const selectedFreight = referenceInfo.freight as FreightT;
+  const selectedMarkup = referenceInfo.markup as MarkupT;
+  const selectedProspection = referenceInfo.prospection as ProspectionT;
+
+  useEffect(() => {
+    if (!loading) {
+      console.log(factories)
+      console.log(markups)
+      console.log(prospections)
+    }
+  }, [selectedMarkup,factories, markups, prospections])
   
   const costMask = createNumberMask({
     prefix: 'R$ ',
@@ -57,15 +80,15 @@ export default function BudgetCalculator({ factories, markups, freights, prospec
     return unformatNumber(cost) * value;
   }
 
-  const direct_sale = useDirectSale && selectedFactory?.direct_sale ? selectedFactory.direct_sale : 0;
+  const direct_sale = useDirectSale && selectedFactory.direct_sale ? selectedFactory.direct_sale : 0;
   const discount = selectedFactory?.discount ? selectedFactory.discount : 0;
   const freight = selectedFreight?.fee ? selectedFreight.fee as number : 0;
   const prospection = selectedProspection?.tax ? selectedProspection.tax as number : 0;
-  const costBase = cost && selectedMarkup ? (unformatNumber(cost) - multiplyCost(discount) + multiplyCost(direct_sale)) * Number(selectedMarkup['12x']) : 0
+  const costBase = cost && selectedMarkup ? (unformatNumber(cost) - multiplyCost(discount) + multiplyCost(direct_sale)) * unformatNumber(selectedMarkup['12x']) : 0
   const result = selectedMarkup ? {
     '12x': costBase * (1 + freight + prospection),
-    '6x': (costBase * (1 + freight + prospection)) * (1 - Number(selectedMarkup['6x'])),
-    'cash': (costBase * (1 + freight + prospection)) * (1 - Number(selectedMarkup['cash']))
+    '6x': (costBase * (1 + freight + prospection)) * (1 - (unformatNumber(selectedMarkup['6x']) * 0.01)),
+    'cash': (costBase * (1 + freight + prospection)) * (1 - (unformatNumber(selectedMarkup['cash'])* 0.01))
   } : undefined
 
   return (
@@ -90,7 +113,7 @@ export default function BudgetCalculator({ factories, markups, freights, prospec
                   role="combobox"
                   className={`cursor-pointer justify-between pl-3 pr-3 relative overflow-hidden ${selectedFactory ?? 'text-tertiary'}`}
                 >
-                  {selectedFactory ? `${selectedFactory.person.info.company_name} ${selectedFactory.person.info.fantasy_name ? '- ' + selectedFactory.person.info.fantasy_name : ''}` : 'Selecione uma fábrica'}
+                  {selectedFactory ? (selectedFactory.person as PersonT).label : 'Selecione uma fábrica'}
                   <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
                 </Button>
               </PopoverTrigger>
@@ -100,15 +123,15 @@ export default function BudgetCalculator({ factories, markups, freights, prospec
                   <CommandEmpty>Não encontrado</CommandEmpty>
                   <CommandGroup>
                     <CommandList>
-                      {factories.map((factory) =>
+                      {factories && factories.map((factory) =>
                         <CommandItem
                           value={JSON.stringify(factory)}
                           key={factory.person.info.company_name}
-                          onSelect={(value) => setSelectedFactory(JSON.parse(value))}
+                          onSelect={(value) => updateReferenceInfo('factory',JSON.parse(value))}
                         >
                           <Check
-                            className={`mr-2 h-4 w-4 opacity-0 ${selectedFactory && selectedFactory.refs.factory === factory.refs.factory ? 'opacity-100' : ''}`} />
-                          {`${factory.person.info.company_name} ${factory.person.info.fantasy_name ? '- ' + factory.person.info.fantasy_name : ''}`}
+                            className={`mr-2 h-4 w-4 opacity-0 ${selectedFactory && selectedFactory.id === factory.id ? 'opacity-100' : ''}`} />
+                          {factory.person.label}
                         </CommandItem>
                       )
                       }
@@ -136,14 +159,14 @@ export default function BudgetCalculator({ factories, markups, freights, prospec
         <BorderDiv>
           <div className='flex justify-between items-center'>
             <h2 className='text-2xl'>Marcação</h2>
-            <p className='text-base text-tertiary whitespace-nowrap text-ellipsis'>{selectedMarkup?.observation ? `Observação: ${selectedMarkup.observation}` : ''}</p>
+            <p className='text-base text-tertiary whitespace-nowrap text-ellipsis'>{selectedMarkup.observation ? `Observação: ${selectedMarkup.observation}` : ''}</p>
           </div>
-          <Select onValueChange={(markup) => setSelectedMarkup(JSON.parse(markup))}>
+          <Select onValueChange={(markup) => updateReferenceInfo('markup', JSON.parse(markup))}>
             <SelectTrigger>
               <SelectValue placeholder='Selecione uma marcação' />
             </SelectTrigger>
             <SelectContent>
-              {(markups).map((markup) => <SelectItem key={markup.name} value={JSON.stringify(markup)}>{markup.name}</SelectItem>)}
+              {markups.map((markup) => <SelectItem key={markup.name} value={JSON.stringify(markup)}>{markup.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <div className='flex grow'>
@@ -154,13 +177,13 @@ export default function BudgetCalculator({ factories, markups, freights, prospec
             </div>
             <div className='flex flex-col grow items-center border-r border-l border-secondary'>
               <h3 className='text-base'>6x</h3>
-              <p className='text-sm text-tertiary'>{selectedMarkup ? formatPercent(selectedMarkup['6x'] as number) : '-'}</p>
-              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * (selectedMarkup['6x'] as number + freight + prospection)) : ''}</p>
+              <p className='text-sm text-tertiary'>{selectedMarkup ? selectedMarkup['6x'] + '%' : '-'}</p>
+              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * ((unformatNumber(selectedMarkup['6x']) * 0.01) + freight + prospection)) : ''}</p>
             </div>
             <div className='flex flex-col grow items-center'>
               <h3 className='text-base'>à vista</h3>
-              <p className='text-sm text-tertiary'>{selectedMarkup ? formatPercent(selectedMarkup['cash'] as number) : '-'}</p>
-              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * (selectedMarkup['cash'] as number + freight + prospection)) : ''}</p>
+              <p className='text-sm text-tertiary'>{selectedMarkup ? selectedMarkup['cash'] + '%' : '-'}</p>
+              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * ((unformatNumber(selectedMarkup['cash']) * 0.01) + freight + prospection)) : ''}</p>
             </div>
           </div>
         </BorderDiv>
@@ -169,14 +192,14 @@ export default function BudgetCalculator({ factories, markups, freights, prospec
             <h2 className='text-2xl'>Frete</h2>
             <p className='text-base text-tertiary'>{selectedFreight && costBase ? `(+${formatCurrency(costBase * freight)})` : ''}</p>
           </div>
-          <SelectableChips chips={freights} chipText='region' chipNumber='fee' placeholder='Sem fretes cadastrados...' selectedChip={selectedFreight} setFunction={setSelectedFreight} />
+          <SelectableChips chips={freights} chipText='region' chipNumber='fee' placeholder='Sem fretes cadastrados...' selectedChip={selectedFreight} setFunction={(value) => { updateReferenceInfo('freight', value)}} />
         </BorderDiv>
         <BorderDiv>
           <div className='flex justify-between items-center'>
             <h2 className='text-2xl'>Prospecção</h2>
             <p className='text-base text-tertiary'>{selectedProspection && costBase ? `(+${formatCurrency(costBase * prospection)})` : ''}</p>
           </div>
-          <SelectableChips chips={prospections} chipText='title' chipNumber='tax' placeholder='Sem prospecções cadastradas...' selectedChip={selectedProspection} setFunction={setSelectedProspection} />
+          <SelectableChips chips={prospections} chipText='title' chipNumber='tax' placeholder='Sem prospecções cadastradas...' selectedChip={selectedProspection} setFunction={(value) => { updateReferenceInfo('prospection', value) }} />
         </BorderDiv>
       </div>
       <div className='flex flex-col gap-4 w-full'>
