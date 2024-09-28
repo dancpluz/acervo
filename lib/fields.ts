@@ -428,7 +428,7 @@ export const markupFields: TableFieldT[] = [
 ];
 
 export const freightFields: { [key: string]: TableFieldT } = {
-  ref: {
+  id: {
     value: 'ref',
     label: '',
     validation: z.string().optional().or(z.literal('')),
@@ -448,7 +448,7 @@ export const freightFields: { [key: string]: TableFieldT } = {
 };
 
 export const prospectionFields: { [key: string]: TableFieldT } = {
-  ref: {
+  id: {
     value: 'ref',
     label: '',
     validation: z.string().optional().or(z.literal('')),
@@ -583,7 +583,7 @@ export const factoryFields = {
   link_site: fields.link_site,
 }
 
-export const actionFields = {
+export const actionFields: { [key: string]: FieldT | EnumFieldT } = {
   date: {
     value: 'date',
     label: 'DATA*',
@@ -733,6 +733,12 @@ const productFields = {
 }
 
 export const proposalFields = {
+  num: {
+    value: 'num',
+    label: '',
+    placeholder: '',
+    validation: z.number()
+  },
   name: {
     value: 'name',
     label: 'NOME*',
@@ -798,16 +804,6 @@ export const proposalFields = {
   observations: fields.observations,
   actions: actionFields,
   // products: productFields,
-  // total: {
-  //   value: 'total',
-  //   label: '',
-  //   validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", "."))).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O preço deve ser maior que 0')),
-  // },
-  created_at: {
-    value: 'created_at',
-    label: 'CRIADO EM',
-    validation: z.string().optional().or(z.literal('')),
-  },
 }
 
 type CollaboratorFieldsT = typeof collaboratorFields;
@@ -818,6 +814,7 @@ type ServiceJuridicalFieldsT = typeof serviceJuridicalFields;
 type RepresentativeFieldsT = typeof representativeFields;
 type OfficeFieldsT = typeof officeFields;
 type FactoryFieldsT = typeof factoryFields;
+type ProposalFieldsT = typeof proposalFields;
 
 export type AllFieldTypes =
   | CollaboratorFieldsT
@@ -828,3 +825,4 @@ export type AllFieldTypes =
   | RepresentativeFieldsT
   | OfficeFieldsT
   | FactoryFieldsT
+  | ProposalFieldsT

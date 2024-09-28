@@ -1,6 +1,5 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import * as Types from '@/lib/types';
 import { FieldT, TableFieldT, AllFieldTypes, EnumFieldT } from '@/lib/fields';
 import { z } from "zod";
 import slugify from 'slugify';
@@ -20,6 +19,15 @@ export type EntityTitleT = {
   singular: string,
   sufix: string
 };
+
+export const mapEnum = {
+  '0': 'Perdido',
+  '1': 'Solicitado',
+  '2': 'Enviado',
+  '3': 'Revisão',
+  '4': 'Esperando',
+  '5': 'Fechado',
+}
 
 export const entityTitles: { [key: string]: EntityTitleT } = {
   representative: {
@@ -78,8 +86,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function unformatNumber(str: string) {
-  return parseFloat(str.replace('R$ ', '').replaceAll('.', '').replaceAll(',', '.'))
+export function unformatNumber(str: string, percent: boolean = false) {
+  return parseFloat(str.replace('R$ ', '').replaceAll('.', '').replaceAll(',', '.')) * (percent ? 0.01 : 1)
 }
 
 export function formatCurrency(value: number) {
@@ -98,151 +106,6 @@ export function formatPercent(float: number | '') {
   } catch (error: any) {
     console.log(error)
     return 'NaN'
-  }
-}
-
-export function formatRefEntity(entity: string, person: any) {
-  switch (entity) {
-    case 'representative':
-      return {
-        ref: person.ref,
-        label: person.info.fantasy_name ? person.info.company_name + ' - ' + person.info.fantasy_name : person.info.company_name,
-        info_email: person.info.info_email,
-        contact: person.contact,
-      }
-    case 'office':
-      return {
-        ref: person.ref,
-        label: person.info.fantasy_name ? person.info.company_name + ' - ' + person.info.fantasy_name : person.info.company_name,
-        info_email: person.info.info_email,
-        contact: person.contact,
-      }
-    case 'collaborator':
-      return {
-        ref: person.ref,
-        label: `${person.info.name} ${person.info.surname}`
-      }
-    case 'client':
-      return {
-        ref: person.ref,
-        label: person.info.company_name ? person.info.company_name : `${person.info.name} ${person.info.surname}`,
-      }
-    default:
-      return {}
-  }
-}
-
-export function formatFactory(data: Types.FactoryT[]): any {
-  try {
-    return data.map((factory: Types.FactoryT) => {
-      const person = factory.person as Types.PersonT;
-      return {
-        company_name: person.info.fantasy_name ? person.info.fantasy_name : person.info.company_name,
-        pricing: factory.pricing,
-        style: factory.style,
-        ambient: factory.ambient,
-        representative: factory.representative?.label,
-        discount: factory.discount,
-        direct_sale: factory.direct_sale,
-        link_table: factory.link_table,
-        link_catalog: factory.link_catalog,
-        link_site: factory.link_site
-      }
-    })
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
-}
-
-export function formatRepresentative(data: Types.RepresentativeT[]): any {
-  try {
-    return data.map((representative: Types.RepresentativeT) => {
-      const person = representative.person as Types.PersonT;
-      return {
-        company_name: person.info.fantasy_name ? person.info.fantasy_name : person.info.company_name,
-        info_email: person.info.info_email,
-        phone: person.contact[0] ? person.contact[0].phone : '-',
-        telephone: person.contact[0] ? person.contact[0].telephone : '-',
-        factories: representative.refs?.representative,
-      }
-    })
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
-}
-
-export function formatOffice(data: Types.OfficeT[]): any {
-  try {
-    return data.map((office: Types.OfficeT) => {
-      const person = office.person as Types.PersonT;
-      return {
-        company_name: person.info.fantasy_name ? person.info.fantasy_name : person.info.company_name,
-        info_email: person.info.info_email,
-        phone: person.contact[0] ? person.contact[0].phone : '-',
-        telephone: person.contact[0] ? person.contact[0].telephone : '-',
-      }
-    })
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
-}
-
-export function formatClient(data: Types.ClientT[]): any {
-  try {
-    return data.map((client: Types.ClientT) => {
-      const person = client.person as Types.PersonT;
-      return {
-        name: person.info.fantasy_name ? person.info.fantasy_name : person.info.company_name ? person.info.company_name : person.info.name + ' ' + person.info.surname,
-        info_email: person.info.info_email,
-        phone: person.contact[0] ? person.contact[0].phone : '-',
-        telephone: person.contact[0] ? person.contact[0].telephone : '-',
-        office: client.office?.label,
-      }
-    })
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
-}
-
-export function formatCollaborator(data: Types.CollaboratorT[]): any {
-  try {
-    return data.map((collaborator: Types.CollaboratorT) => {
-      const person = collaborator.person as Types.PersonT;
-      return {
-        name: person.info.name + ' ' + person.info.surname,
-        role: collaborator.role,
-        info_email: person.info.info_email,
-        phone: person.contact[0] ? person.contact[0].phone : '-',
-        telephone: person.contact[0] ? person.contact[0].telephone : '-',
-        pix: person.payment.pix
-      }
-    })
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
-}
-
-export function formatService(data: Types.ServiceT[]): any {
-  try {
-    return data.map((service: Types.ServiceT) => {
-      const person = service.person as Types.PersonT;
-      return {
-        service: service.service,
-        name: person.info.fantasy_name ? person.info.fantasy_name : person.info.company_name ? person.info.company_name : person.info.name + ' ' + person.info.surname,
-        info_email: person.info.info_email,
-        phone: person.contact[0] ? person.contact[0].phone : '-',
-        telephone: person.contact[0] ? person.contact[0].telephone : '-',
-        pix: person.payment.pix,
-      }
-    })
-  } catch (error) {
-    console.log(error);
-    return [];
   }
 }
 

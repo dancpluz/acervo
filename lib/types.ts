@@ -1,14 +1,8 @@
 import { DocumentReference, FieldValue } from "firebase/firestore";
 
-export type ReferenceT = {
-  contact: ContactT[];
-  info_email: string;
-  label: string;
-  ref: string;
-}
-
 export type PersonT = {
-  ref?: string;
+  id: string;
+  label?: string
   contact: ContactT[];
   info: InfoT;
   payment: PaymentT;
@@ -55,8 +49,9 @@ export type AddressT = {
 }
 
 export type FactoryT = {
+  id: string;
   person: PersonT | DocumentReference;
-  representative: ReferenceT;
+  representative: DocumentReference | RepresentativeT | '';
   pricing: number;
   ambient: string;
   style: string;
@@ -76,21 +71,23 @@ export type WorkerT = {
 }
 
 export type RepresentativeT = {
+  id: string;
   person: PersonT | DocumentReference;
   team: WorkerT[];
   last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
-  refs?: { [key: string]: string };
 }
 
 export type OfficeT = {
+  id: string;
   person: PersonT | DocumentReference;
   team: WorkerT[];
   last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
 }
 
 export type ClientT = {
+  id: string;
   person: PersonT | DocumentReference;
-  office: ReferenceT;
+  office: DocumentReference | OfficeT | '';
   order: OrderT[];
   last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
 }
@@ -107,35 +104,36 @@ export type OrderT = {
 }
 
 export type CollaboratorT = {
+  id: string;
   person: PersonT | DocumentReference;
   role: string;
   last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
 }
 
 export type ServiceT = {
+  id: string;
   person: PersonT | DocumentReference;
   service: string;
   last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
 }
 
 export type MarkupT = {
-  ref?: string;
+  id: string;
   name: string;
   observation: string;
-  "x": number | string;
   "12x": number | string;
   "6x": number | string;
   cash: number | string;
 }
 
 export type FreightT = {
-  ref?: string;
+  id: string;
   region: string;
   fee: number | string;
 }
 
 export type ProspectionT = {
-  ref?: string;
+  id: string;
   title: string;
   tax: number | string;
 }
@@ -156,7 +154,7 @@ export type FinishT = {
 }
 
 export type ProductT = {
-  ref?: string; // Numero_categoria_nome do produto_custo_data de criação
+  id: string; // Numero_categoria_nome do produto_custo_data de criação
   name: string;
   ambient?: string;
   enabled: boolean;
@@ -179,13 +177,14 @@ export type ActionT = {
 }
 
 export type ProposalT = {
-  ref?: string; // Numero_nome do projeto_cliente_escritório_colaborador_data de criação 
+  id: string; // Numero_nome do projeto_cliente_escritório_colaborador_data de criação 
+  num: number;
   name: string;
   priority: string;
   status: string;
-  collaborator: CollaboratorT | DocumentReference;
-  client: ClientT | DocumentReference;
-  office: OfficeT | DocumentReference;
+  collaborator: string | CollaboratorT | DocumentReference;
+  client: string | ClientT | DocumentReference;
+  office: string | OfficeT | DocumentReference;
   client_type?: string;
   project_type?: string;
   origin?: string;

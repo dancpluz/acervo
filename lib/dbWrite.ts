@@ -3,7 +3,7 @@
 import db from "@/lib/firebase";
 import { collection, addDoc, setDoc, deleteDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { revalidatePath } from 'next/cache';
-
+import { converters } from '@/lib/converters';
 
 export async function addEntity(values: any, entity: string, entityValue?: string) {
   try {
@@ -102,14 +102,22 @@ export async function deleteConfig(ref: string, subcollection: string, config: s
     console.log(error)
   }
 }
-export async function addProposal(values: any, id: string, entity: string, refEntities: string[]=[]) {
+
+export async function updateIndex(shardId: string, num: number) {
   try {
-    refEntities.forEach((entityValue) => { values[entityValue] ? values[entityValue] = {person: doc(db, 'person', values[entityValue])} : ''})
+    const shardRef = doc(db, 'shard', shardId);
+    await updateDoc(shardRef, { index: num })
+  } catch(error) {
+    console.log(error)
+  }
+}
 
-    await setDoc(doc(db, entity, id), { ...values, created_at: serverTimestamp(), last_updated: serverTimestamp() });
-
-    revalidatePath('/crm');
-
+export async function addProposal(values: any, id: string) {
+  try {  
+    await setDoc(doc(collection(db, 'proposal'), id).withConverter(converters['proposal']), values)
+    
+    await updateIndex('proposal', values.num)
+    
   } catch (error) {
     console.log(error);
     throw new Error('Erro ao adicionar no banco de dados')

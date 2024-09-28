@@ -28,32 +28,31 @@ import {
 import { ChevronRight, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from "@/components/ui/button";
-import { EntityTitleT } from "@/lib/utils";
-import { useRouter } from 'next/navigation'
+import { entityTitles } from "@/lib/utils";
+import { useRouter } from 'next/navigation';
+import useGetEntities from '@/hooks/useGetEntities';
+import { converters, ConverterKey } from '@/lib/converters';
 
-
-interface DataTableProps<TData, TValue, TFullData> {
+interface DataTableProps<TData, TValue> {
+  entity: ConverterKey,
   columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  fullData?: TFullData[]
   search: string
   children?: ReactElement
-  found: EntityTitleT
   link?: string
 }
 
-export function DataTable<TData, TValue, TFullData>({
+export function DataTable<TData, TValue>({
+  entity,
   columns,
-  data,
-  fullData,
   search,
   children,
-  found,
   link,
-}: DataTableProps<TData, TValue, TFullData>) {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const router = useRouter()
+}: DataTableProps<TData, TValue>) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const router = useRouter();
+  const found = entityTitles[entity];
+  const [data, loading, error] = useGetEntities<TData>(entity, converters[entity]);
   
   const table = useReactTable({
     data,
@@ -105,7 +104,7 @@ export function DataTable<TData, TValue, TFullData>({
         </TableHeader>
         <TableBody className='last:border-b last:border-primary'>
           {table.getRowModel().rows?.length ? 
-           children && fullData ?
+           children && data ?
           (
             table.getRowModel().rows.map((row) => (
               <Collapsible key={row.id} asChild>
@@ -128,7 +127,7 @@ export function DataTable<TData, TValue, TFullData>({
                   <CollapsibleContent asChild>
                     <TableRow>
                       <TableCell colSpan={columns.length + 1} className="p-0">
-                        {cloneElement(children, { data: fullData[row.index] })}
+                        {cloneElement(children, { data: data[row.index] })}
                       </TableCell>
                     </TableRow>
                   </CollapsibleContent>
@@ -139,7 +138,7 @@ export function DataTable<TData, TValue, TFullData>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     className={link ? 'cursor-pointer hover:bg-secondary/20' : ''}
-                    onClick={link ? () => router.push(link + (data[row.index] as any).ref) : undefined}
+                    onClick={link && data ? () => router.push(link + (data[row.index]).id) : undefined}
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
                   >
