@@ -1,6 +1,6 @@
 import db from "@/lib/firebase";
 import { FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot, serverTimestamp, getDoc, SnapshotOptions, doc } from "firebase/firestore";
-import { ClientT, CollaboratorT, FactoryT, FreightT, MarkupT, OfficeT, PersonT, ProposalT, ProspectionT, RepresentativeT, ServiceT } from "@/lib/types";
+import { ClientT, CollaboratorT, FactoryT, FreightT, MarkupT, OfficeT, PersonT, ProductT, ProposalT, ProspectionT, RepresentativeT, ServiceT, VersionT } from "@/lib/types";
 import { formatPercent } from '@/lib/utils';
 
 const personConverter: FirestoreDataConverter<PersonT> = {
@@ -80,7 +80,7 @@ const factoryConverter: FirestoreDataConverter<FactoryT> = {
   toFirestore(factory: WithFieldValue<FactoryT>): DocumentData {
     return {
       person: factory.person,
-      representative: factory.representative,
+      representative: factory.representative ? doc(db, 'representative', factory.representative as string) : '',
       pricing: factory.pricing,
       ambient: factory.ambient,
       style: factory.style,
@@ -89,7 +89,7 @@ const factoryConverter: FirestoreDataConverter<FactoryT> = {
       link_table: factory.link_table,
       link_catalog: factory.link_catalog,
       link_site: factory.link_site,
-      last_updated: factory.last_updated,
+      last_updated: serverTimestamp(),
     };
   },
   // @ts-ignore because its async
@@ -209,6 +209,7 @@ const markupConverter: FirestoreDataConverter<MarkupT> = {
     const data = snapshot.data(options);
     return {
       id: snapshot.id,
+      label: `${data.name} - ${data['12x'].toString().replace('.', ',')}x/${data['6x'] * 100}%/${data.cash * 100}%`,
       name: data.name,
       observation: data.observation,
       '12x': data['12x'].toString().replace('.', ','),
@@ -232,6 +233,7 @@ const freightConverter: FirestoreDataConverter<FreightT> = {
     const data = snapshot.data(options);
     return {
       id: snapshot.id,
+      label: `${data.region} - ${data.fee === 0 ? 'Grátis' : formatPercent(data.fee as number) }`,
       region: data.region,
       fee: data.fee === 0 ? '' : formatPercent(data.fee as number).replace('%', ''),
     };
@@ -252,6 +254,7 @@ const prospectionConverter: FirestoreDataConverter<ProspectionT> = {
     const data = snapshot.data(options);
     return {
       id: snapshot.id,
+      label: `${data.title} - ${data.tax === 0 ? 'Grátis' : formatPercent(data.tax as number)}`,
       title: data.title,
       tax: data.tax === 0 ? '' : formatPercent(data.tax as number).replace('%', ''),
     };
@@ -273,7 +276,7 @@ const proposalConverter: FirestoreDataConverter<ProposalT> = {
       origin: proposal.origin,
       observations: proposal.observations,
       actions: proposal.actions,
-      products: proposal.products ? proposal.products : [],
+      versions: proposal.versions ? proposal.versions : [],
       total: proposal.total ? proposal.total : 0,
       last_updated: serverTimestamp(),
       created_at: proposal.created_at ? proposal.created_at : serverTimestamp(),
@@ -302,9 +305,65 @@ const proposalConverter: FirestoreDataConverter<ProposalT> = {
       origin: data.origin,
       observations: data.observations,
       actions: data.actions,
-      products: data.products,
+      versions: await Promise.all(data.versions.map(async (version: VersionT) => ({
+        num: version.num,
+        products: await Promise.all(version.products.map(async (product) => {
+          const factory = product.factory ? await getDoc(product.factory.withConverter(factoryConverter)) : '';
+          const markup = product.markup ? await getDoc(product.markup.withConverter(markupConverter)) : '';
+          const freight = product.freight ? await getDoc(product.freight.withConverter(freightConverter)) : '';
+          
+          return {...product, factory: factory ? factory.data() as FactoryT : '', markup: markup ? markup.data() as MarkupT : '', freight: freight ? freight.data() as FreightT : ''};
+          })
+        )})
+      )),
       total: data.total,
       last_updated: data.last_updated.toDate(),
+      created_at: data.created_at.toDate(),
+    };
+  },
+};
+
+const productConverter: FirestoreDataConverter<ProductT> = {
+  toFirestore(product: WithFieldValue<ProductT>): DocumentData {
+    return {
+      num: product.num,
+      name: product.name,
+      ambient: product.ambient,
+      enabled: product.enabled,
+      quantity: product.quantity,
+      category: product.category,
+      finish: product.finish,
+      observations: product.observations,
+      factory: doc(db, 'factory', product.factory as string),
+      freight: doc(db, 'config', 'markup_freight', 'freight', product.freight as string),
+      cost: product.cost,
+      markup: doc(db, 'config', 'markup_freight','markup', product.markup as string),
+      created_at: product.created_at ? product.created_at : serverTimestamp(),
+    };
+  },
+  // @ts-ignore because its async
+  async fromFirestore(
+    snapshot: QueryDocumentSnapshot,
+    options: SnapshotOptions
+  ): Promise<ProductT> {
+    const data = snapshot.data(options);
+    const factory = data.factory ? await getDoc(data.factory.withConverter(factoryConverter)) : '';
+    const markup = data.client ? await getDoc(data.markup.withConverter(markupConverter)) : '';
+    const freight = data.freight ? await getDoc(data.freight.withConverter(freightConverter)) : '';
+    return {
+      id: snapshot.id,
+      num: data.num,
+      name: data.name,
+      ambient: data.ambient,
+      enabled: data.enabled,
+      quantity: data.quantity,
+      category: data.category,
+      finish: data.finish,
+      observations: data.observations,
+      factory: factory ? factory.data() as FactoryT : '',
+      freight: freight ? freight.data() as FreightT : '',
+      cost: data.cost,
+      markup: markup ? markup.data() as MarkupT : '',
       created_at: data.created_at.toDate(),
     };
   },
@@ -321,6 +380,7 @@ export const converters = {
   freight: freightConverter,
   prospection: prospectionConverter,
   proposal: proposalConverter,
+  product: productConverter
 }
 
 export type ConverterKey = keyof typeof converters; 

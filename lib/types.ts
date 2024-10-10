@@ -51,7 +51,7 @@ export type AddressT = {
 export type FactoryT = {
   id: string;
   person: PersonT | DocumentReference;
-  representative: DocumentReference | RepresentativeT | '';
+  representative: DocumentReference | RepresentativeT | string | '';
   pricing: number;
   ambient: string;
   style: string;
@@ -120,6 +120,7 @@ export type ServiceT = {
 export type MarkupT = {
   id: string;
   name: string;
+  label: string;
   observation: string;
   "12x": number | string;
   "6x": number | string;
@@ -129,12 +130,14 @@ export type MarkupT = {
 export type FreightT = {
   id: string;
   region: string;
+  label: string;
   fee: number | string;
 }
 
 export type ProspectionT = {
   id: string;
   title: string;
+  label: string;
   tax: number | string;
 }
 
@@ -154,7 +157,8 @@ export type FinishT = {
 }
 
 export type ProductT = {
-  id: string; // Numero_categoria_nome do produto_custo_data de criação
+  id: string; // Numero_categoria_nome do produto_data de criação
+  num: number;
   name: string;
   ambient?: string;
   enabled: boolean;
@@ -163,10 +167,10 @@ export type ProductT = {
   finish: FinishT;
   //image: string;
   observations?: string;
-  factory: FactoryT | DocumentReference;
-  freight: FreightT | DocumentReference;
+  factory: FactoryT | DocumentReference | '';
+  freight: FreightT | DocumentReference | '';
   cost: number;
-  markup: MarkupT | DocumentReference;
+  markup: MarkupT | DocumentReference | '';
   created_at: Date | { seconds: number, nanoseconds: number };
 }
 
@@ -174,6 +178,13 @@ export type ActionT = {
   date: Date | { seconds: number, nanoseconds: number };
   description?: string;
   collaborator: CollaboratorT | DocumentReference;
+}
+
+export type VersionT = {
+  num: number;
+  products: ProductT[];
+  total: number;
+  created_at: Date | { seconds: number, nanoseconds: number };
 }
 
 export type ProposalT = {
@@ -190,7 +201,7 @@ export type ProposalT = {
   origin?: string;
   observations?: string;
   actions?: ActionT[];
-  products?: ProductT[];
+  versions: VersionT[];
   total: number;
   created_at: Date | { seconds: number, nanoseconds: number };
   last_updated: Date | { seconds: number, nanoseconds: number };

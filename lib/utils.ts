@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 import { FieldT, TableFieldT, AllFieldTypes, EnumFieldT } from '@/lib/fields';
 import { z } from "zod";
 import slugify from 'slugify';
+import createNumberMask from 'text-mask-addons/dist/createNumberMask';
 
 export const translationFields: { [key: string]: string } = {
   company_name: 'Nome/Razão Social',
@@ -26,7 +27,8 @@ export const mapEnum = {
   '2': 'Enviado',
   '3': 'Revisão',
   '4': 'Esperando',
-  '5': 'Fechado',
+  '5': 'Negociação',
+  '6': 'Fechado',
 }
 
 export const entityTitles: { [key: string]: EntityTitleT } = {
@@ -79,8 +81,20 @@ export const entityTitles: { [key: string]: EntityTitleT } = {
     plural: 'propostas',
     singular: 'proposta',
     sufix: 'a' 
+  },
+  product: {
+    plural: 'produtos',
+    singular: 'produto',
+    sufix: 'o'
   }
 }
+
+export const costMask = createNumberMask({
+    prefix: 'R$ ',
+    thousandsSeparatorSymbol: '.',
+    allowDecimal: true,
+    decimalSymbol: ',',
+  })
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -91,7 +105,7 @@ export function unformatNumber(str: string, percent: boolean = false) {
 }
 
 export function formatCurrency(value: number) {
-  return value.toLocaleString('pt-br', { maximumFractionDigits: 2, style: 'currency', currency: 'BRL' })
+  return value > 0 ? value.toLocaleString('pt-br', { maximumFractionDigits: 2, style: 'currency', currency: 'BRL' }) : '-'
 }
 
 export function formatPercent(float: number | '') {
