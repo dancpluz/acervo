@@ -1,9 +1,8 @@
 'use server'
 
 import db from "@/lib/firebase";
-import { collection, addDoc, setDoc, deleteDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, deleteDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { revalidatePath } from 'next/cache';
-import { converters } from '@/lib/converters';
 
 export async function addEntity(values: any, entity: string, entityValue?: string) {
   try {
@@ -15,10 +14,7 @@ export async function addEntity(values: any, entity: string, entityValue?: strin
       values[entityValue] = values[entityValue] ? doc(db, entityValue, values[entityValue]) : ''
     }
     
-    await addDoc(collection(db, entity), { ...values, person: personRef, last_updated: serverTimestamp() });
-    
-    revalidatePath('/cadastros')
-    
+    await addDoc(collection(db, entity), { ...values, person: personRef, last_updated: serverTimestamp() });    
   } catch (error) {
     console.log(error);
     throw new Error('Erro ao adicionar no banco de dados')
@@ -68,58 +64,11 @@ export async function deleteDocs(ids: { [key: string]: string }) {
   }
 }
 
-export async function addConfig(value: any, subcollection: string, config: string) {
-  try {
-    delete value.ref
-    
-    await addDoc(collection(db, "config", subcollection, config), value);
-    
-    revalidatePath('/configuracoes')
-  } catch (error) {
-    console.log(error);
-    throw new Error('Ocorreu um erro inesperado');
-  }
-}
-
-export async function updateConfig(value: any, subcollection: string, config: string) {
-  try {
-    const ref = value.ref
-    delete value.ref
-    
-    await updateDoc(doc(db, 'config', subcollection, config, ref), value);
-    
-    revalidatePath('/configuracoes')
-  } catch (error) {
-    console.log(error);
-    throw new Error('Ocorreu um erro inesperado');
-  }
-}
-
-export async function deleteConfig(ref: string, subcollection: string, config: string) {
-  try {
-    await deleteDoc(doc(db, 'config', subcollection, config, ref))
-  } catch (error) {
-    console.log(error)
-  }
-}
-
 export async function updateIndex(shardId: string, num: number) {
   try {
     const shardRef = doc(db, 'shard', shardId);
     await updateDoc(shardRef, { index: num })
   } catch(error) {
     console.log(error)
-  }
-}
-
-export async function addProposal(values: any, id: string) {
-  try {  
-    await setDoc(doc(collection(db, 'proposal'), id).withConverter(converters['proposal']), values)
-    
-    await updateIndex('proposal', values.num)
-    
-  } catch (error) {
-    console.log(error);
-    throw new Error('Erro ao adicionar no banco de dados')
   }
 }

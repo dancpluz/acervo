@@ -22,7 +22,7 @@ export default function Service() {
               <CirclePlus />ADICIONAR SERVIÇO
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className='w-10/12 top-[30%] translate-y-[0%]'>
             <FormService />
           </DialogContent>
         </Dialog>

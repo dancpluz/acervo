@@ -1,6 +1,8 @@
 import { z } from "zod";
 import cidades from '@/lib/cidades.json';
 import bancos from '@/lib/bancos.json';
+import { costMask } from '@/lib/utils';
+import { unformatNumber } from '@/lib/utils';
 
 export type FieldT = {
   value: string;
@@ -121,9 +123,9 @@ export const fields: { [key: string]: FieldT } = {
   },
   info_email: {
     value: 'info_email',
-    label: 'E-MAIL*',
+    label: 'E-MAIL',
     placeholder: 'Ex. acervomobilia@gmail.com',
-    validation: z.string().min(1, 'Campo não preenchido.').email('E-mail inválido.'),
+    validation: z.string().email('E-mail inválido.').optional().or(z.literal('')),
   },
   cpf: {
     value: 'cpf',
@@ -220,7 +222,7 @@ export const fields: { [key: string]: FieldT } = {
     value: 'direct_sale',
     label: 'VENDA DIRETA',
     placeholder: 'Ex. 3',
-    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O desconto deve ser maior que 0').lte(100, 'Valor muito alto')).optional().or(z.literal('')),
+    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).lte(100, 'Valor muito alto')).optional().or(z.literal('')),
   },
   observations: {
     value: 'observations',
@@ -386,7 +388,7 @@ export const teamFields: TableFieldT[] = [
 
 export const markupFields: TableFieldT[] = [
   {
-    value: 'ref',
+    value: 'id',
     label: '',
     validation: z.string().optional().or(z.literal('')),
   },
@@ -429,7 +431,7 @@ export const markupFields: TableFieldT[] = [
 
 export const freightFields: { [key: string]: TableFieldT } = {
   id: {
-    value: 'ref',
+    value: 'id',
     label: '',
     validation: z.string().optional().or(z.literal('')),
   },
@@ -449,7 +451,7 @@ export const freightFields: { [key: string]: TableFieldT } = {
 
 export const prospectionFields: { [key: string]: TableFieldT } = {
   id: {
-    value: 'ref',
+    value: 'id',
     label: '',
     validation: z.string().optional().or(z.literal('')),
   },
@@ -604,7 +606,7 @@ export const actionFields: { [key: string]: FieldT | EnumFieldT } = {
   },
 }
 
-const finishFields = {
+export const finishFields = {
   width: {
     value: 'width',
     label: 'LARGURA*',
@@ -643,7 +645,7 @@ const finishFields = {
   },
   extra: {
     value: 'extra',
-    label: 'EXTRA',
+    label: 'ACAB. 3/OBS',
     placeholder: 'Ex. Acabamento em laminas de madeira',
     validation: z.string().optional().or(z.literal('')),
   },
@@ -655,46 +657,49 @@ const finishFields = {
   },
   link_3d: {
     value: 'link_3d',
-    label: 'LINK 3D',
+    label: 'LINK 3D WAREHOUSE',
     placeholder: 'Ex. https://exemplo.com.br',
     validation: z.string().url({ message: 'Link inválida' }).optional().or(z.literal('')),
   },
 }
 
-const productFields = {
-  ref: {
-    value: 'ref',
+export const productFields = {
+  num: {
+    value: 'num',
     label: '',
     placeholder: '',
-    validation: z.string().optional().or(z.literal('')),
+    validation: z.number()
   },
   name: {
     value: 'name',
-    label: 'NOME*',
+    label: 'NOME DO PRODUTO*',
     placeholder: 'Ex. Cadeira',
     validation: z.string().min(1, 'Campo não preenchido.').max(150, 'Máximo de 150 caracteres.'),
   },
   ambient: {
     value: 'ambient',
     label: 'AMBIENTE',
+    placeholder: 'Selecione um Ambiente',
     // @ts-ignore
-    validation: z.enum([fieldItems.product_ambient.map(item => item.value), '']),
+    validation: z.enum([...fieldItems.product_ambient.map(item => item.value), '']),
     items: fieldItems.product_ambient,
   },
   enabled: {
     value: 'enabled',
     label: '',
+    placeholder: '',
     validation: z.boolean(),
   },
   quantity: {
     value: 'quantity',
-    label: 'QUANTIDADE*',
+    label: 'QTD.*',
     placeholder: 'Ex. 10',
     validation: z.string().transform((val) => Number(val)).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'A quantidade deve ser maior que 0')),
   },
   category: {
     value: 'category',
     label: 'CATEGORIA*',
+    placeholder: 'Selecione um Categoria',
     // @ts-ignore
     validation: z.enum(fieldItems.product_category.map(item => item.value)),
     items: fieldItems.product_category,
@@ -717,7 +722,8 @@ const productFields = {
     value: 'cost',
     label: 'VALOR DE CUSTO*',
     placeholder: 'Ex. 100,00',
-    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", "."))).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).gt(0, 'O preço deve ser maior que 0')),
+    mask: costMask,
+    validation: z.string().transform((val) => unformatNumber(val)).pipe(z.number({ invalid_type_error: 'Somente números.' })),
   },
   markup: {
     value: 'markup',
@@ -803,7 +809,6 @@ export const proposalFields = {
   },
   observations: fields.observations,
   actions: actionFields,
-  // products: productFields,
 }
 
 type CollaboratorFieldsT = typeof collaboratorFields;

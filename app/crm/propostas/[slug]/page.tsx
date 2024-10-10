@@ -6,6 +6,9 @@ import { collection, getDocs, getDoc, doc } from "firebase/firestore";
 import { converters } from '@/lib/converters';
 import ProposalView from "@/components/ProposalView";
 import ProposalSidebar from "@/components/ProposalSidebar";
+import { PriorityProposal } from '@/components/PriorityIndicator';
+
+export const dynamic = 'force-dynamic'
 
 export async function generateStaticParams() {
   const querySnapshot = await getDocs(collection(db, 'proposal'));
@@ -14,25 +17,27 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }))
 }
 
-async function resolvePromises(data: any) {
-  const resolvedData = { ...data };
-  const promises = [];
-  const keys = [];
+async function resolvePromises(data: any): Promise<any> {
+  if (data instanceof Promise) {
+    return await data;
+  }
 
-  for (const [key, value] of Object.entries(data)) {
-    if (value instanceof Promise) {
-      promises.push(value);
-      keys.push(key);
+  if (Array.isArray(data)) {
+    return await Promise.all(data.map(resolvePromises));
+  }
+
+  if (data !== null && typeof data === 'object') {
+    const resolvedData = { ...data };
+    const entries = await Promise.all(
+      Object.entries(data).map(async ([key, value]) => [key, await resolvePromises(value)])
+    );
+    for (const [key, value] of entries) {
+      resolvedData[key] = value;
     }
+    return resolvedData;
   }
 
-  const resolvedValues = await Promise.all(promises);
-
-  for (let i = 0; i < keys.length; i++) {
-    resolvedData[keys[i]] = resolvedValues[i];
-  }
-
-  return resolvedData;
+  return data;
 }
 
 export default async function Propostas({ params: { slug } }: { params: { slug: string } }) {
@@ -57,14 +62,14 @@ export default async function Propostas({ params: { slug } }: { params: { slug: 
               </span>
               <div className='flex items-center gap-2'>
                 <h1 className='text-2xl'>
-                  {data.name}
+                  {data && data.name}
                 </h1>
-                {/* <PriorityIndicator priority={2} /> */}
+                <PriorityProposal />
               </div>
             </div>
           </div>
         </Header>
-        <ProposalView />
+        <ProposalView data={JSON.stringify(data)} />
       </div>
       <ProposalSidebar />
     </>

@@ -1,8 +1,5 @@
 import MarkupForm from "@/components/MarkupForm";
 import FreightForm from "@/components/FreightForm";
-import { getConfig } from '@/lib/dbRead';
-import { formatPercent } from '@/lib/utils';
-import { FreightT, MarkupT, ProspectionT } from "@/lib/types";
 import ProspectionForm from "@/components/ProspectionForm";
 
 export default function Markup() {

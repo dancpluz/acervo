@@ -17,7 +17,7 @@ import { ConfirmAlert, DeleteAlert } from "@/components/AllPopups";
 import FormButton from '@/components/FormButton';
 import { fillCepFields, formatFields, createDefaultArray } from "@/lib/utils";
 import useEntityFormActions from "@/hooks/useEntityFormActions";
-import { ReferenceT } from "@/lib/types";
+import { OfficeT } from "@/lib/types";
 
 const [fisicalDefaultValues, fisicalFieldValidations] = formatFields(clientFisicalFields);
 
@@ -200,7 +200,7 @@ export default function FormClient({ data, show }: { data?: any, show?: boolean 
               <div className='flex gap-8'>
                 <FormDiv>
                   <FieldDiv>
-                    <ReferenceField obj={fields.office} form={form} hint={'Ex. Punto'} setReferenceInfo={setReferenceInfo} disabled={show && !isEditing} />
+                    <ReferenceField obj={fields.office} refPath='office' onSelect={(e: OfficeT) => setReferenceInfo(e)} form={form} hint={'Ex. Punto'} disabled={show && !isEditing} person />
                     <ShowField text={referenceInfo ? referenceInfo.ref : ''} label={'TEST'} placeholder={'Selecione um Escritório'} />
                   </FieldDiv>
                 </FormDiv>

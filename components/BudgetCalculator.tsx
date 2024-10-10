@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { BorderDiv } from "@/components/ui/div";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
-import { formatPercent, unformatNumber, formatCurrency } from "@/lib/utils";
+import { formatPercent, unformatNumber, costMask, formatCurrency } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { FactoryT, FreightT, MarkupT, ProspectionT, PersonT } from "@/lib/types";
 import {
@@ -29,7 +29,6 @@ import {
 } from "@/components/ui/command";
 import { Button } from './ui/button';
 import { Check, ChevronsUpDown, Copy } from 'lucide-react';
-import createNumberMask from 'text-mask-addons/dist/createNumberMask';
 import SelectableChips from '@/components/SelectableChips';
 import useGetEntities from '@/hooks/useGetEntities';
 import { converters } from './../lib/converters';
@@ -68,13 +67,6 @@ export default function BudgetCalculator() {
       console.log(prospections)
     }
   }, [selectedMarkup,factories, markups, prospections])
-  
-  const costMask = createNumberMask({
-    prefix: 'R$ ',
-    thousandsSeparatorSymbol: '.',
-    allowDecimal: true,
-    decimalSymbol: ',',
-  })
 
   function multiplyCost(value: number) {
     return unformatNumber(cost) * value;

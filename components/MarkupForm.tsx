@@ -80,10 +80,9 @@ export default function MarkupForm() {
             </TableHeader>
             <TableBody className="overflow-y-auto">
               {fieldArray.fields.length > 0 ? fieldArray.fields.map((row: any, index) => {
-                console.log(row)
                 return (
-                  <TableRow className='odd:bg-background even:bg-secondary/20' key={row.uuid}>
-                    {Object.keys(row).sort((a, b) => { return order.indexOf(a) - order.indexOf(b) }).slice(2).map((key, i) => {
+                  <TableRow className='odd:bg-background even:bg-secondary/20' key={row.uuid ? row.uuid : index}>
+                    {Object.keys(row).filter(a => order.includes(a)).sort((a, b) => { return order.indexOf(a) - order.indexOf(b) }).map((key, i) => {
                       return (
                         <TableCell className='first:pl-4 transition-colors hover:cursor-pointer hover:bg-secondary/10' onClick={() => document.getElementById(`markup.${index}.${key}`)?.focus()} key={key}>
                           <FormField

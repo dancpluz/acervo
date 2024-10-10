@@ -39,9 +39,10 @@ const Input = React.forwardRef<HTMLInputElement, InputCustom>(
           type={type}
           mask={mask || []}
           className={cn(
-            `${long ? 'h-32 box-border resize-none' : 'h-10'} flex w-full rounded-md border text-ellipsis border-alternate bg-transparent px-3 py-2 ${clear ? 'pr-7' : ''} text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`,
+            `${long ? 'h-24 box-border resize-none' : 'h-10'} flex w-full rounded-md border text-ellipsis border-alternate bg-transparent px-3 py-2 ${clear ? 'pr-7' : ''} text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`,
             className
           )}
+          ref={ref}
           {...props}
         />
         {clear && isDirty && !props.disabled &&

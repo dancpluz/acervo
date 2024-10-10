@@ -16,14 +16,14 @@ import { ConfirmAlert, DeleteAlert } from "@/components/AllPopups";
 import FormButton from '@/components/FormButton';
 import { fillCepFields, formatFields, createDefaultArray } from "@/lib/utils";
 import useEntityFormActions from "@/hooks/useEntityFormActions";
-import { ReferenceT } from "@/lib/types";
+import { RepresentativeT } from "@/lib/types";
 
 const [defaultValues, fieldValidations] = formatFields(factoryFields);
 
 export default function FormFactory({ data, show }: { data?: any, show?: boolean }) {
   const tabs = ['FÁBRICAS', 'REPRESENTAÇÃO', 'OUTRAS INFORMAÇÕES'];
 
-  const [referenceInfo, setReferenceInfo] = useState<ReferenceT | undefined>(undefined);
+  const [referenceInfo, setReferenceInfo] = useState<RepresentativeT | undefined>(undefined);
   const [directSale, setDirectSale] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof fieldValidations>>({
@@ -117,11 +117,11 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
             <TabDiv>
               <div className='flex gap-8'>
                 <FormDiv>
-                  <ReferenceField customClass={'grow-0'} obj={fields.representative} form={form} hint={'Ex. Punto'} setReferenceInfo={setReferenceInfo} disabled={show && !isEditing} />
-                  <ShowField text={referenceInfo ? referenceInfo.info_email : ''} label={'EMAIL DA REPRESENTAÇÃO'} placeholder={'Selecione uma Representação'} />
+                  <ReferenceField customClass={'grow-0'} obj={fields.representative} refPath='representative' onSelect={(e: RepresentativeT) => setReferenceInfo(e)} form={form} hint={'Ex. Punto'} disabled={show && !isEditing} person />
+                  <ShowField text={referenceInfo ? referenceInfo.person.info.info_email : ''} label={'EMAIL DA REPRESENTAÇÃO'} placeholder={'Selecione uma Representação'} />
                 </FormDiv>
                 <FormDiv>
-                  <TinyTable title='CONTATOS DA REPRESENTAÇÃO' columns={contactFields} rows={referenceInfo ? referenceInfo.contact : []} placeholder={referenceInfo ? 'Sem contatos' : 'Selecione uma Representação'} order={["name", "detail", "phone", "telephone"]} /> 
+                  <TinyTable title='CONTATOS DA REPRESENTAÇÃO' columns={contactFields} rows={referenceInfo ? referenceInfo.person.contact : []} placeholder={referenceInfo ? 'Sem contatos' : 'Selecione uma Representação'} order={["name", "detail", "phone", "telephone"]} /> 
                   <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} />
                 </FormDiv>
               </div>
@@ -143,10 +143,10 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
                       <div className="flex gap-1 grow">
                         <RadioGroupItem value='Sim' label='Sim' disabled={show && !isEditing}
                           className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 w-full`}
-                          onClick={() => { setDirectSale(true) }} />
+                          onClick={() => { setDirectSale(true); form.setValue('direct_sale','0') }} />
                         <RadioGroupItem value="Não" label="Não" disabled={show && !isEditing}
                           className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 w-full`}
-                          onClick={() => { setDirectSale(false) }} />
+                          onClick={() => { setDirectSale(false); form.setValue('direct_sale','') }} />
                       </div>
                     </RadioGroup>
                     <InputField obj={fields.direct_sale} form={form} percent disabled={show && !isEditing || !directSale} />

@@ -3,6 +3,27 @@ import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, FirestoreDataConverter } from 'firebase/firestore';
 import db from '@/lib/firebase';
 
+// MUITO MAL OTIMIZADO
+
+async function resolvePromisesDeep(obj: any): Promise<any> {
+  if (obj instanceof Promise) {
+    // If obj is a promise, resolve it
+    return await obj;
+  } else if (Array.isArray(obj)) {
+    // If obj is an array, map over it and resolve any promises inside
+    return await Promise.all(obj.map(resolvePromisesDeep));
+  } else if (obj !== null && typeof obj === 'object') {
+    // If obj is an object, recursively resolve any promises in its values
+    const entries = Object.entries(obj);
+    const resolvedEntries = await Promise.all(
+      entries.map(async ([key, value]) => [key, await resolvePromisesDeep(value)])
+    );
+    return Object.fromEntries(resolvedEntries);
+  }
+  // Return the value directly if it's not a promise, array, or object
+  return obj;
+}
+
 export default function useGetEntities<EntityT>(
   entity: string,
   converter: FirestoreDataConverter<EntityT>,
@@ -19,9 +40,12 @@ export default function useGetEntities<EntityT>(
 
   useEffect(() => {
     if (snapshots && snapshots.length > 0) {
-      const resolveCollaborators = async () => {
+      const resolveEntities = async () => {
         try {
-          const resolvedData = await Promise.all(snapshots);
+          const resolvedSnapshots = await Promise.all(snapshots);
+          const resolvedData = await Promise.all(
+            resolvedSnapshots.map(snapshot => resolvePromisesDeep(snapshot))
+          );
           setResolvedEntities(resolvedData);
           setLoading(false);
         } catch (err) {
@@ -30,7 +54,7 @@ export default function useGetEntities<EntityT>(
         }
       };
 
-      resolveCollaborators();
+      resolveEntities();
     } else {
       setLoading(firebaseLoading);
     }

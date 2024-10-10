@@ -43,7 +43,7 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, pref
       <Label>{title}</Label>
       <Table containerClassName="border-secondary max-h-[180px] overflow-y-auto">
         <TableHeader className='bg-transparent border-b border-secondary'>
-          <TableRow className='border-0'>
+          <TableRow className='border-secondary'>
             {columns.map((column) => {
               return (
                 <TableHead key={column.label} className={`first:pl-4 px-2 text-tertiary text-sm w-[${column.size}]`}>{column.label}</TableHead>
@@ -104,7 +104,7 @@ export function TinyTable({ columns, title, rows, placeholder, order }: Props) {
       <Label>{title}</Label>
       <Table containerClassName="border-secondary">
         <TableHeader className='bg-transparent border-b border-secondary'>
-          <TableRow className='border-0'>
+          <TableRow className='border-secondary'>
             {columns.sort((a, b) => { return order.indexOf(a.value) - order.indexOf(b.value); }).map((column) => {
               return (
                 <TableHead key={column.label} className={`text-tertiary text-sm w-[${column.size}]`}>{column.label}</TableHead>

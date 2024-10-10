@@ -8,7 +8,7 @@ export default function ActionForm({ form, path, append, remove }: { form: Retur
   return (
     <div className='flex flex-col gap-4'>
       <h1 className='text-lg text-foreground'>Nova Ação</h1>
-      <ReferenceField path={path} customClass={'grow-0'} obj={actionFields.collaborator as FieldT} form={form} hint={'Ex. Punto'} />
+      <ReferenceField path={path} customClass={'grow-0'} obj={actionFields.collaborator} refPath='collaborator' form={form} hint={'Ex. Thiago'} person />
       <InputField path={path} obj={actionFields.description as FieldT} form={form} long />
       <DateField path={path} obj={actionFields.date as FieldT} form={form} />
       <div className='flex relative p-1 justify-between items-center'>
