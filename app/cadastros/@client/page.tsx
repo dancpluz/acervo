@@ -22,7 +22,7 @@ export default function Client() {
               <CirclePlus />ADICIONAR CLIENTE
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className='w-10/12 top-[30%] translate-y-[0%]'>
             <FormClient />
           </DialogContent>
         </Dialog>
