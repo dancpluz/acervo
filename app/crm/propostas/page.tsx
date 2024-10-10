@@ -17,9 +17,9 @@ export default function CRM() {
         </div>
       </Header>
       <div className='flex gap-2 py-3'>
-        <StatusFilter text='Todos' count={33} route='/propostas' money={2000} active={false} />
-        <StatusFilter type='front' text='Solicitado' count={33} route='/propostas' money={2000} active={true} />
-        <StatusFilter type='both' text='Revisão' count={33} route='/propostas' money={2000} active={true} />
+        <StatusFilter text='Todos' count={33} route='/propostas' money={2000} active={true} />
+        <StatusFilter type='front' text='Solicitado' count={33} route='/propostas' money={2000} active={false} />
+        <StatusFilter type='both' text='Revisão' count={33} route='/propostas' money={2000} active={false} />
         <StatusFilter type='both' text='Esperando' count={33} route='/propostas' money={2000} active={false} />
         <StatusFilter type='both' text='Negociação' count={33} route='/propostas' money={2000} active={false} />
         <StatusFilter type='back' text='Fechado' count={33} route='/propostas' money={2000} active={false} />
@@ -33,7 +33,7 @@ export default function CRM() {
               <CirclePlus />NOVA PROPOSTA
             </Button>
           </DialogTrigger>
-          <DialogContent className='w-[680px]'>
+          <DialogContent className='w-[760px]'>
             <ProposalForm />
           </DialogContent>
         </Dialog>

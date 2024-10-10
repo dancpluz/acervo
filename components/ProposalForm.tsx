@@ -8,7 +8,7 @@ import { z } from "zod";
 import { fields, proposalFields } from "@/lib/fields";
 import { formatFields, stringToSlug } from "@/lib/utils";
 import useCRMFormActions from "@/hooks/useCRMFormActions";
-import { ReferenceField, InputField, SelectField, TitleField, PriorityField } from "@/components/AllFields";
+import { ReferenceField, InputField, SelectField, TitleField } from "@/components/AllFields";
 import { Form, FormLabel } from "@/components/ui/form";
 import { FormDiv, FieldDiv } from "@/components/ui/div";
 import { Button } from "@/components/ui/button";
@@ -25,10 +25,12 @@ import {
 } from "@/components/ui/popover"
 import ActionForm from "@/components/ActionForm";
 import { ClientT, CollaboratorT, OfficeT } from "@/lib/types";
+import { PriorityField } from "@/components/PriorityIndicator";
 
 const [defaultValues, fieldValidations] = formatFields(proposalFields, ['actions', 'products'])
 defaultValues['status'] = '1';
 defaultValues['priority'] = '1';
+defaultValues['versions'] = [];
 
 export default function ProposalForm() {
   const [shard, loading, error] = useDocumentData(doc(db, 'shard', 'proposal'));
@@ -46,12 +48,13 @@ export default function ProposalForm() {
   
   const [referenceInfo, setReferenceInfo] = useState<{ [key: string] : '' | CollaboratorT | ClientT | OfficeT }>({ client: '', collaborator: '', office: '' });
   const [popoverOpen, setPopoverOpen] = useState(false);
+
   const today = new Date();
   const id = `${loading ? '' : shard.index + 1}${form.watch('name') ? '_' + stringToSlug(form.watch('name')) : ''}${referenceInfo.client ? '_' + stringToSlug(referenceInfo.client.person.label) : ''}${referenceInfo.office ? '_' + stringToSlug(referenceInfo.office.person.label) : ''}${referenceInfo.collaborator ? '_' + stringToSlug(referenceInfo.collaborator.person.label) : ''}_${format(today, "dd-MM-yyyy")}`
   
   const {
-    addSubmit,
-  } = useCRMFormActions(form, undefined, 'proposal', id);
+    proposalSubmit,
+  } = useCRMFormActions(form, undefined, id);
 
   // const checkPaths = [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
 
@@ -59,6 +62,7 @@ export default function ProposalForm() {
     if (!loading && shard) {
       form.setValue('num', shard.index + 1)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shard, loading]);
 
   const appendItem = async () => {
@@ -71,16 +75,16 @@ export default function ProposalForm() {
   }
 
   const updateReferenceInfo = (key: string, value: '' | CollaboratorT | ClientT | OfficeT) => {
-      setReferenceInfo((prevState) => ({
-        ...prevState,
-        [key]: value,
-      }));
-    };
+    setReferenceInfo((prevState) => ({
+      ...prevState,
+      [key]: value,
+    }));
+  };
   
   return (
     <div className='flex flex-col bg-background gap-4 p-4 rounded-lg'>
       <Form {...form}>
-        <form className='flex flex-col gap-4' onSubmit={form.handleSubmit(addSubmit)}>
+        <form className='flex flex-col gap-4' onSubmit={form.handleSubmit(proposalSubmit)}>
           <span className='text-sm text-tertiary'>{id}</span>
           <div className='flex justify-between w-full'>
             <TitleField path='' obj={proposalFields.name} form={form} />
@@ -91,19 +95,20 @@ export default function ProposalForm() {
           <div className='flex gap-2 py-3'>
             <StatusButton type='front' text='Solicitado' statusNum={Number(form.watch('status'))} num={1} onClick={() => form.setValue('status','1')} />
             <StatusButton type='both' text='Enviado' statusNum={Number(form.watch('status'))} num={2} onClick={() => form.setValue('status','2')} />
-            <StatusButton type='both' text='Esperando' statusNum={Number(form.watch('status'))} num={3} onClick={() => form.setValue('status','3')} />
-            <StatusButton type='both' text='Negociação' statusNum={Number(form.watch('status'))} num={4} onClick={() => form.setValue('status','4')} />
-            <StatusButton type='back' text='Fechado' statusNum={Number(form.watch('status'))} num={5} onClick={() => form.setValue('status','5')} />
+            <StatusButton type='both' text='Revisão' statusNum={Number(form.watch('status'))} num={3} onClick={() => form.setValue('status','3')} />
+            <StatusButton type='both' text='Esperando' statusNum={Number(form.watch('status'))} num={4} onClick={() => form.setValue('status','4')} />
+            <StatusButton type='both' text='Negociação' statusNum={Number(form.watch('status'))} num={5} onClick={() => form.setValue('status','5')} />
+            <StatusButton type='back' text='Fechado' statusNum={Number(form.watch('status'))} num={6} onClick={() => form.setValue('status','6')} />
             <StatusButton type='lost' text='Perdido' statusNum={Number(form.watch('status'))} num={0} onClick={() => form.setValue('status','0')} />
           </div>
           <FormDiv className='flex-row gap-4 w-full'>
             <FieldDiv className='flex-col gap-4 w-full'>
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.collaborator} onSelect={(e) => updateReferenceInfo('collaborator', e)} form={form} hint={'Ex. Punto'} />
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.client} form={form} onSelect={(e) => updateReferenceInfo('client', e)} hint={'Ex. Punto'} />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.collaborator} refPath='collaborator' onSelect={(e: '' | CollaboratorT | ClientT | OfficeT) => updateReferenceInfo('collaborator', e)} form={form} hint={'Ex. Punto'} person />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.client} form={form} refPath='client' onSelect={(e: '' | CollaboratorT | ClientT | OfficeT) => updateReferenceInfo('client', e)} hint={'Ex. Punto'} person />
               <InputField customClass={'grow-0'} path='' obj={fields.observations} form={form} long />
             </FieldDiv>
             <FieldDiv className='flex-col gap-4 w-full grow-0'>
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.office} form={form} onSelect={(e) => updateReferenceInfo('office', e)} hint={'Ex. Punto'} />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.office} form={form} refPath='office' onSelect={(e: '' | CollaboratorT | ClientT | OfficeT) => updateReferenceInfo('office', e)} hint={'Ex. Punto'} person />
               <div className='flex gap-2'>
                 <SelectField path='' obj={proposalFields.client_type} form={form} />
                 <SelectField path='' obj={proposalFields.project_type} form={form} />

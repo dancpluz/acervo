@@ -12,7 +12,7 @@ export default function VersionOptions({ num, active } : { num: number, active: 
   return (
     <Popover>
       <div className='flex gap-1'>
-        VERSÃO {(num+1).toString()}
+        VERSÃO {num.toString()}
       {active && 
       <>
         <PopoverTrigger asChild>

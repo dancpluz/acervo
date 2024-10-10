@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { updateConfig, addConfig, deleteConfig } from '@/lib/dbWrite';
 import { UseFormReturn } from 'react-hook-form';
 import { entityTitles } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import { deleteToast } from '@/hooks/general';
+import db from '@/lib/firebase';
+import { setDoc, doc, collection, deleteDoc, addDoc } from 'firebase/firestore';
+import { converters } from '@/lib/converters';
 
 export default function useConfigFormActions(
   form: UseFormReturn<any>,
@@ -25,11 +27,14 @@ export default function useConfigFormActions(
 
   async function onSubmit(values: any) {
     try {
-      values[config].forEach((e: any, i: number) => {
-        if (e.ref) {
-          if (form.getFieldState(config + "." + i).isDirty) { updateConfig(e, subcollection, config) }
+      values[config].forEach(async (e: any, i: number) => {
+        console.log(e,i)
+        const configCollection = collection(db, 'config', subcollection, config).withConverter(converters[config])
+        if (e.id) {
+          const docRef = doc(configCollection, e.id)
+          await setDoc(docRef, e)
         } else {
-          addConfig(e, subcollection, config);
+          await addDoc(configCollection, e)
         }
       })
 
@@ -54,9 +59,9 @@ export default function useConfigFormActions(
     }
   }
 
-  async function deleteSubmit(ref: string) {
+  async function deleteSubmit(id: string) {
     try {
-      await deleteConfig(ref, subcollection, config);
+      await deleteDoc(doc(db, 'config', subcollection, config, id))
 
       toast({
         title: `${entityTitle.singular[0].toUpperCase() + entityTitle.singular.slice(1)} removid${entityTitle.sufix} com sucesso!`,

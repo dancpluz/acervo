@@ -33,14 +33,14 @@ import {
   CommandItem
 } from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CalendarIcon, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
+import { CalendarIcon, ImageUp, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import useGetEntities from '@/hooks/useGetEntities';
-import { converters, ConverterKey } from '@/lib/converters';
+import { converters } from '@/lib/converters';
 
 export function SelectField({ path, form, customClass, obj, disabled }: { path?: string, form: ReturnType<typeof useForm>, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
@@ -67,9 +67,9 @@ export function SelectField({ path, form, customClass, obj, disabled }: { path?:
   );
 }
 
-export function ReferenceField<EntityT>({ path, form, obj, customClass, hint, onSelect, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, customClass?: string, hint: string, onSelect?: any, disabled?: boolean }) {
+export function ReferenceField<EntityT>({ path, form, refPath, obj, customClass, person, hint, onSelect, disabled }: { path?: string, form: ReturnType<typeof useForm>, refPath: string, obj: FieldT, customClass?: string, person?: boolean, hint: string, onSelect?: any, disabled?: boolean }) {
   
-  const [data, loading, error] = useGetEntities<EntityT>(obj.value, converters[obj.value]);
+  const [data, loading, error] = useGetEntities<EntityT>(refPath, converters[obj.value]);
 
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   
@@ -93,7 +93,9 @@ export function ReferenceField<EntityT>({ path, form, obj, customClass, hint, on
                   )}
                 >
                   {loading ? <LoaderCircle className='text-primary h-5 w-5 animate-spin' /> : field.value
-                    ? data.find((item) => item.id === field.value)?.person?.label
+                    ? person ? data.find((item) => item.id === field.value)?.person?.label
+                    :
+                      data.find((item) => item.id === field.value)?.label
                     : disabled ?? obj.placeholder
                   }
                   <ChevronsUpDown className="absolute text-tertiary top-1/2 transform -translate-y-1/2 right-3 h-4 w-4 shrink-0" />
@@ -123,7 +125,7 @@ export function ReferenceField<EntityT>({ path, form, obj, customClass, hint, on
                                 ? "opacity-100"
                                 : "opacity-0"
                             )} />
-                          {item.person.label}
+                          {person ? item.person.label : item.label}
                         </CommandItem>
                       )
                     }
@@ -217,7 +219,7 @@ export function ShowField({ text, placeholder, label }: {  text?: string, placeh
   )
 }
 
-export function InputField({ path, form, obj, autofill, customClass, percent, long, disabled, update, onChange }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any, onChange?: ChangeEvent }) {
+export function InputField({ path, form, obj, autofill, customClass, percent, long, cm, disabled, update, onChange }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, cm?: boolean, disabled?: boolean, update?: any, onChange?: ChangeEvent }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -231,6 +233,7 @@ export function InputField({ path, form, obj, autofill, customClass, percent, lo
             <div className='flex items-center gap-1'>
               <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(fieldPath).isDirty, clear: () => form.resetField(fieldPath, { keepError: false, defaultValue: '' }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {onChange ? onChange : field.onChange(e); autofill ? autofill(e.target.value, form, path + '.') : ''; update ? update(fieldPath, e.target.value) : ''}} disabled={disabled} />
               {percent ? <span className='text-tertiary'>%</span> : ''}
+              {cm ? <span className='text-tertiary text-sm'>cm</span> : ''}
             </div>
           </FormControl>
         </FormItem>
@@ -350,22 +353,19 @@ export function DateField({ path, form, obj }: { path?: string, form: ReturnType
   )
 }
 
-export function PriorityField({ form, obj, priority }: { form: ReturnType<typeof useForm>, obj: EnumFieldT, priority: string }) {
+export function ImageField({ form, obj, path }: { form: ReturnType<typeof useForm>, obj: FieldT, path: string }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
       control={form.control}
-      name={obj.value}
-      render={() => (
+      name={fieldPath}
+      render={({ field }) => (
         <FormItem>
-          <FormMessage className='top-4' />
+          <FormMessage />
           <FormLabel>{obj.label}</FormLabel>
-          <div className='flex gap-0.5'>
-            {Array(3).fill(null).map((_, i) => {
-              return (
-                <Button type='button' onClick={() => priority === (i + 1).toString() ? '' : form.setValue(obj.value, (i + 1).toString())} key={i} className={`w-5 h-5 p-0 bg-background transition-colors border border-primary rounded-full ${i < Number(priority) ? 'bg-primary hover:bg-primary/80' : 'hover:bg-secondary/20'}`} />
-              )
-            })}
-          </div>
+          <FormControl>
+            <Input type='file' accept="image/*" icon={<ImageUp className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary h-8 w-8' />} className='w-auto h-auto' {...field} />
+          </FormControl>
         </FormItem>
       )} />
   )
