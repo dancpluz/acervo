@@ -6,6 +6,20 @@ import { unformatNumber } from '@/lib/utils';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 
+export type PresentationToggleT = {
+  sizes: boolean;
+  markupName: boolean;
+  designer: boolean;
+  frame: boolean;
+  fabric: boolean;
+  freight: boolean;
+  extra: boolean;
+  images: boolean;
+  markup12: boolean;
+  markup6: boolean;
+  markupCash: boolean;
+}
+
 type CRMContextProps = {
   proposal?: ProposalT;
   setProposal: Dispatch<SetStateAction<ProposalT | undefined>>
@@ -17,6 +31,8 @@ type CRMContextProps = {
   totalValues: { markup12: number; markup6: number; markupCash: number };
   updateProposalStatus: (status: string) => Promise<void>;
   updateProposalPriority: (priority: string) => Promise<void>;
+  presentationToggle: PresentationToggleT;
+  setPresentationToggle: Dispatch<SetStateAction<PresentationToggleT>>;
 };
 
 const Context = createContext<CRMContextProps | null>(null);
@@ -26,6 +42,19 @@ export function CRMProvider({ children }: { children: ReactNode }) {
   const [totalValues, setTotalValues] = useState({ markup12: 0, markup6: 0, markupCash: 0 });
   const [versionNum, setVersionNum] = useState<number>(1);
   const proposalRef = proposal ? doc(db, 'proposal', proposal.id) : undefined
+  const [presentationToggle, setPresentationToggle] = useState({ 
+    sizes: true,
+    markupName: true,
+    designer: true,
+    frame: true,
+    fabric: true,
+    extra: true,
+    images: true,
+    freight: true,
+    markup12: true,
+    markup6: true,
+    markupCash: true,
+  });
 
   useEffect(() => {
     if (proposal) {
@@ -141,6 +170,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         updateProposalStatus,
         updateProposalPriority,
         totalValues,
+        presentationToggle,
+        setPresentationToggle
       }}
     >
       {children}

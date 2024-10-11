@@ -89,6 +89,10 @@ export const entityTitles: { [key: string]: EntityTitleT } = {
   }
 }
 
+export function timestampToDate(timestamp: { seconds: number, nanoseconds: number }) {
+  return new Date(timestamp.seconds*1000)
+}
+
 export const costMask = createNumberMask({
     prefix: 'R$ ',
     thousandsSeparatorSymbol: '.',
