@@ -32,6 +32,7 @@ import { entityTitles } from "@/lib/utils";
 import { useRouter } from 'next/navigation';
 import useGetEntities from '@/hooks/useGetEntities';
 import { converters, ConverterKey } from '@/lib/converters';
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface DataTableProps<TData, TValue> {
   entity: ConverterKey,
@@ -150,7 +151,21 @@ export function DataTable<TData, TValue>({
                   </TableRow>
                 ))
               )
-          : (
+          : loading ? 
+          (
+            <>
+              {Array.from({ length: 7 }).map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell colSpan={columns.length + 1} className="h-16">
+                    <Skeleton className="bg-secondary/30 w-full h-full " />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </>
+          )
+          : 
+          
+          (
             <TableRow>
               <TableCell colSpan={columns.length + 1} className="h-16 text-center text-base text-tertiary">
                 Não foi encontrado nenhum resultado...

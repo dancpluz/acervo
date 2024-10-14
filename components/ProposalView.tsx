@@ -14,6 +14,7 @@ import { useCRMContext } from "@/hooks/useCRMContext";
 import { ProposalT } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { formatCurrency, timestampToDate } from "@/lib/utils";
+import PresentationSlides from "./PresentationSlides";
 
 export default function ProposalView({ data }: { data: string }) {
   const { setProposal, proposal, setVersionNum, versionNum, totalValues, updateProposalStatus } = useCRMContext();
@@ -92,9 +93,10 @@ export default function ProposalView({ data }: { data: string }) {
                   </div>
                 </div>
                 <div className='flex flex-col gap-4 pr-2'>
-                  {products.map((product, i) => (
-                    <ProductCard view={view} key={i} product={product} index={i} />
-                  ))}
+                  {products.map((product, i) => view === 'list' ? 
+                  (<ProductCard key={product.name} product={product} index={i} />) :
+                    (<PresentationSlides key={product.name} product={product} index={i} />)
+                  )}
                 </div>
               </ScrollArea>
               {view === 'list' && <div className='flex justify-end items-center gap-2'>

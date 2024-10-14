@@ -95,7 +95,6 @@ export default function useCRMFormActions(
           const proposalRef = doc(db, 'proposal', proposal.id);
           const proposalDoc = await getDoc(proposalRef)
           const proposalData = proposalDoc.data()
-          console.log(proposalData)
 
           const versions = proposalData && proposalData.versions.length > 0 ? proposalData.versions.map((version: VersionT) => {
             if (version.num === versionNum) {

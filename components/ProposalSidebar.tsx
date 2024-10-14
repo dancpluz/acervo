@@ -31,9 +31,9 @@ function SideAccordion({ icon, title, expanded, value, children }: { title: stri
   )
 }
 
-function SideButton({ icon, title, expanded }: { title: string, icon: React.ReactElement, expanded: boolean }) {
+function SideButton({ icon, title, expanded, onClick }: { title: string, icon: React.ReactElement, expanded: boolean, onClick: () => void }) {
   return (
-    <Button onClick={() => console.log('TEst')} variant='outline' className={`p-1 h-auto border-secondary justify-start text-base ${expanded ? 'w-full' : 'border-0'}`}>
+    <Button onClick={onClick} variant='outline' className={`p-1 h-auto border-secondary justify-start text-base ${expanded ? 'w-full' : 'border-0'}`}>
       {icon}
       {expanded && title}
     </Button>
@@ -51,6 +51,7 @@ function InfoIcon({ icon, title, text }: { icon: React.ReactElement, title: stri
     </div>
   )
 }
+
 
 export default function ProposalSidebar() {
   const [expanded, setExpanded] = useState(false);
@@ -84,7 +85,7 @@ export default function ProposalSidebar() {
         </SideAccordion>
       </Accordion>
       <div className="flex flex-col gap-2 items-center w-full">
-        <SideButton title='GERAR PROPOSTA' icon={<Scroll className='w-8 h-8 text-primary' />} expanded={expanded}/>
+        <SideButton title='GERAR PROPOSTA' icon={<Scroll className='w-8 h-8 text-primary' />} expanded={expanded} onClick={expanded ? () => {console.log('expandido')} : () => { setExpanded(true) }}/>
         <SideButton title='EDITAR PROPOSTA' icon={<SquarePen className='w-8 h-8 text-primary' />} expanded={expanded} />
         <SideButton title='EXCLUIR PROPOSTA' icon={<Trash2 className='w-8 h-8 text-primary' />} expanded={expanded} />
       </div>

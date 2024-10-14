@@ -26,13 +26,14 @@ type CRMContextProps = {
   versionNum: number;
   setVersionNum: Dispatch<SetStateAction<number>>;
   calculatePrice: (cost: number, markup: MarkupT, quantity: number) => { markup12: number; markup6: number; markupCash: number };
-  updateProductEnable: (proposalId: string, versionNum: number, productIndex: number, enable: boolean) => Promise<void>;
-  updateProductQuantity: (proposalId: string, versionNum: number, productIndex: number, quantity: number) => Promise<void>;
+  updateProductQuantity: (versionNum: number, productIndex: number, quantity: number) => Promise<void>;
   totalValues: { markup12: number; markup6: number; markupCash: number };
   updateProposalStatus: (status: string) => Promise<void>;
   updateProposalPriority: (priority: string) => Promise<void>;
-  presentationToggle: PresentationToggleT;
-  setPresentationToggle: Dispatch<SetStateAction<PresentationToggleT>>;
+  presentationToggle: { [id: string]: PresentationToggleT };
+  setPresentationToggle: Dispatch<SetStateAction<{ [id: string]: PresentationToggleT }>>;
+  updatePresentationToggle: (id: string, key: keyof PresentationToggleT, value: boolean) => void;
+  handleEnableToggle: (enabled: boolean, index: number) => Promise<void>;
 };
 
 const Context = createContext<CRMContextProps | null>(null);
@@ -41,20 +42,39 @@ export function CRMProvider({ children }: { children: ReactNode }) {
   const [proposal, setProposal] = useState<ProposalT | undefined>(undefined);
   const [totalValues, setTotalValues] = useState({ markup12: 0, markup6: 0, markupCash: 0 });
   const [versionNum, setVersionNum] = useState<number>(1);
+  const [presentationToggle, setPresentationToggle] = useState<{ [id: string ]: PresentationToggleT }>({})
+
   const proposalRef = proposal ? doc(db, 'proposal', proposal.id) : undefined
-  const [presentationToggle, setPresentationToggle] = useState({ 
-    sizes: true,
-    markupName: true,
-    designer: true,
-    frame: true,
-    fabric: true,
-    extra: true,
-    images: true,
-    freight: true,
-    markup12: true,
-    markup6: true,
-    markupCash: true,
-  });
+
+  useEffect(() => {
+    const defaultToggle = {
+      sizes: true,
+      markupName: true,
+      designer: true,
+      frame: true,
+      fabric: true,
+      extra: true,
+      images: true,
+      freight: true,
+      markup12: true,
+      markup6: true,
+      markupCash: true,
+    }
+    const productIds = Object.keys(presentationToggle)
+
+    if (proposal?.versions) {
+      const presentations = proposal.versions.reduce((acc: any, { products }: VersionT) => {
+        products.forEach(({ id }: ProductT) => {
+          if (!productIds.includes(id)) {
+        acc[id] = defaultToggle;
+          }
+        });
+        return acc;
+      }, {});
+      console.log(presentations)
+      setPresentationToggle(prev => ({...prev, ...presentations}))
+    }
+  }, [proposal]);
 
   useEffect(() => {
     if (proposal) {
@@ -77,7 +97,34 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     }
   }, [proposal]);
 
-  async function updateProductEnable(proposalId: string, versionNum: number, productIndex: number, enable: boolean) {
+  function updatePresentationToggle(id: string, key: keyof PresentationToggleT, value: boolean) {
+    setPresentationToggle(prev => ({ ...prev, [id]: { ...prev[id], [key]: value } }))
+  }
+
+  async function handleEnableToggle(enabled: boolean, index: number) {
+    const newEnabledState = !enabled
+    if (!proposal) {
+      throw new Error('Proposal is undefined');
+    }
+    const versions = proposal.versions.map((version: VersionT) =>
+      version.num === versionNum ?
+        {
+          ...version, products: version.products.map((product: ProductT, i: number) =>
+            i === index ? { ...product, enabled: newEnabledState } : product
+          )
+        } : version
+    )
+
+    setProposal((prev) => ({ ...prev, versions }))
+
+    try {
+      await updateProductEnable(index, newEnabledState)
+    } catch (error) {
+      console.error('Failed to update product enable status:', error)
+    }
+  }
+
+  async function updateProductEnable(productIndex: number, enable: boolean) {
     try {
       if (!proposalRef) {
         throw new Error('Proposal reference is undefined');
@@ -101,7 +148,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function updateProductQuantity(proposalId: string, versionNum: number, productIndex: number, quantity: number) {
+  async function updateProductQuantity(versionNum: number, productIndex: number, quantity: number) {
     try {
       if (!proposalRef) {
         throw new Error('Proposal reference is undefined');
@@ -165,10 +212,11 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         versionNum,
         setVersionNum,
         calculatePrice,
-        updateProductEnable,
+        handleEnableToggle,
         updateProductQuantity,
         updateProposalStatus,
         updateProposalPriority,
+        updatePresentationToggle,
         totalValues,
         presentationToggle,
         setPresentationToggle
