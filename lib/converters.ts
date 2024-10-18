@@ -47,7 +47,7 @@ const collaboratorConverter: FirestoreDataConverter<CollaboratorT> = {
       id: snapshot.id,
       person: person.data() as PersonT,
       role: data.role,
-      last_updated: data.last_updated.toDate(),
+      last_updated: data.last_updated,
     };
   },
 };
@@ -71,7 +71,7 @@ const representativeConverter: FirestoreDataConverter<RepresentativeT> = {
       id: snapshot.id,
       person: person.data() as PersonT,
       team: data.team,
-      last_updated: data.last_updated.toDate(),
+      last_updated: data.last_updated,
     };
   },
 };
@@ -112,7 +112,7 @@ const factoryConverter: FirestoreDataConverter<FactoryT> = {
       link_table: data.link_table,
       link_catalog: data.link_catalog,
       link_site: data.link_site,
-      last_updated: data.last_updated.toDate(),
+      last_updated: data.last_updated,
     };
   },
 };
@@ -136,7 +136,7 @@ const officeConverter: FirestoreDataConverter<OfficeT> = {
       id: snapshot.id,
       person: person.data() as PersonT,
       team: data.team,
-      last_updated: data.last_updated.toDate(),
+      last_updated: data.last_updated,
     };
   },
 };
@@ -187,7 +187,7 @@ const serviceConverter: FirestoreDataConverter<ServiceT> = {
       id: snapshot.id,
       person: person.data() as PersonT,
       service: data.service,
-      last_updated: data.last_updated.toDate(),
+      last_updated: data.last_updated,
     };
   },
 };
@@ -317,8 +317,8 @@ const proposalConverter: FirestoreDataConverter<ProposalT> = {
         )})
       )),
       total: data.total,
-      last_updated: data.last_updated.toDate(),
-      created_at: data.created_at.toDate(),
+      last_updated: data.last_updated,
+      created_at: data.created_at,
     };
   },
 };
@@ -364,7 +364,7 @@ const productConverter: FirestoreDataConverter<ProductT> = {
       freight: freight ? freight.data() as FreightT : '',
       cost: data.cost,
       markup: markup ? markup.data() as MarkupT : '',
-      created_at: data.created_at.toDate(),
+      created_at: data.created_at,
     };
   },
 };

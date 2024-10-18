@@ -7,8 +7,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useCRMContext } from '@/hooks/useCRMContext'
 
 export default function VersionOptions({ num, active } : { num: number, active: boolean }) {
+  const { downloadPresentation } = useCRMContext()
+
   return (
     <Popover>
       <div className='flex gap-1'>
@@ -31,7 +34,7 @@ export default function VersionOptions({ num, active } : { num: number, active: 
             <Button variant='ghost' className='justify-start p-1 pr-2 h-auto'>
               <FileText className='w-4 h-4' /> Exportar PDF
             </Button>
-            <Button variant='ghost' className='justify-start p-1 pr-2 h-auto'>
+            <Button onClick={downloadPresentation} variant='ghost' className='justify-start p-1 pr-2 h-auto'>
               <Presentation className='w-4 h-4' /> Exportar Apresentação
             </Button>
           </div>

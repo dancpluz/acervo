@@ -820,6 +820,7 @@ type RepresentativeFieldsT = typeof representativeFields;
 type OfficeFieldsT = typeof officeFields;
 type FactoryFieldsT = typeof factoryFields;
 type ProposalFieldsT = typeof proposalFields;
+type ProductFieldsT = typeof productFields;
 
 export type AllFieldTypes =
   | CollaboratorFieldsT
@@ -831,3 +832,4 @@ export type AllFieldTypes =
   | OfficeFieldsT
   | FactoryFieldsT
   | ProposalFieldsT
+  | ProductFieldsT
