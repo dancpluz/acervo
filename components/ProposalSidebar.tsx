@@ -12,6 +12,8 @@ import { Info, Activity, Scroll, CircleEllipsis, SquarePen, Trash2, User, Person
 import { Button } from '@/components/ui/button';
 import { useCRMContext } from "@/hooks/useCRMContext";
 import { format } from 'date-fns';
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import ProposalPDF from "@/components/ProposalPDF";
 
 function SideAccordion({ icon, title, expanded, value, children }: { title: string, icon: React.ReactElement, value: string, expanded: boolean, children: React.ReactNode }) {
   return (
@@ -85,7 +87,14 @@ export default function ProposalSidebar() {
         </SideAccordion>
       </Accordion>
       <div className="flex flex-col gap-2 items-center w-full">
-        <SideButton title='GERAR PROPOSTA' icon={<Scroll className='w-8 h-8 text-primary' />} expanded={expanded} onClick={expanded ? () => {console.log('expandido')} : () => { setExpanded(true) }}/>
+        <Dialog>
+          <DialogTrigger asChild>
+            <SideButton title='GERAR PROPOSTA' icon={<Scroll className='w-8 h-8 text-primary' />} expanded={expanded} onClick={expanded ? () => {console.log('expandido')} : () => { setExpanded(true) }}/>
+          </DialogTrigger>
+          <DialogContent className='w-[900px] h-[90vh]'>
+            {/* <ProposalPDF /> */}
+          </DialogContent>
+        </Dialog>
         <SideButton title='EDITAR PROPOSTA' icon={<SquarePen className='w-8 h-8 text-primary' />} expanded={expanded} />
         <SideButton title='EXCLUIR PROPOSTA' icon={<Trash2 className='w-8 h-8 text-primary' />} expanded={expanded} />
       </div>
