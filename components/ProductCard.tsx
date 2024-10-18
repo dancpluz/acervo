@@ -7,6 +7,7 @@ import { MarkupT, ProductT, VersionT } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
 import { useCRMContext } from '@/hooks/useCRMContext'
 import { cn } from "@/lib/utils"
+import Image from 'next/image'
 
 export function GreyText({ className, children }: { className?: string, children: React.ReactNode }) {
   return <b className={cn('text-xs text-tertiary font-normal', className)}>{children}</b>
@@ -58,7 +59,7 @@ export default function ProductCard({ product, index }: { product: ProductT; ind
   
     return (
       <div className="flex border border-secondary gap-4 p-4 rounded-lg justify-between">
-        <div style={{ opacity: enabled ? 1 : 0.5 }} className="w-32 h-32 border border-primary rounded-2xl">Imagem</div>
+        <Image alt={id} className="border border-primary rounded-2xl object-cover w-32 h-32" style={{ opacity: enabled ? 1 : 0.5 }} width={128} height={128} src='https://placehold.co/128/png' />
         <div style={{ opacity: enabled ? 1 : 0.5 }} className="flex flex-col grow">
           <div className="flex flex-col">
             <span className="text-tertiary text-xs">Item {id ? id : index + 1}</span>

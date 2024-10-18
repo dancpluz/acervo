@@ -2,7 +2,7 @@
 import { PresentationToggleT, useCRMContext } from "@/hooks/useCRMContext";
 import { MarkupT, ProductT } from "@/lib/types";
 import { Label } from "@/components/ui/label";
-import { Presentation, Slide, Text, Shape, Image } from "react-pptx";
+import { Presentation } from "react-pptx";
 import Preview from "react-pptx/preview";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatCurrency } from "@/lib/utils";
@@ -10,7 +10,6 @@ import { Eye, EyeOff, Edit, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PriceBox from "./PriceBox";
 import { BlackText, GreyText } from "./ProductCard";
-
 function ToggleBox({ children, productId, id }: { children: React.ReactNode, productId: string, id: keyof PresentationToggleT }) {
   const { presentationToggle, updatePresentationToggle } = useCRMContext()
 
@@ -24,8 +23,11 @@ function ToggleBox({ children, productId, id }: { children: React.ReactNode, pro
   )
 }
 
+
+
 export default function PresentationSlides({ product, index }: { product: ProductT; index: number }) {
-  const { calculatePrice, presentationToggle, updatePresentationToggle, handleEnableToggle } = useCRMContext()
+
+  const { calculatePrice, createProductSlide, presentationToggle, updatePresentationToggle, handleEnableToggle } = useCRMContext()
 
   const { id, name, quantity, finish, cost, enabled, markup } = product
 
@@ -33,12 +35,7 @@ export default function PresentationSlides({ product, index }: { product: Produc
 
   const textStyle = 'text-sm leading-0 text-wrap'
 
-  const { sizes, markupName, designer, frame, fabric, extra, images, markup12, markup6, freight, markupCash } = presentationToggle[id];
-
-  const fontFace = 'Open Sans';
-  const small = 10;
-  const big = 13;
-  const space = 2;
+  const { images, markup12, markup6, markupCash } = presentationToggle[id];
 
   return (
     <div className='flex gap-4'>
@@ -51,87 +48,7 @@ export default function PresentationSlides({ product, index }: { product: Produc
         opacity: enabled ? 1 : 0.5
       }}>
         <Presentation>
-          <Slide style={{
-            backgroundColor: "#feffff"
-          }}>
-            <Image
-              src={{ kind: "path", path: "/acervo-sm.svg" }}
-              style={{ x: 9.4, y: 0.2, w: 0.3, h: 0.3 }}
-            />
-            <Text style={{
-              x: 0.5, y: 3.9, w: 3,
-              fontSize: small,
-              fontFace,
-              verticalAlign: 'bottom',
-            }}>
-              <Text.Bullet style={{
-                fontSize: big,
-                fontFace,
-                bold: true,
-                paraSpaceBefore: 16,
-                paraSpaceAfter: 16,
-              }}>
-                {name}
-              </Text.Bullet>
-              <Text.Bullet>
-                {markupName ? `${markup.name}` : ''}
-              </Text.Bullet>
-              <Text.Bullet>
-                {frame ? `Base/Estrutura - ${finish.frame}` : ''}
-              </Text.Bullet>
-              <Text.Bullet>
-                {fabric ? `Tampo/Tecido - ${finish.fabric}` : ''}
-              </Text.Bullet>
-              <Text.Bullet>
-                {extra && finish.extra ? `Acabamento 3 - ${finish.extra}` : ''}
-              </Text.Bullet>
-              <Text.Bullet style={{ paraSpaceBefore: 14, paraSpaceAfter: 14 }}>
-                {sizes ? `${finish.width}cm x ${finish.depth}cm x ${finish.height}cm` : ''}
-              </Text.Bullet>
-              <Text.Bullet style={{ bold: true, paraSpaceBefore: space, paraSpaceAfter: space }}>
-                {`A partir de`}
-              </Text.Bullet>
-              <Text.Bullet style={{ bold: true, paraSpaceBefore: space, paraSpaceAfter: space }}>
-                {markup12 ? `${formatCurrency(price.markup12)} UND. em 12x` : ''}
-              </Text.Bullet>
-              <Text.Bullet style={{ bold: true, paraSpaceBefore: space, paraSpaceAfter: space }}>
-                {markup6 ? `${formatCurrency(price.markup6)} UND. em 6x` : ''}
-              </Text.Bullet>
-              <Text.Bullet style={{ color: '#a53825',fontSize: small + 2, bold: true, paraSpaceBefore: space, paraSpaceAfter: space }}>
-                {markupCash ? `${formatCurrency(price.markupCash)} UND. à vista` : ''}
-              </Text.Bullet>
-              <Text.Bullet style={{ color: '#a53825', bold: true, paraSpaceBefore: space, paraSpaceAfter: space }}>
-                {freight ? `Frete incluso` : ''}
-              </Text.Bullet>
-            </Text>
-            <Image
-              src={{ kind: "path", path: "https://placehold.co/600x400?text=Imagem" }}
-              style={{ x: 4, y: 1, w: 5.4, h: 3.6 }}
-            />
-            <Text style={{
-              x: 4, y: 4.7, w: 1.5, h: 0.4,
-              fontSize: small,
-              fontFace,
-            }}>
-              Portfólio, ACERVO
-            </Text>
-            <Text style={{
-              x: 6, y: 4.7, w: 1.5, h: 0.4,
-              fontSize: small,
-              fontFace,
-              align: 'center',
-            }}>
-              acervomobilia.com
-            </Text>
-            <Text style={{
-              x: 7.9, y: 4.7, w: 1.5, h: 0.4,
-              fontSize: small,
-              fontFace,
-              align: 'right',
-            }}>
-              {designer && finish.designer ? `designer ${finish.designer}` : ''}
-            </Text>
-          </Slide>
+          {createProductSlide(product)}
         </Presentation>
       </Preview>
       <div className='w-[20%] flex flex-col border border-secondary gap-4 p-4 rounded-lg justify-between'>

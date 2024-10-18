@@ -92,7 +92,7 @@ export default function ProposalSidebar() {
             <SideButton title='GERAR PROPOSTA' icon={<Scroll className='w-8 h-8 text-primary' />} expanded={expanded} onClick={expanded ? () => {console.log('expandido')} : () => { setExpanded(true) }}/>
           </DialogTrigger>
           <DialogContent className='w-[900px] h-[90vh]'>
-            {/* <ProposalPDF /> */}
+            <ProposalPDF />
           </DialogContent>
         </Dialog>
         <SideButton title='EDITAR PROPOSTA' icon={<SquarePen className='w-8 h-8 text-primary' />} expanded={expanded} />
