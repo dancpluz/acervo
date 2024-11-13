@@ -42,11 +42,11 @@ export function ConfirmAlert({ submit, popupOpen, setPopupOpen, conflicts, reset
         <AlertDialogHeader>
           <AlertDialogTitle>Você tem certeza que deseja adicionar?</AlertDialogTitle>
           <AlertDialogDescription>
-            <p>Foi encontrado no nosso banco de dados registros com estes mesmos dados:</p>
+            Foi encontrado no nosso banco de dados registros com estes mesmos dados:
             {conflicts ? Object.keys(conflicts).map((key) => 
-              <p key={key}>{`- ${translationFields[key]}`} <b>{conflicts[key][0]}</b>
-              {` (encontrado ${conflicts[key][1]} ocorrência${conflicts[key][1] > 1 ? 's' : ''} desse dado)`}</p>
-            ) : <p>Não encontrado...</p>}
+              <React.ReactFragment key={key}>{`- ${translationFields[key]}`} <b>{conflicts[key][0]}</b>
+              {` (encontrado ${conflicts[key][1]} ocorrência${conflicts[key][1] > 1 ? 's' : ''} desse dado)`}</React.ReactFragment>
+            ) : <>Não encontrado...</>}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -9,7 +9,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { Form } from "@/components/ui/form";
 import { EditTinyTable, TinyTable } from "@/components/TinyTable";
-import { InputField, SearchField, SelectField } from "./AllFields";
+import { InputField, SearchField, SelectField, PersonTypeRadio } from "./AllFields";
 import { serviceFisicalFields, serviceJuridicalFields, fields, enumFields, contactFields } from "@/lib/fields";
 import { FormDiv, FieldDiv, TabDiv } from "@/components/ui/div";
 import { ConfirmAlert, DeleteAlert } from "@/components/AllPopups";
@@ -23,10 +23,12 @@ const [juridicalDefaultValues, juridicalFieldValidations] = formatFields(service
 
 const defaultValues = { ...juridicalDefaultValues, person: { ...juridicalDefaultValues.person, info: { ...juridicalDefaultValues.person.info, ...fisicalDefaultValues.person.info } } }
 
-export default function FormService({ data, show }: { data?: any, show?: boolean }) {
-  const tabs = ['PRESTADOR DE SERVIÇOS', 'CONTATO E ENDEREÇO'];
+const tabs = ['PRESTADOR DE SERVIÇOS', 'CONTATO E ENDEREÇO'];
 
-  const [personType, setPersonType] = useState<'Física' | 'Jurídica'>('Física');
+export default function FormService({ data, show }: { data?: any, show?: boolean }) {
+  const initialPersonType = data ? data.person.info.cnpj === undefined ? 'Física' : 'Jurídica' : 'Física'
+
+  const [personType, setPersonType] = useState<'Física' | 'Jurídica'>(initialPersonType);
 
   const form = useForm<z.infer<typeof fisicalFieldValidations> | z.infer<typeof juridicalFieldValidations>>({
     resolver: zodResolver(personType === 'Física' ? fisicalFieldValidations : juridicalFieldValidations),
@@ -52,6 +54,15 @@ export default function FormService({ data, show }: { data?: any, show?: boolean
     conflicts
   } = useEntityFormActions(form, data, 'service', checkPaths);
 
+  const formButtonProps = {
+    setIsEditing,
+    isEditing: show ? isEditing : undefined,
+    undoForm: data ? () => { setPersonType(initialPersonType); form.reset(data) } : undefined,
+    state: form.formState,
+  }
+
+  const disabled = show && !isEditing;
+
   return (
     <Tabs className='bg-secondary/20' defaultValue={tabs[0]}>
       <div className='flex'>
@@ -74,61 +85,51 @@ export default function FormService({ data, show }: { data?: any, show?: boolean
               <div className='flex gap-8'>
                 <FormDiv>
                   <FieldDiv>
-                    <InputField obj={fields.service} form={form} disabled={show && !isEditing} />
-                    <RadioGroup className='flex-col p-0 border-0 gap-1 grow items-stretch max-w-56' defaultValue={personType}>
-                      <Label>TIPO DE PESSOA</Label>
-                      <div className="flex gap-1 grow">
-                        <RadioGroupItem label="Física" value="Física" disabled={show && !isEditing}
-                          className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 w-full`}
-                          onClick={() => { setPersonType('Física'); form.reset()} } />
-                        <RadioGroupItem label="Jurídica" value="Jurídica" disabled={show && !isEditing}
-                          className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 w-full`}
-                          onClick={() => { setPersonType('Jurídica'); form.reset()} }  />
-                      </div>
-                    </RadioGroup>
+                    <InputField obj={fields.service} disabled={disabled} />
+                    <PersonTypeRadio defaultValue={personType} disabled={disabled} setPersonType={data ? (val) => { setPersonType(val); form.reset(data) } : (val) => { setPersonType(val); form.reset()}} />
                   </FieldDiv>
                   <FieldDiv>
                   {personType === 'Jurídica' ?
                     <>
-                      <InputField path='person.info' obj={{...fields.company_name, label: 'NOME OU RAZÃO SOCIAL'}} form={form} disabled={show && !isEditing} />
-                      <InputField path='person.info' obj={fields.fantasy_name} form={form} disabled={show && !isEditing} />
+                      <InputField path='person.info' obj={{...fields.company_name, label: 'NOME OU RAZÃO SOCIAL'}} disabled={disabled} />
+                      <InputField path='person.info' obj={fields.fantasy_name} disabled={disabled} />
                     </> :
                     <>
-                      <InputField path='person.info' obj={{...fields.name, label: 'NOME'}} form={form} disabled={show && !isEditing} />
-                      <InputField path='person.info' obj={{...fields.surname, label: 'SOBRENOME'}} form={form} disabled={show && !isEditing} />
+                      <InputField path='person.info' obj={{...fields.name, label: 'NOME'}} disabled={disabled} />
+                      <InputField path='person.info' obj={{...fields.surname, label: 'SOBRENOME'}} disabled={disabled} />
                     </>}
                   </FieldDiv>
                   <FieldDiv>
-                    <InputField path='person.info' obj={{...fields.info_email, label: 'EMAIL'}} form={form} disabled={show && !isEditing} />
+                    <InputField path='person.info' obj={{...fields.info_email, label: 'EMAIL'}} disabled={disabled} />
                     {personType === 'Jurídica' ?
                     <>
-                      <InputField path='person.info' obj={{...fields.cnpj, label: 'CNPJ'}} form={form} disabled={show && !isEditing} />
+                      <InputField path='person.info' obj={{...fields.cnpj, label: 'CNPJ'}} disabled={disabled} />
                     </> :
                     <>
-                      <InputField path='person.info' obj={fields.rg} form={form} disabled={show && !isEditing} customClass={'grow-0 min-w-40'} />
-                      <InputField path='person.info' obj={fields.cpf} form={form} disabled={show && !isEditing} customClass={'grow-0 min-w-44'} />
+                      <InputField path='person.info' obj={fields.rg} disabled={disabled} customClass={'grow-0 min-w-40'} />
+                      <InputField path='person.info' obj={fields.cpf} disabled={disabled} customClass={'grow-0 min-w-44'} />
                     </>}
                   </FieldDiv>
                   <FieldDiv>
                     {personType === 'Jurídica' &&
                     <>
-                      <SelectField path='person.info' obj={{...enumFields.tax_payer, label: 'CONTRIBUINTE'}} form={form} disabled={show && !isEditing} />
-                      <InputField path='person.info' obj={fields.state_register} form={form} disabled={show && !isEditing} />
-                      <InputField path='person.info' obj={fields.municipal_register} form={form} disabled={show && !isEditing} />
+                      <SelectField path='person.info' obj={{...enumFields.tax_payer, label: 'CONTRIBUINTE'}} disabled={disabled} />
+                      <InputField path='person.info' obj={fields.state_register} disabled={disabled} />
+                      <InputField path='person.info' obj={fields.municipal_register} disabled={disabled} />
                     </>}
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
-                  <InputField path='person' obj={fields.observations} form={form} long disabled={show && !isEditing} />
+                  <InputField path='person' obj={fields.observations} long disabled={disabled} />
                   <FieldDiv>
-                    <SearchField path='person.payment' obj={enumFields.bank} form={form} hint={'Ex. Bradesco'} customClass={'overflow-hidden text-ellipsis'} disabled={show && !isEditing} />
-                    <InputField path='person.payment' obj={fields.pix} form={form} disabled={show && !isEditing} />
+                    <SearchField path='person.payment' obj={enumFields.bank} hint={'Ex. Bradesco'} customClass={'overflow-hidden text-ellipsis'} disabled={disabled} />
+                    <InputField path='person.payment' obj={fields.pix} disabled={disabled} />
                   </FieldDiv>
                   <FieldDiv>
-                    <InputField path='person.payment' obj={fields.account} form={form} disabled={show && !isEditing} />
-                    <InputField path='person.payment' obj={fields.agency} form={form} disabled={show && !isEditing}/>
+                    <InputField path='person.payment' obj={fields.account} disabled={disabled} />
+                    <InputField path='person.payment' obj={fields.agency} disabled={disabled}/>
                   </FieldDiv>
-                  <FormButton nextValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} />
+                  <FormButton nextValue={tabs[1]} {...formButtonProps} />
                 </FormDiv>
               </div>
             </TabDiv>
@@ -138,20 +139,20 @@ export default function FormService({ data, show }: { data?: any, show?: boolean
               <div className='flex gap-8'>
                 <FormDiv>
                   <FieldDiv>
-                    <InputField path='person.info.tax_address' obj={fields.cep} autofill={fillCepFields} form={form} customClass={'grow-0 min-w-36'} disabled={show && !isEditing} />
-                    <InputField path='person.info.tax_address' obj={fields.address} form={form} customClass={'grow'} disabled={show && !isEditing} />
-                    <InputField path='person.info.tax_address' obj={fields.number} form={form} customClass={'grow-0 min-w-36'} disabled={show && !isEditing} />
+                    <InputField path='person.info.tax_address' obj={fields.cep} autofill={fillCepFields} customClass={'grow-0 min-w-36'} disabled={disabled} />
+                    <InputField path='person.info.tax_address' obj={fields.address} customClass={'grow'} disabled={disabled} />
+                    <InputField path='person.info.tax_address' obj={fields.number} customClass={'grow-0 min-w-36'} disabled={disabled} />
                   </FieldDiv>
                   <FieldDiv>
-                    <SearchField path='person.info.tax_address' obj={enumFields.state} form={form} hint={'Ex. DF'} customClass={'grow-0 min-w-44'} state='reset' disabled={show && !isEditing} />
-                    <SearchField path='person.info.tax_address' obj={enumFields.city} form={form} hint={'Ex. Brasília'} state={form.watch('person.info.tax_address.state')} customClass={'grow-0 min-w-44'} disabled={show && !isEditing} />
-                    <InputField obj={fields.complement} form={form} customClass={'grow'} disabled={show && !isEditing} />
+                    <SearchField path='person.info.tax_address' obj={enumFields.state} hint={'Ex. DF'} customClass={'grow-0 min-w-44'} state='reset' disabled={disabled} />
+                    <SearchField path='person.info.tax_address' obj={enumFields.city} hint={'Ex. Brasília'} state={form.watch('person.info.tax_address.state')} customClass={'grow-0 min-w-44'} disabled={disabled} />
+                    <InputField obj={fields.complement} customClass={'grow'} disabled={disabled} />
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
-                {show && !isEditing ? <TinyTable title='' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
-                  : <EditTinyTable title='' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(createDefaultArray(contactFields))} remove={contactForm.remove} prefix='person.contact' form={form} order={["name", "detail", "phone", "telephone"]} />}
-                  <FormButton backValue={tabs[0]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} submit={!show} />
+                {disabled ? <TinyTable title='' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
+                  : <EditTinyTable title='' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(createDefaultArray(contactFields))} remove={contactForm.remove} prefix='person.contact' order={["name", "detail", "phone", "telephone"]} />}
+                  <FormButton backValue={tabs[0]} {...formButtonProps} submit={!show} />
                 </FormDiv>
               </div>
             </TabDiv>

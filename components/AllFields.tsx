@@ -1,8 +1,8 @@
 'use client';
 
 import cidades from '@/lib/cidades.json';
-import { useEffect, useState, ChangeEvent } from 'react';
-import { useForm } from "react-hook-form";
+import { ChangeEvent } from 'react';
+import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,
@@ -41,9 +41,12 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import useGetEntities from '@/hooks/useGetEntities';
 import { converters } from '@/lib/converters';
+import { Label } from './ui/label';
 
-export function SelectField({ path, form, customClass, obj, disabled }: { path?: string, form: ReturnType<typeof useForm>, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
+export function SelectField({ path, customClass, obj, disabled }: { path?: string, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
+  const form = useFormContext();
+
   return (
     <FormField
       control={form.control}
@@ -52,10 +55,10 @@ export function SelectField({ path, form, customClass, obj, disabled }: { path?:
         <FormItem className={customClass}>
           <FormMessage />
           <FormLabel>{obj.label}</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
             <FormControl>
               <SelectTrigger className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} disabled={disabled}>
-                <SelectValue placeholder={disabled ? '' : disabled ?? obj.placeholder} />
+                <SelectValue placeholder={disabled ? '' : disabled ?? obj.placeholder}/>
               </SelectTrigger>
             </FormControl>
             <SelectContent>
@@ -67,11 +70,13 @@ export function SelectField({ path, form, customClass, obj, disabled }: { path?:
   );
 }
 
-export function ReferenceField<EntityT>({ path, form, refPath, obj, customClass, person, hint, onSelect, disabled }: { path?: string, form: ReturnType<typeof useForm>, refPath: string, obj: FieldT, customClass?: string, person?: boolean, hint: string, onSelect?: any, disabled?: boolean }) {
+export function ReferenceField<EntityT>({ path, refPath, obj, customClass, person, hint, onSelect, disabled }: { path?: string, refPath: string, obj: FieldT, customClass?: string, person?: boolean, hint: string, onSelect?: any, disabled?: boolean }) {
   
   const [data, loading, error] = useGetEntities<EntityT>(refPath, converters[obj.value]);
 
+  const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
+
   
   return (
     <FormField
@@ -139,8 +144,9 @@ export function ReferenceField<EntityT>({ path, form, refPath, obj, customClass,
   );
 }
 
-export function SearchField({ path, form, obj, customClass, hint, state, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: EnumFieldT, customClass?: string, hint: string, state?: string, disabled?: boolean }) {
+export function SearchField({ path, obj, customClass, hint, state, disabled }: { path?: string, obj: EnumFieldT, customClass?: string, hint: string, state?: string, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
+  const form = useFormContext();
   
   if (state && state !== 'reset') {
     obj.items = (cidades as { [key: string] : string[] })[state].map((e: string) => ({ label: e, value: e }));
@@ -219,7 +225,8 @@ export function ShowField({ text, placeholder, label }: {  text?: string, placeh
   )
 }
 
-export function InputField({ path, form, obj, autofill, customClass, percent, long, cm, disabled, update, onChange }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, cm?: boolean, disabled?: boolean, update?: any, onChange?: ChangeEvent }) {
+export function InputField({ path, obj, autofill, customClass, percent, long, cm, disabled, update, onChange }: { path?: string, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, cm?: boolean, disabled?: boolean, update?: any, onChange?: ChangeEvent }) {
+  const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -241,8 +248,10 @@ export function InputField({ path, form, obj, autofill, customClass, percent, lo
   )
 }
 
-export function TitleField({ path, form, obj, customClass, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any }) {
+export function TitleField({ path, obj, customClass, disabled }: { path?: string, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
+  const form = useFormContext();
+
   return (
     <FormField
       control={form.control}
@@ -258,7 +267,22 @@ export function TitleField({ path, form, obj, customClass, disabled }: { path?: 
   )
 }
 
-export function RadioField({ path, form, obj, optional, disabled, defaultValue }: { path?: string, form: ReturnType<typeof useForm>, obj: EnumFieldT, optional?: boolean, disabled?: boolean, defaultValue?: string }) {
+export function PersonTypeRadio({ defaultValue, setPersonType, disabled }: { defaultValue: string, setPersonType: (value: 'Física' | 'Jurídica') => void, disabled?: boolean }) {
+  return (
+    <RadioGroup className='flex-col p-0 border-0 gap-1 grow items-stretch max-w-56' onValueChange={setPersonType} defaultValue={defaultValue}>
+      <Label>TIPO DE PESSOA</Label>
+      <div className="flex gap-1 grow">
+        <RadioGroupItem label="Física" value="Física" disabled={disabled} className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 w-full`}
+          />
+        <RadioGroupItem label="Jurídica" value="Jurídica" disabled={disabled} className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 w-full`}
+          />
+      </div>
+    </RadioGroup>
+  )
+}
+
+export function RadioField({ path, obj, optional, disabled, defaultValue }: { path?: string, obj: EnumFieldT, optional?: boolean, disabled?: boolean, defaultValue?: string }) {
+  const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -304,7 +328,8 @@ export function RadioField({ path, form, obj, optional, disabled, defaultValue }
   )
 }
 
-export function DateField({ path, form, obj }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT }) {
+export function DateField({ path, obj }: { path?: string, obj: FieldT }) {
+  const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -353,7 +378,8 @@ export function DateField({ path, form, obj }: { path?: string, form: ReturnType
   )
 }
 
-export function ImageField({ form, obj, path }: { form: ReturnType<typeof useForm>, obj: FieldT, path: string }) {
+export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
+  const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField

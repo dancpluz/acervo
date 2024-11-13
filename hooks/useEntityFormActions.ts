@@ -24,6 +24,7 @@ export default function useEntityFormActions(
   entity: string,
   check: string[][],
   entityRef?: string,
+  overrideFunction?: () => void
 ): FormActionsT {
 
   const router = useRouter();
@@ -33,12 +34,15 @@ export default function useEntityFormActions(
   const entityTitle = entityTitles[entity];
 
   // useEffect(() => {
-  //   console.log(form.getValues());
+  //   console.log(form.formState.errors);
   // }, [form.formState]);
 
   useEffect(() => {
     if (data) {
       form.reset(data);
+      if (overrideFunction) {
+        overrideFunction()
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
@@ -93,8 +97,9 @@ export default function useEntityFormActions(
 
   async function deleteSubmit() {
     try {
-      for (const [entity, ref] of Object.entries(data.refs)) {
-        await deleteEntity(entity as string, ref as string);
+      await deleteEntity(entity, data.id);
+      if (entityRef && data[entityRef]) {
+        await deleteEntity(entityRef, data[entityRef].person.id);
       }
 
       toast({

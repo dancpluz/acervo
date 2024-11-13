@@ -9,10 +9,11 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { CirclePlus, CircleX } from 'lucide-react';
 import { TableFieldT } from '@/lib/fields';
+import { useFormContext } from "react-hook-form";
+
 
 type Props = {
   columns: TableFieldT[];
@@ -31,13 +32,13 @@ type EditProps = {
   }[];
   title?: string;
   prefix: string;
-  form: UseFormReturn;
   append: () => void;
   remove: (index: number) => void;
   order: string[];
 }
 
-export function EditTinyTable({ columns, title, rows, append, remove, form, prefix, order}: EditProps) {
+export function EditTinyTable({ columns, title, rows, append, remove, prefix, order}: EditProps) {
+  const form = useFormContext();
   return (
     <div className='flex flex-col gap-1'>
       <Label>{title}</Label>
@@ -55,7 +56,7 @@ export function EditTinyTable({ columns, title, rows, append, remove, form, pref
         <TableBody className="overflow-y-auto">
           {rows.map((row,index) => {
             return (
-              <TableRow key={row.id}>
+              <TableRow className='border-secondary' key={row.id}>
                 {Object.keys(row).sort((a, b) => { return order.indexOf(a) - order.indexOf(b) }).map((key, i) => {
                   if (key === 'id') {return}
                   return (

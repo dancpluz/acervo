@@ -222,7 +222,7 @@ export const fields: { [key: string]: FieldT } = {
     value: 'direct_sale',
     label: 'VENDA DIRETA',
     placeholder: 'Ex. 3',
-    validation: z.string().transform((val) => Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).lte(100, 'Valor muito alto')).optional().or(z.literal('')),
+    validation: z.string().transform((val) => val === '' ? val : Number((Number(`${val}`.replace(",", ".")) / 100).toFixed(4))).pipe(z.number({ invalid_type_error: 'Somente números.' }).lte(100, 'Valor muito alto')).optional().or(z.literal('')),
   },
   observations: {
     value: 'observations',
@@ -469,27 +469,27 @@ export const prospectionFields: { [key: string]: TableFieldT } = {
   },
 };
 
-export const orderFields: { [key: string]: FieldT | EnumFieldT } = {
-  id_order: {
-    value: 'id_order',
-    label: 'ID*',
-    placeholder: 'Ex. 12345678',
-    validation: z.string().min(1, 'Campo não preenchido.'),
-  },
-  date: {
-    value: 'date',
-    label: 'DATA*',
-    placeholder: 'Ex. 21/05/2024',
-    mask: [/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/],
-    validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 8, 'A data deve ter 8 números.'),
-  },
-  cep: fields.cep,
-  address: fields.address,
-  number: fields.number,
-  state: enumFields.state,
-  city: enumFields.city,
-  complement: fields.complement
-};
+// export const orderFields: { [key: string]: FieldT | EnumFieldT } = {
+//   id_order: {
+//     value: 'id_order',
+//     label: 'ID*',
+//     placeholder: 'Ex. 12345678',
+//     validation: z.string().min(1, 'Campo não preenchido.'),
+//   },
+//   date: {
+//     value: 'date',
+//     label: 'DATA*',
+//     placeholder: 'Ex. 21/05/2024',
+//     mask: [/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/],
+//     validation: z.string().refine((e: string) => e.replace(/\D/g, "").length == 8, 'A data deve ter 8 números.'),
+//   },
+//   cep: fields.cep,
+//   address: fields.address,
+//   number: fields.number,
+//   state: enumFields.state,
+//   city: enumFields.city,
+//   complement: fields.complement
+// };
 
 const addressFields = {
   cep: fields.cep,
@@ -544,13 +544,13 @@ export const collaboratorFields = {
 
 export const clientFisicalFields = {
   person: { ...fisicalPerson, info: { ...fisicalPerson.info, shipping_address: addressFields }  },
-  order: orderFields,
+  // order: orderFields,
   office: fields.office,
 }
 
 export const clientJuridicalFields = {
   person: { ...juridicalPerson, info: { ...juridicalPerson.info, shipping_address: addressFields } },
-  order: orderFields,
+  // order: orderFields,
   office: fields.office,
 }
 
