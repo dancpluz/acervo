@@ -31,6 +31,11 @@ const nextConfig = {
         source: '/propostas',
         destination: '/crm/propostas',
         permanent: false
+      },
+      {
+        source: '/cadastros',
+        destination: '/cadastros/fabricas',
+        permanent: false
       }
     ]
   }

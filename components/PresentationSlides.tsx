@@ -10,6 +10,7 @@ import { Eye, EyeOff, Edit, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PriceBox from "./PriceBox";
 import { BlackText, GreyText } from "./ProductCard";
+
 function ToggleBox({ children, productId, id }: { children: React.ReactNode, productId: string, id: keyof PresentationToggleT }) {
   const { presentationToggle, updatePresentationToggle } = useCRMContext()
 
@@ -61,7 +62,7 @@ export default function PresentationSlides({ product, index }: { product: Produc
             <ToggleBox productId={id} id='markupName'>
               <BlackText>
                 <GreyText className='text-sm'>MARCAÇÃO </GreyText>
-                {markup.name}
+                {(markup as MarkupT).name}
               </BlackText>
             </ToggleBox>
             {finish.designer &&
