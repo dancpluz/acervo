@@ -4,6 +4,7 @@ import { FieldT, TableFieldT, AllFieldTypes, EnumFieldT } from '@/lib/fields';
 import { z } from "zod";
 import slugify from 'slugify';
 import createNumberMask from 'text-mask-addons/dist/createNumberMask';
+import { Timestamp } from "firebase/firestore";
 
 export const translationFields: { [key: string]: string } = {
   company_name: 'Nome/Razão Social',
@@ -89,7 +90,7 @@ export const entityTitles: { [key: string]: EntityTitleT } = {
   }
 }
 
-export function timestampToDate(timestamp: { seconds: number, nanoseconds: number }) {
+export function timestampToDate(timestamp: Timestamp) {
   return new Date(timestamp.seconds*1000)
 }
 

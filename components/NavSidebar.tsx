@@ -59,7 +59,7 @@ export default function NavSidebar() {
         <SidebarItem icon={'/icons/users.svg'} title={'Cadastros'} slug={'cadastros'}  />
         <SidebarItem icon={'/icons/pie-chart.svg'} title={'CRM'} slug={'crm'}  />
         <SidebarItem icon={'/icons/catalog.svg'} title={'Catálogo'} slug={'catalogo'}  />
-        <SidebarItem icon={'/icons/calculator.svg'} title={'Orçamento'} slug={'orcamento'} />
+        <SidebarItem icon={'/icons/calculator.svg'} title={'Calculadora'} slug={'calculadora'} />
       </nav>
       <div className="px-5">
         <SidebarItem icon={'/icons/config.svg'} title={'Configurações'} slug={'configuracoes'} />

@@ -3,8 +3,10 @@
 import SortHeader from "@/components/SortHeader";
 import { ProposalT, ActionT } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
-import { formatCurrency, mapEnum } from '@/lib/utils'
+import { formatCurrency, mapEnum, timestampToDate } from '@/lib/utils'
 import { PriorityButtons } from "@/components/PriorityIndicator";
+import { format } from 'date-fns';
+import { Timestamp } from "firebase/firestore";
 
 
 export const columns: ColumnDef<ProposalT>[] = [
@@ -92,7 +94,7 @@ export const columns: ColumnDef<ProposalT>[] = [
     },
     cell: ({ row }) => {
       const action = row.getValue('actions') as ActionT[];
-      return <div>{action && action.length !== 0 ? action[0].date.toString() : '-'}</div>;
+      return <div>{action && action.length !== 0 ? format(timestampToDate(action[0].date as Timestamp), 'dd/MM/yyyy') : '-'}</div>;
     },
     size: 100,
   },

@@ -75,26 +75,26 @@ export default function FormCollaborator({ data, show }: { data?: any, show?: bo
               <div className='flex gap-8'>
                 <FormDiv>
                   <FieldDiv>
-                    <InputField path='person.info' obj={fields.name} form={form} disabled={disabled} />
-                    <InputField path='person.info' obj={fields.surname} form={form} disabled={disabled} />
+                    <InputField path='person.info' obj={fields.name} disabled={disabled} />
+                    <InputField path='person.info' obj={fields.surname} disabled={disabled} />
                   </FieldDiv>
                   <FieldDiv>
-                    <InputField path='person.info' obj={fields.info_email} form={form} disabled={disabled} />
-                    <InputField path='person.info' obj={fields.rg} form={form} disabled={disabled} customClass={'grow-0 min-w-40'}/>
-                    <InputField path='person.info' obj={fields.cpf} form={form} disabled={disabled} customClass={'grow-0 min-w-44'}/>
+                    <InputField path='person.info' obj={fields.info_email} disabled={disabled} />
+                    <InputField path='person.info' obj={fields.rg} disabled={disabled} customClass={'grow-0 min-w-40'}/>
+                    <InputField path='person.info' obj={fields.cpf} disabled={disabled} customClass={'grow-0 min-w-44'}/>
                   </FieldDiv>
                   <FieldDiv>
-                    <SearchField path='person.payment' obj={enumFields.bank} form={form} hint={'Ex. Bradesco'} customClass={'overflow-hidden text-ellipsis'} disabled={disabled} />
-                    <InputField path='person.payment' obj={fields.pix} form={form} disabled={disabled} />
+                    <SearchField path='person.payment' obj={enumFields.bank} hint={'Ex. Bradesco'} customClass={'overflow-hidden text-ellipsis'} disabled={disabled} />
+                    <InputField path='person.payment' obj={fields.pix} disabled={disabled} />
                   </FieldDiv>
                   <FieldDiv>
-                    <InputField path='person.payment' obj={fields.account} form={form} disabled={disabled} />
-                    <InputField path='person.payment' obj={fields.agency} form={form} disabled={disabled} />
+                    <InputField path='person.payment' obj={fields.account} disabled={disabled} />
+                    <InputField path='person.payment' obj={fields.agency} disabled={disabled} />
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
-                  <InputField obj={fields.role} form={form} disabled={disabled} />
-                  <InputField path='person' obj={fields.observations} form={form} long disabled={disabled} />
+                  <InputField obj={fields.role} disabled={disabled} />
+                  <InputField path='person' obj={fields.observations} long disabled={disabled} />
                   <FormButton nextValue={tabs[1]} {...formButtonProps} />
                 </FormDiv>
               </div>
@@ -105,18 +105,18 @@ export default function FormCollaborator({ data, show }: { data?: any, show?: bo
               <div className='flex gap-8'>
                 <FormDiv>
                 {disabled ? <TinyTable title='' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
-                  : <EditTinyTable title='' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(createDefaultArray(contactFields))} remove={contactForm.remove} prefix='person.contact' form={form} order={["name", "detail", "phone", "telephone"]} /> }
+                  : <EditTinyTable title='' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(createDefaultArray(contactFields))} remove={contactForm.remove} prefix='person.contact' order={["name", "detail", "phone", "telephone"]} /> }
                 </FormDiv>
                 <FormDiv>
                   <FieldDiv>
-                    <InputField path='person.info.tax_address' obj={fields.cep} autofill={fillCepFields} form={form} customClass={'grow-0 min-w-36'} disabled={disabled} />
-                    <InputField path='person.info.tax_address' obj={fields.address} form={form} customClass={'grow'} disabled={disabled} />
-                    <InputField path='person.info.tax_address' obj={fields.number} form={form} customClass={'grow-0 min-w-36'} disabled={disabled} />
+                    <InputField path='person.info.tax_address' obj={fields.cep} autofill={fillCepFields} customClass={'grow-0 min-w-36'} disabled={disabled} />
+                    <InputField path='person.info.tax_address' obj={fields.address} customClass={'grow'} disabled={disabled} />
+                    <InputField path='person.info.tax_address' obj={fields.number} customClass={'grow-0 min-w-36'} disabled={disabled} />
                   </FieldDiv>
                   <FieldDiv>
-                    <SearchField path='person.info.tax_address' obj={enumFields.state} form={form} hint={'Ex. DF'} customClass={'grow-0 min-w-44'} state={'reset'} disabled={disabled} />
-                    <SearchField path='person.info.tax_address' obj={enumFields.city} form={form} hint={'Ex. Brasília'} state={form.watch('person.info.tax_address.state')} customClass={'grow-0 min-w-44'} disabled={disabled} />
-                    <InputField path='person.info.tax_address' obj={fields.complement} form={form} customClass={'grow'} disabled={disabled} />
+                    <SearchField path='person.info.tax_address' obj={enumFields.state} hint={'Ex. DF'} customClass={'grow-0 min-w-44'} state={'reset'} disabled={disabled} />
+                    <SearchField path='person.info.tax_address' obj={enumFields.city} hint={'Ex. Brasília'} state={form.watch('person.info.tax_address.state')} customClass={'grow-0 min-w-44'} disabled={disabled} />
+                    <InputField path='person.info.tax_address' obj={fields.complement} customClass={'grow'} disabled={disabled} />
                   </FieldDiv>
                   <FormButton backValue={tabs[0]} {...formButtonProps} submit={!show} />
                 </FormDiv>

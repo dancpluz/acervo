@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ['@react-pdf/renderer'],
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -11,8 +14,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'placehold.co',
-        port: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com'
+      }
     ],
   },
   async redirects() {

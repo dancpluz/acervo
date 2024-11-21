@@ -2,11 +2,13 @@
 
 import { EnumFieldT } from "@/lib/fields"
 import { Button } from "@/components/ui/button"
-import { useForm } from "react-hook-form"
+import { useFormContext } from "react-hook-form"
 import { FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form"
 import { useCRMContext } from "@/hooks/useCRMContext";
 
-export function PriorityField({ form, obj, priority }: { form: ReturnType<typeof useForm>, obj: EnumFieldT, priority: string }) {
+export function PriorityField({ obj, priority }: { obj: EnumFieldT, priority: string }) {
+  const form = useFormContext();
+
   return (
     <FormField
       control={form.control}

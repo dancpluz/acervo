@@ -64,18 +64,18 @@ export default function OrderFields({ title, rows, form, append, remove, update,
         {selected && 
         <>
           <FieldDiv>
-            <InputField path={path} obj={orderFields.id_order as FieldT} form={form} disabled={disabled} update={update}/>
-            <InputField path={path} obj={orderFields.date as FieldT} form={form} disabled={disabled} update={update}/>
+            <InputField path={path} obj={orderFields.id_order as FieldT} disabled={disabled} update={update}/>
+            <InputField path={path} obj={orderFields.date as FieldT} disabled={disabled} update={update}/>
           </FieldDiv>
           <FieldDiv>
-            <InputField path={path} obj={orderFields.cep as FieldT} autofill={fillCepFields} form={form} customClass={'grow-0 min-w-36'} disabled={disabled} />
-            <InputField path={path} obj={orderFields.address as FieldT} form={form} customClass={'grow'} disabled={disabled} />
-            <InputField path={path} obj={orderFields.number as FieldT} form={form} customClass={'grow-0 min-w-36'} disabled={disabled} />
+            <InputField path={path} obj={orderFields.cep as FieldT} autofill={fillCepFields} customClass={'grow-0 min-w-36'} disabled={disabled} />
+            <InputField path={path} obj={orderFields.address as FieldT} customClass={'grow'} disabled={disabled} />
+            <InputField path={path} obj={orderFields.number as FieldT} customClass={'grow-0 min-w-36'} disabled={disabled} />
           </FieldDiv>
           <FieldDiv>
-            <SearchField path={path} obj={orderFields.state as EnumFieldT} form={form} hint={'Ex. DF'} customClass={'grow-0 min-w-44'} state='reset' disabled={disabled} />
-            <SearchField path={path} obj={orderFields.city as EnumFieldT} form={form} hint={'Ex. Brasília'} state={form.watch(path + '.state')} customClass={'grow-0 min-w-44'} disabled={disabled} />
-            <InputField path={path} obj={orderFields.complement as FieldT} form={form} customClass={'grow'} disabled={disabled} />
+            <SearchField path={path} obj={orderFields.state as EnumFieldT} hint={'Ex. DF'} customClass={'grow-0 min-w-44'} state='reset' disabled={disabled} />
+            <SearchField path={path} obj={orderFields.city as EnumFieldT} hint={'Ex. Brasília'} state={form.watch(path + '.state')} customClass={'grow-0 min-w-44'} disabled={disabled} />
+            <InputField path={path} obj={orderFields.complement as FieldT} customClass={'grow'} disabled={disabled} />
           </FieldDiv>
         </>}
       </FormDiv>
