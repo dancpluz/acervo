@@ -54,7 +54,7 @@ export default function ProposalForm() {
   
   const {
     proposalSubmit,
-  } = useCRMFormActions(form, undefined, id);
+  } = useCRMFormActions(form, id, undefined);
 
   // const checkPaths = [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
 
@@ -80,6 +80,8 @@ export default function ProposalForm() {
       [key]: value,
     }));
   };
+
+  const submitLoading = form.formState.isSubmitting;
   
   return (
     <div className='flex flex-col bg-background gap-4 p-4 rounded-lg'>
@@ -87,9 +89,9 @@ export default function ProposalForm() {
         <form className='flex flex-col gap-4' onSubmit={form.handleSubmit(proposalSubmit)}>
           <span className='text-sm text-tertiary'>{id}</span>
           <div className='flex justify-between w-full'>
-            <TitleField path='' obj={proposalFields.name} form={form} />
+            <TitleField path='' obj={proposalFields.name} />
             <div className='flex flex-col gap-1'>
-              <PriorityField form={form} obj={proposalFields.priority} priority={form.watch('priority')} />
+              <PriorityField obj={proposalFields.priority} priority={form.watch('priority')} />
             </div>
           </div>
           <div className='flex gap-2 py-3'>
@@ -103,17 +105,17 @@ export default function ProposalForm() {
           </div>
           <FormDiv className='flex-row gap-4 w-full'>
             <FieldDiv className='flex-col gap-4 w-full'>
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.collaborator} refPath='collaborator' onSelect={(e: '' | CollaboratorT | ClientT | OfficeT) => updateReferenceInfo('collaborator', e)} form={form} hint={'Ex. Punto'} person />
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.client} form={form} refPath='client' onSelect={(e: '' | CollaboratorT | ClientT | OfficeT) => updateReferenceInfo('client', e)} hint={'Ex. Punto'} person />
-              <InputField customClass={'grow-0'} path='' obj={fields.observations} form={form} long />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.collaborator} refPath='collaborator' onSelect={(e: '' | CollaboratorT | ClientT | OfficeT) => updateReferenceInfo('collaborator', e)} hint={'Ex. Punto'} person />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.client} refPath='client' onSelect={(e: '' | CollaboratorT | ClientT | OfficeT) => updateReferenceInfo('client', e)} hint={'Ex. Punto'} person />
+              <InputField customClass={'grow-0'} path='' obj={fields.observations} long />
             </FieldDiv>
             <FieldDiv className='flex-col gap-4 w-full grow-0'>
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.office} form={form} refPath='office' onSelect={(e: '' | CollaboratorT | ClientT | OfficeT) => updateReferenceInfo('office', e)} hint={'Ex. Punto'} person />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.office} refPath='office' onSelect={(e: '' | CollaboratorT | ClientT | OfficeT) => updateReferenceInfo('office', e)} hint={'Ex. Punto'} person />
               <div className='flex gap-2'>
-                <SelectField path='' obj={proposalFields.client_type} form={form} />
-                <SelectField path='' obj={proposalFields.project_type} form={form} />
+                <SelectField path='' obj={proposalFields.client_type} />
+                <SelectField path='' obj={proposalFields.project_type} />
               </div>
-              <SelectField customClass={'grow-0'} path='' obj={proposalFields.origin} form={form} />
+              <SelectField customClass={'grow-0'} path='' obj={proposalFields.origin} />
               <div className='flex gap-1 flex-col'>
                 <FormLabel>
                   AÇÕES
@@ -130,7 +132,7 @@ export default function ProposalForm() {
                         <PopoverClose className='absolute top-4 right-4'>
                           <X className="h-5 w-5 text-primary/60 hover:text-primary" />
                         </PopoverClose>
-                        {/* <ActionForm form={form} path={'temp'} append={appendItem} /> */}
+                        {/* <ActionForm path={'temp'} append={appendItem} /> */}
                       </PopoverContent>
                     </Popover>
                   )}
@@ -144,7 +146,7 @@ export default function ProposalForm() {
                       <PopoverClose className='absolute top-4 right-4'>
                         <X className="h-5 w-5 text-primary/60 hover:text-primary" />
                       </PopoverClose>
-                      <ActionForm form={form} path={'temp'} append={appendItem} setPopoverOpen={setPopoverOpen} />
+                      <ActionForm path={'temp'} append={appendItem} setPopoverOpen={setPopoverOpen} />
                     </PopoverContent>
                   </Popover>
                 </div>
@@ -153,7 +155,7 @@ export default function ProposalForm() {
           </FormDiv>
           <div className='flex justify-between items-center'>
             <span className='text-sm text-tertiary'>Data de criação: {today.toLocaleDateString('pt-BR')}</span>
-            <Button type='submit'>
+            <Button disabled={submitLoading || loading} type='submit'>
               <CirclePlus />ADICIONAR PROPOSTA
             </Button>
           </div>

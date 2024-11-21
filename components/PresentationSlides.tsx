@@ -49,7 +49,7 @@ export default function PresentationSlides({ product, index }: { product: Produc
         opacity: enabled ? 1 : 0.5
       }}>
         <Presentation>
-          {createProductSlide(product)}
+          {index % 2 === 0 ? createProductSlide(product) : createProductSlide(product, true)}
         </Presentation>
       </Preview>
       <div className='w-[20%] flex flex-col border border-secondary gap-4 p-4 rounded-lg justify-between'>

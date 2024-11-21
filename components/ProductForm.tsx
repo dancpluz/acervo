@@ -7,7 +7,7 @@ import { z } from "zod";
 import { finishFields, productFields } from "@/lib/fields";
 import { formatFields, stringToSlug, unformatNumber, formatCurrency } from "@/lib/utils";
 import useCRMFormActions from "@/hooks/useCRMFormActions";
-import { ReferenceField, InputField, SelectField, ImageField } from "@/components/AllFields";
+import { ReferenceField, InputField, SelectOtherField, SelectField, ImageField } from "@/components/AllFields";
 import { Form } from "@/components/ui/form";
 import { FieldDiv } from "@/components/ui/div";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ const [defaultValues, fieldValidations] = formatFields(productFields);
 defaultValues['quantity'] = '1';
 defaultValues['enabled'] = true;
 
-export default function ProductForm() {
+export default function ProductForm({ data } : { data?: any }) {
   const [shard, loading, error] = useDocumentData(doc(db, 'shard', 'product'));
 
   const form = useForm<z.infer<typeof fieldValidations>>({
@@ -36,33 +36,70 @@ export default function ProductForm() {
   })
 
   const [referenceInfo, setReferenceInfo] = useState<{ [key: string]: '' | FactoryT | MarkupT }>({ factory: '', markup: '' });
-  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const selectedMarkup = referenceInfo.markup as MarkupT;
   const selectedFactory = referenceInfo.factory as FactoryT;
 
   const today = new Date();
-  const id = `${loading || !shard ? '' : shard.index + 1}${form.watch('category') ? '_' + stringToSlug(form.watch('category') || '') : ''}${form.watch('name') ? '_' + stringToSlug(form.watch('name') || '') : ''}${selectedFactory ? '_' + stringToSlug((selectedFactory.person as PersonT).label || '') : ''}_${format(today, "dd-MM-yyyy")}`
+  const id = data ? data.id : `${loading || !shard ? '' : shard.index + 1}${form.watch('category') ? '_' + stringToSlug(form.watch('category') || '') : ''}${form.watch('name') ? '_' + stringToSlug(form.watch('name') || '') : ''}${selectedFactory ? '_' + stringToSlug((selectedFactory.person as PersonT).label || '') : ''}_${format(today, "dd-MM-yyyy")}`;
 
 
   const markup12 = selectedMarkup && form.watch('cost') ? unformatNumber(selectedMarkup['12x'] as string) * unformatNumber(form.watch('cost')) : '';
   const markup6 = selectedMarkup && form.watch('cost') ? Number(markup12) * (1 - unformatNumber(selectedMarkup['6x'] as string, true)) : '';
   const markupCash = selectedMarkup && form.watch('cost') ? Number(markup12) * (1 - unformatNumber(selectedMarkup['cash'] as string, true)) : '';
 
+  const overrideFunction = async () => {
+    const { factory, freight, markup, image, quantity, category, cost, finish } = data;
+    if (factory) {
+      setReferenceInfo({...referenceInfo, factory: factory});
+      form.setValue('factory', factory.id)
+    }
+    if (freight) {
+      form.setValue('freight', freight.id)
+    }
+    if (markup) {
+      setReferenceInfo({...referenceInfo, factory: markup});
+      form.setValue('markup', markup.id)
+    }
+    if (image) {
+      const response = await fetch(image.path);
+      const blob = await response.blob();
+
+      // Extract name from URL or give it a default name
+      const name = image.path.split('/').pop() || 'image.jpg';
+
+      // Create a File object
+      const fileObject = new File([blob], name, {
+        type: blob.type,
+        lastModified: Date.now(),
+      });
+
+      form.setValue('image', [fileObject])
+    }
+    const { depth, width, height } = finish
+    
+    form.setValue('cost', cost.toString())
+    form.setValue('finish.depth', depth.toString())
+    form.setValue('finish.width', width.toString())
+    form.setValue('finish.height', height.toString())
+    form.setValue('quantity', quantity.toString())
+    form.setValue('category', category)
+  }
+
   const {
     productSubmit,
     saveProduct,
     setSaveProduct,
-  } = useCRMFormActions(form, undefined, id);
+  } = useCRMFormActions(form, id, data, overrideFunction);
 
   // const checkPaths = [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
 
   useEffect(() => {
-    if (!loading && shard) {
+    if (!loading && shard && !data) {
       form.setValue('num', shard.index + 1)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shard, loading]);
+  }, [data, shard, loading]);
 
   const updateReferenceInfo = (key: string, value: '' | FactoryT | MarkupT) => {
     setReferenceInfo((prevState) => ({
@@ -70,6 +107,8 @@ export default function ProductForm() {
       [key]: value,
     }));
   };
+
+  const submitLoading = form.formState.isSubmitting;
 
   return (
     <div className='flex flex-col bg-background gap-4 p-4 rounded-lg'>
@@ -79,24 +118,24 @@ export default function ProductForm() {
           <div className='flex gap-4'>
             <div className='flex flex-col gap-4 w-[60%]'>
               <FieldDiv>
-                <InputField path='' obj={productFields.name} form={form} />
-                <SelectField path='' obj={productFields.ambient} form={form} />
+                <InputField path='' obj={productFields.name} />
+                <SelectField path='' obj={productFields.ambient} />
               </FieldDiv>
-              <InputField path='finish' obj={finishFields.frame} form={form} />
-              <InputField path='finish' obj={finishFields.fabric} form={form} />
+              <InputField path='finish' obj={finishFields.frame} />
+              <InputField path='finish' obj={finishFields.fabric} />
               <FieldDiv>
-                <InputField path='finish' obj={finishFields.width} cm form={form} />
-                <InputField path='finish' obj={finishFields.depth} cm form={form} />
-                <InputField path='finish' obj={finishFields.height} cm form={form} />
+                <InputField path='finish' obj={finishFields.width} cm />
+                <InputField path='finish' obj={finishFields.depth} cm />
+                <InputField path='finish' obj={finishFields.height} cm />
               </FieldDiv>
-              <InputField path='' obj={productFields.observations} form={form} long />
+              <InputField path='' obj={productFields.observations} long />
               <FieldDiv>
-                <ReferenceField obj={productFields.factory} form={form} refPath='factory' onSelect={(e: FactoryT | MarkupT) => updateReferenceInfo('factory', e)} hint={'Ex. Punto'} person />
-                <ReferenceField obj={productFields.freight} form={form} refPath='config, markup_freight, freight' hint={'Ex. Punto'} />
+                <ReferenceField obj={productFields.factory} refPath='factory' onSelect={(e: FactoryT | MarkupT) => updateReferenceInfo('factory', e)} hint={'Ex. Punto'} person />
+                <ReferenceField obj={productFields.freight} refPath='config, markup_freight, freight' hint={'Ex. Punto'} />
               </FieldDiv>
               <FieldDiv>
-                <InputField path='' obj={productFields.cost} form={form} />
-                <ReferenceField obj={productFields.markup} form={form} refPath='config, markup_freight, markup' onSelect={(e: FactoryT | MarkupT ) => updateReferenceInfo('markup', e)} hint={'Ex. Punto'} />
+                <InputField path='' obj={productFields.cost} />
+                <ReferenceField obj={productFields.markup} refPath='config, markup_freight, markup' onSelect={(e: FactoryT | MarkupT ) => updateReferenceInfo('markup', e)} hint={'Ex. Punto'} />
               </FieldDiv>
               <Separator className='bg-alternate' orientation="horizontal" />
               <FieldDiv className='justify-between'>
@@ -107,16 +146,16 @@ export default function ProductForm() {
             </div>
             <div className='flex flex-col gap-4 w-[40%]'>
               <FieldDiv>
-                <InputField path='' obj={productFields.quantity} form={form} />
-                <SelectField customClass='grow-0 min-w-52' path='' obj={productFields.category} form={form} />
+                <InputField path='' obj={productFields.quantity} />
+                <SelectOtherField customClass='grow-0 min-w-52' path='' obj={productFields.category} />
               </FieldDiv>
-              <InputField customClass='grow-0' path='finish' obj={finishFields.extra} form={form} />
-              <InputField customClass='grow-0' path='finish' obj={finishFields.designer} form={form} />
+              <InputField customClass='grow-0' path='finish' obj={finishFields.extra} />
+              <InputField customClass='grow-0' path='finish' obj={finishFields.designer} />
               <FieldDiv>
-                <InputField path='finish' obj={finishFields.link_finishes} form={form} />
-                <InputField path='finish' obj={finishFields.link_3d} form={form} />
+                <InputField path='finish' obj={finishFields.link_finishes} />
+                <InputField path='finish' obj={finishFields.link_3d} />
               </FieldDiv>
-              <ImageField path='finish' obj={finishFields.link_3d} form={form} />
+              <ImageField path='' obj={productFields.image} />
             </div>
           </div>
           <div className='flex justify-between items-center'>
@@ -132,8 +171,8 @@ export default function ProductForm() {
                 />
               </div>
             </RadioGroup>
-            <Button type='submit'>
-              <CirclePlus />ADICIONAR PRODUTO
+            <Button disabled={submitLoading || loading} type='submit'>
+              <CirclePlus />{data ? 'EDITAR' : 'ADICIONAR'} PRODUTO
             </Button>
           </div>
         </form>

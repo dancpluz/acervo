@@ -14,6 +14,9 @@ import {
 import { Trash2 } from 'lucide-react';
 import { translationFields } from '@/lib/utils';
 import { Dispatch, SetStateAction } from "react";
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import React from "react";
+import { useCRMContext, Popups } from "@/hooks/useCRMContext";
 
 export function DeleteAlert({ submit }: { submit: () => void }) {
   return (
@@ -55,5 +58,20 @@ export function ConfirmAlert({ submit, popupOpen, setPopupOpen, conflicts, reset
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+export function CRMPopup({ children, type, button }: { children: React.ReactNode, type: Popups, button: React.ReactNode }) {
+  const { setPopupOpen, popups } = useCRMContext();
+
+  return (
+    <Dialog onOpenChange={(val) => setPopupOpen(type, val)} open={popups[type]}>
+      <DialogTrigger asChild>
+        {button}
+      </DialogTrigger>
+      <DialogContent className='w-[760px]'>
+        {children}
+      </DialogContent>
+    </Dialog>
   )
 }

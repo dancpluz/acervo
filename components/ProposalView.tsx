@@ -3,7 +3,7 @@
 import { StatusButton } from "@/components/StatusButtons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from '@/components/ui/button';
-import { CirclePlus, LoaderCircle, Search, Eye, List, Presentation, Rows3 } from 'lucide-react';
+import { CirclePlus, LoaderCircle, Search, Eye, EyeOff, List, Presentation, Rows3 } from 'lucide-react';
 import PriceBox from "@/components/PriceBox";
 import VersionOptions from '@/components/VersionOptions'
 import ProductCard from "@/components/ProductCard";
@@ -11,21 +11,23 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import ProductForm from "@/components/ProductForm";
 import { useCRMContext } from "@/hooks/useCRMContext";
-import { ProposalT } from "@/lib/types";
+import { ProductT, ProposalT } from "@/lib/types";
 import { useEffect, useState } from "react";
-import { formatCurrency, timestampToDate } from "@/lib/utils";
-import PresentationSlides from "./PresentationSlides";
+import { formatCurrency, timestampToDate, stringToSlug } from "@/lib/utils";
+import PresentationSlides from "@/components//PresentationSlides";
+import { Timestamp } from "firebase/firestore";
+import { CRMPopup } from "@/components/AllPopups";
+import React from "react";
 
 export default function ProposalView({ data }: { data: string }) {
-  const { setProposal, proposal, setVersionNum, versionNum, totalValues, updateProposalStatus } = useCRMContext();
-
+  const { setProposal, proposal, setVersionNum, versionNum, handleEnableToggle, totalValues, updateProposalStatus } = useCRMContext();
   const [view, setView] = useState<'list' | 'presentation'>('list');
 
   useEffect(() => {
     if (data) {
       const obj = JSON.parse(data) as ProposalT;
-      obj.created_at = timestampToDate(obj.created_at as { seconds: number, nanoseconds: number })
-      obj.last_updated = timestampToDate(obj.last_updated as { seconds: number, nanoseconds: number })
+      obj.created_at = timestampToDate(obj.created_at as Timestamp)
+      obj.last_updated = timestampToDate(obj.last_updated as Timestamp)
       setProposal(obj);
       setVersionNum(obj.versions.length || 1);
     }
@@ -38,6 +40,28 @@ export default function ProposalView({ data }: { data: string }) {
       await updateProposalStatus(status);
     }
   }
+
+  const handleHideProducts = (enabled, products) => {
+    products.forEach((product) => handleEnableToggle(enabled, product.id))
+  }
+
+  const groupProductsByCategory = (products: ProductT[]): Record<string, ProductT[]> => {
+    const categories = {};
+
+    products.forEach((product) => {
+      const slug = stringToSlug(product.category)
+
+      const originalCategoryKey = Object.keys(categories).find((key) => stringToSlug(key) === slug) || product.category;
+
+      if (!categories[originalCategoryKey]) {
+        categories[originalCategoryKey] = [];
+      }
+
+      categories[originalCategoryKey].push(product);
+    });
+
+    return categories;
+  };
 
   return (
     <>
@@ -75,37 +99,54 @@ export default function ProposalView({ data }: { data: string }) {
       <Tabs className='flex flex-col relative grow overflow-hidden' defaultValue={versionNum.toString()} onValueChange={(e) => setVersionNum(Number(e))}>
         {proposal && proposal.versions.length > 0 ? 
           <>
-          <TabsList className='mt-0 mb-2 justify-between border-0'>
-            {proposal.versions.map(({ num }) => (
-              <TabsTrigger className='px-0 data-[state=active]:font-normal data-[state=active]:text-foreground' key={num} value={num.toString()}>
-              <VersionOptions num={num} active={num === versionNum} />
-            </TabsTrigger>
-          ))}
-          </TabsList>
-          {proposal.versions.map(({ num, products }) => (
-            <TabsContent className='flex flex-col gap-2 overflow-hidden' key={num} value={num.toString()}>
-              <ScrollArea>
-                <div className='flex mb-2 justify-between items-center'>
-                  <div className='flex gap-2 items-center'>
-                    <Button variant='outline' className='h-auto border-primary gap-1 rounded-lg py-2 px-2 text-xs text-primary'><List className='w-4 h-4' /></Button>
-                    <h3 className='text-xl'>SEM CATEGORIA</h3>
-                    <Button variant='ghost' className='p-1 h-auto'><Eye className='text-primary w-6 h-6' /></Button>
+            <TabsList className='mt-0 mb-2 justify-between border-0'>
+              {proposal.versions.map(({ num }) => (
+                <TabsTrigger className='px-0 data-[state=active]:font-normal data-[state=active]:text-foreground' key={num} value={num.toString()}>
+                <VersionOptions num={num} active={num === versionNum} />
+              </TabsTrigger>
+            ))}
+            </TabsList>
+            {proposal.versions.map(({ num, products }) => {
+              const categories = groupProductsByCategory(products)
+
+            return (
+              <TabsContent className='flex flex-col gap-2 overflow-hidden' key={num} value={num.toString()}>
+                <ScrollArea>
+                  <div className='flex flex-col gap-2'>
+                    {Object.keys(categories).map((category) => {
+                      const products = categories[category]
+                      const enabled = products.filter((product) => product.enabled).length > 0
+
+                      return (
+                        <React.Fragment key={category}>
+                          <div className='flex justify-between items-center'>
+                            <div className='flex gap-2 items-center'>
+                              {/* <Button variant='outline' className='h-auto border-primary gap-1 rounded-lg py-2 px-2 text-xs text-primary'><List className='w-4 h-4' /></Button> */}
+                              <h3 className='text-xl'>{category.toUpperCase()}</h3>
+                              {/* <Button onClick={() => handleHideProducts(enabled, products)} variant='ghost' className='p-1 h-auto'>
+                                {enabled ? <Eye className='text-primary w-6 h-6' /> : <EyeOff className="text-primary" />}
+                              </Button> */}
+                            </div>
+                          </div>
+                          <div className='flex flex-col gap-4 pr-2'>
+                            {products.map((product, i) => view === 'list' ? 
+                            (<ProductCard key={product.id + '-' + i} product={product} index={i} />) :
+                              (<PresentationSlides key={product.id + '-' + i} product={product} index={i} />
+                            ))}
+                          </div>
+                        </React.Fragment>
+                      )
+                    })}
                   </div>
-                </div>
-                <div className='flex flex-col gap-4 pr-2'>
-                  {products.map((product, i) => view === 'list' ? 
-                  (<ProductCard key={product.name} product={product} index={i} />) :
-                    (<PresentationSlides key={product.name} product={product} index={i} />)
-                  )}
-                </div>
-              </ScrollArea>
-              {view === 'list' && <div className='flex justify-end items-center gap-2'>
-                <PriceBox title='12x' text={formatCurrency(totalValues.markup12)} />
-                <PriceBox title='6x' text={formatCurrency(totalValues.markup6)} />
-                <PriceBox title='à vista' text={formatCurrency(totalValues.markupCash)} />
-              </div>}
-            </TabsContent>
-          ))}
+                </ScrollArea>
+                {view === 'list' && <div className='flex justify-end items-center gap-2'>
+                  <PriceBox title='12x' text={formatCurrency(totalValues.markup12)} />
+                  <PriceBox title='6x' text={formatCurrency(totalValues.markup6)} />
+                  <PriceBox title='à vista' text={formatCurrency(totalValues.markupCash)} />
+                </div>}
+              </TabsContent>
+            )
+          })}
         </>
          : 
           <h2 className='mt-12 text-2xl'>Adicione novos Produtos</h2>
@@ -119,14 +160,16 @@ export default function ProposalView({ data }: { data: string }) {
               Teste
             </DialogContent>
           </Dialog>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className='h-auto gap-1 rounded-lg py-2 px-2 text-xs'><CirclePlus className='w-4 h-4' />NOVO PRODUTO</Button>
-            </DialogTrigger>
-            <DialogContent className='w-[800px]'>
-              <ProductForm />
-            </DialogContent>
-          </Dialog>
+          <CRMPopup
+            type='product'
+            button={
+              <Button className='h-auto gap-1 rounded-lg py-2 px-2 text-xs'>
+                <CirclePlus className='w-4 h-4' />NOVO PRODUTO
+              </Button>
+            }
+          >
+            <ProductForm data={undefined} />
+          </CRMPopup>
         </div>
       </Tabs>
     </>

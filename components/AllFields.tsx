@@ -33,7 +33,7 @@ import {
   CommandItem
 } from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CalendarIcon, ImageUp, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
+import { CalendarIcon, ImageUp, Paperclip, Send, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
 import { Calendar } from '@/components/ui/calendar';
@@ -41,7 +41,10 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import useGetEntities from '@/hooks/useGetEntities';
 import { converters } from '@/lib/converters';
+import { useState } from 'react';
 import { Label } from './ui/label';
+import Image from "next/image";
+import { FileUploader, FileUploaderContent, FileUploaderItem, FileInput } from "@/components/ui/file-upload";
 
 export function SelectField({ path, customClass, obj, disabled }: { path?: string, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
@@ -380,6 +383,16 @@ export function DateField({ path, obj }: { path?: string, obj: FieldT }) {
 
 export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
   const form = useFormContext();
+
+  const dropzone = {
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.webp', ]
+    },
+    multiple: false,
+    maxFiles: 1,
+    maxSize: 50 * 1024 * 1024, // 50MB
+  }
+
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -387,12 +400,75 @@ export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
       name={fieldPath}
       render={({ field }) => (
         <FormItem>
+          <FileUploader
+            value={field.value}
+            onValueChange={field.onChange}
+            dropzoneOptions={dropzone}
+            reSelect={true}
+            className='hover:border-dashed relative overflow-hidden aspect-square border rounded-md border-secondary'
+          >
+            <FileInput className='flex static justify-center items-center size-full'>
+              <ImageUp className="size-8 text-primary" />
+              <span className="sr-only">Envie uma imagem</span>
+            </FileInput>
+            {field.value && field.value.length > 0 && (
+              <FileUploaderContent className="absolute size-full top-1/2 p-2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                {field.value.length > 0 && 
+                  <FileUploaderItem
+                      index={0}
+                      aria-roledescription={`Imagem contendo ${
+                        field.value[0].name
+                      }`}
+                      className="p-0 size-full aspect-square"
+                    >
+                      <Image
+                        src={URL.createObjectURL(field.value[0])}
+                        alt={field.value[0].name}
+                        className="object-cover rounded-md h-full w-full"
+                        width={300}
+                        height={300}
+                      />
+                    </FileUploaderItem>
+                  }
+              </FileUploaderContent>
+            )}
+          </FileUploader>
+          <FormMessage className='top-2 right-auto left-2' />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+export function SelectOtherField({ path, customClass, obj, disabled }: { path?: string, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
+  const form = useFormContext();
+  const [isOther, setIsOther] = useState(false)
+
+  return (
+    <FormField
+      control={form.control}
+      name={fieldPath}
+      render={({ field }) => (
+        <FormItem className={customClass}>
           <FormMessage />
           <FormLabel>{obj.label}</FormLabel>
-          <FormControl>
-            <Input type='file' accept="image/*" icon={<ImageUp className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary h-8 w-8' />} className='w-auto h-auto' {...field} />
-          </FormControl>
+          {isOther ?
+            <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} actions={{ isDirty: true, clear: () => {form.resetField(fieldPath, { keepError: false, defaultValue: '' }); setIsOther(false)}, copy: () => navigator.clipboard.writeText(field.value) }} placeholder='Escreva outro' {...field}  disabled={disabled} />
+          :
+            <Select onValueChange={(val) => val === 'Outro' ? setIsOther(true) : field.onChange(val)} defaultValue={field.value} value={field.value}>
+              <FormControl>
+                <SelectTrigger className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} disabled={disabled}>
+                  <SelectValue placeholder={disabled ? '' : disabled ?? obj.placeholder}/>
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {(obj.items).map(({ value, label }) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                <SelectItem onClick={() => setIsOther(true)} value={'Outro'}>Outro</SelectItem>
+              </SelectContent>
+            </Select>
+          }
         </FormItem>
       )} />
-  )
+  );
 }

@@ -8,8 +8,11 @@ import { deleteToast } from '@/hooks/general';
 import { converters } from '@/lib/converters';
 import db from '@/lib/firebase';
 import { setDoc, doc, collection, updateDoc, getDoc } from 'firebase/firestore';
-import { VersionT } from '@/lib/types';
 import { useCRMContext } from '@/hooks/useCRMContext';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes } from "firebase/storage";
+import { ProductT, VersionT } from '@/lib/types';
+
 
 export interface FormActionsT {
   proposalSubmit: (values: any) => Promise<void>;
@@ -20,23 +23,20 @@ export interface FormActionsT {
   deleteSubmit: () => Promise<void>;
   isEditing: boolean;
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  popupOpen: boolean;
-  setPopupOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  conflicts: any;
 }
 
 export default function useCRMFormActions(
   form: UseFormReturn,
-  data: any,
   id: string,
+  data?: any,
+  overrideFunction?: () => Promise<void>
 ): FormActionsT {
 
-  const { proposal, versionNum } = useCRMContext();
+  const { proposal, versionNum, setPopupOpen } = useCRMContext();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [popupOpen, setPopupOpen] = useState<boolean>(false);
   const [saveProduct, setSaveProduct] = useState<boolean>(false);
-  const [conflicts, setConflicts] = useState<{ [key: string]: [string, number] } | undefined>(undefined);
+  //const [conflicts, setConflicts] = useState<{ [key: string]: [string, number] } | undefined>(undefined);
 
   // useEffect(() => {
   //   console.log(form.getValues());
@@ -44,9 +44,16 @@ export default function useCRMFormActions(
   //   console.log(form.formState.errors)
   // }, [form.formState]);
 
+  const handleOverrideFunction = async () => {
+    if (overrideFunction) {
+      await overrideFunction()
+    }
+  }
+
   useEffect(() => {
     if (data) {
       form.reset(data);
+      handleOverrideFunction()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
@@ -58,16 +65,20 @@ export default function useCRMFormActions(
       try {
         await setDoc(doc(collection(db, 'proposal'), id).withConverter(converters['proposal']), values)
 
-        await updateIndex('proposal', values.num)
+        if (!data) {
+          await updateIndex('proposal', values.num)
+        }
 
       } catch (error) {
         console.log(error);
         throw new Error('Erro ao adicionar no banco de dados')
       }
-    
+      
       toast({
         title: `${entityTitle.singular[0].toUpperCase() + entityTitle.singular.slice(1)} adicionad${entityTitle.sufix} com sucesso!`,
       });
+
+      setPopupOpen('proposal', false)
       
     } catch (error) {
       console.log(error);
@@ -86,6 +97,49 @@ export default function useCRMFormActions(
 
             await updateIndex('product', values.num)
           }
+   
+          if (values.image.length > 0) {
+            const imageId = `products/${id}`
+            const storageRef = ref(storage, imageId);
+            const upload = await uploadBytes(storageRef, values.image[0]).then((snapshot) => {
+              return true;
+            }).catch((error) => {
+              console.log(error);
+              return false;
+            });
+            
+            if (upload) {
+              const dimensions = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                  const img = new Image();
+                  img.onload = () => {
+                    resolve({ width: img.width, height: img.height });
+                  };
+                  img.onerror = (err) => {
+                    reject(err);
+                  };
+                  if (e.target?.result) {
+                    img.src = e.target.result as string;
+                  }
+                };
+
+                reader.onerror = (err) => {
+                  reject(err);
+                };
+
+                reader.readAsDataURL(values.image[0]);
+              });
+
+              values.image = { path: imageId, width: dimensions.width, height: dimensions.height };
+
+            } else {
+              values.image = '';
+            }
+          } else {
+            values.image = '';
+          }
 
           values.factory = doc(db, 'factory', values.factory as string)
           values.freight = doc(db, 'config', 'markup_freight', 'freight', values.freight as string)
@@ -98,7 +152,14 @@ export default function useCRMFormActions(
 
           const versions = proposalData && proposalData.versions.length > 0 ? proposalData.versions.map((version: VersionT) => {
             if (version.num === versionNum) {
-              return { ...version, products: [...version.products, values] }
+                if (data) {
+                  const productIndex = version.products.findIndex((product: ProductT) => product.id === data.id);
+                  if (productIndex !== -1) {
+                    version.products[productIndex] = values;
+                    return version;
+                  }
+                }
+                return { ...version, products: [...version.products, values] }
             }
             return version;
           }) : [{ num: versionNum, products: [values] }]
@@ -107,7 +168,7 @@ export default function useCRMFormActions(
           await updateDoc(proposalRef, { versions })
 
           router.refresh()
-
+          
         } else {
           throw new Error('Erro ao adicionar produto: Proposta não encontrada')
         }
@@ -115,11 +176,13 @@ export default function useCRMFormActions(
         console.log(error);
         throw new Error('Erro ao adicionar no banco de dados')
       }
-
+      
       toast({
         title: `${entityTitle.singular[0].toUpperCase() + entityTitle.singular.slice(1)} adicionad${entityTitle.sufix} com sucesso!`,
       });
 
+      setPopupOpen('product', false)
+      
     } catch (error) {
       console.log(error);
       deleteToast(error);
@@ -141,9 +204,6 @@ export default function useCRMFormActions(
     deleteSubmit,
     isEditing,
     setIsEditing,
-    popupOpen,
-    setPopupOpen,
-    conflicts,
     saveProduct,
     setSaveProduct
   };

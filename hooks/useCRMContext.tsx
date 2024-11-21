@@ -7,6 +7,7 @@ import { formatCurrency, unformatNumber } from '@/lib/utils';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 import { Presentation, render, Slide, Text, Image } from "react-pptx";
+import { deleteToast } from './general';
 
 export type PresentationToggleT = {
   sizes: boolean;
@@ -38,7 +39,7 @@ type CRMContextProps = {
   versionNum: number;
   setVersionNum: Dispatch<SetStateAction<number>>;
   calculatePrice: (cost: number, markup: MarkupT, quantity: number) => { markup12: number; markup6: number; markupCash: number };
-  updateProductQuantity: (versionNum: number, productIndex: number, quantity: number) => Promise<void>;
+  updateProductQuantity: (productIndex: number, quantity: number) => Promise<void>;
   totalValues: { markup12: number; markup6: number; markupCash: number };
   updateProposalStatus: (status: string) => Promise<void>;
   updateProposalPriority: (priority: string) => Promise<void>;
@@ -47,9 +48,14 @@ type CRMContextProps = {
   updatePresentationToggle: (id: string, key: keyof PresentationToggleT, value: boolean) => void;
   handleEnableToggle: (enabled: boolean, index: number) => Promise<void>;
   complementInfo: ComplementT;
-  createProductSlide: (product: ProductT) => JSX.Element;
+  deleteProduct: (productIndex: number) => Promise<void>;
+  createProductSlide: (product: ProductT, left?: boolean) => JSX.Element;
   downloadPresentation: () => Promise<void>;
+  popups: Record<Popups, boolean>;
+  setPopupOpen: (key: Popups, value: boolean) => void;
 };
+
+export type Popups = 'product' | 'proposal' | 'productEdit' | 'proposalEdit';
 
 const Context = createContext<CRMContextProps | null>(null);
 
@@ -67,6 +73,14 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     general_info: '',
     info: '',
   })
+  const [popups, setPopups] = useState<Record<Popups, boolean>>({
+    product: false,
+    proposal: false,
+    productEdit: false,
+    proposalEdit: false,
+  })
+
+  const setPopupOpen = (key: Popups, value: boolean) => setPopups(prev => ({ ...prev, [key]: value }))
 
   const proposalRef = proposal ? doc(db, 'proposal', proposal.id) : undefined
 
@@ -124,7 +138,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     setPresentationToggle(prev => ({ ...prev, [id]: { ...prev[id], [key]: value } }))
   }
 
-  async function handleEnableToggle(enabled: boolean, index: number) {
+  async function handleEnableToggle(enabled: boolean, id: string) {
     const newEnabledState = !enabled
     if (!proposal) {
       throw new Error('Proposal is undefined');
@@ -132,8 +146,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     const versions = proposal.versions.map((version: VersionT) =>
       version.num === versionNum ?
         {
-          ...version, products: version.products.map((product: ProductT, i: number) =>
-            i === index ? { ...product, enabled: newEnabledState } : product
+          ...version, products: version.products.map((product: ProductT) =>
+            product.id === id ? { ...product, enabled: newEnabledState } : product
           )
         } : version
     )
@@ -141,47 +155,69 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     setProposal((prev) => prev ? { ...prev, versions } : undefined)
 
     try {
-      await updateProductEnable(index, newEnabledState)
+      await updateProductEnable(id, newEnabledState)
     } catch (error) {
-      console.error('Failed to update product enable status:', error)
+      console.error('Falha em habilitar/desabilitar produto:', error)
+      deleteToast(error);
     }
   }
 
-  async function updateProductEnable(productIndex: number, enable: boolean) {
+  async function getProposal() {
+    if (!proposalRef) {
+      throw new Error('Proposal reference is undefined');
+    }
+    const proposal = await getDoc(proposalRef);
+
+    const data = proposal.data();
+    if (!data) {
+      throw new Error('Proposal data is undefined');
+    }
+
+    return data
+  }
+
+  async function deleteProduct(productIndex: number) {
     try {
-      if (!proposalRef) {
-        throw new Error('Proposal reference is undefined');
-      }
-      const proposal = await getDoc(proposalRef);
-      
-      const data = proposal.data();
-      if (!data) {
-        throw new Error('Proposal data is undefined');
-      }
+      const data = await getProposal();
+
+      const versions = data.versions.map((version: VersionT) =>
+        version.num === versionNum ?
+          {
+            ...version, products: version.products.filter((product: ProductT, index: number) =>
+              index !== productIndex
+            )
+          } : version
+      )
+
+      await updateDoc(proposalRef, { versions })
+    } catch (error) {
+      console.log(error)
+      deleteToast(error);
+    }
+  }
+
+  async function updateProductEnable(id: string, enable: boolean) {
+    try {
+      const data = await getProposal();
+
       const versions = data.versions.map((version: VersionT) => 
         version.num === versionNum ? 
         { ...version, products: version.products.map((product: ProductT, index: number) => 
-          index === productIndex ? { ...product, enabled: enable } : product
+          id === product.id ? { ...product, enabled: enable } : product
         ) } : version
       )
 
       await updateDoc(proposalRef, { versions })
     } catch (error) {
       console.log(error)
+      deleteToast(error);
     }
   }
 
-  async function updateProductQuantity(versionNum: number, productIndex: number, quantity: number) {
+  async function updateProductQuantity(productIndex: number, quantity: number) {
     try {
-      if (!proposalRef) {
-        throw new Error('Proposal reference is undefined');
-      }
-      const proposal = await getDoc(proposalRef);
-
-      const data = proposal.data();
-      if (!data) {
-        throw new Error('Proposal data is undefined');
-      }
+      const data = await getProposal();
+      
       const versions = data.versions.map((version: VersionT) =>
         version.num === versionNum ?
           {
@@ -194,6 +230,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       await updateDoc(proposalRef, { versions })
     } catch (error) {
       console.log(error)
+      deleteToast(error);
     }
   }
 
@@ -205,6 +242,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       await updateDoc(proposalRef, { status })
     } catch (error) {
       console.log(error)
+      deleteToast(error);
     }
   }
 
@@ -216,6 +254,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       await updateDoc(proposalRef, { priority })
     } catch (error) {
       console.log(error)
+      deleteToast(error);
     }
   }
 
@@ -227,8 +266,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     return { markup12, markup6, markupCash }
   }
 
-  const createProductSlide = (product: ProductT) => {
-    const { id, name, quantity, finish, cost, enabled, markup } = product
+  const createProductSlide = (product: ProductT, right: boolean = false) => {
+    const { id, name, quantity, finish, cost, image, enabled, markup } = product
 
     const { sizes, markupName, designer, frame, fabric, extra, images, markup12, markup6, freight, markupCash } = presentationToggle[id];
 
@@ -239,9 +278,30 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     const big = 13;
     const space = 2;
     const bulletOptions: { type: 'bullet', characterCode: string } = { type: 'bullet', characterCode: '' }
+    const textPosition = right ? { x: 6.5, y: 0.9, w: 3, h: 4 } : { x: 0.5, y: 0.9, w: 3, h: 4 };
+    const captionOptions = {
+      y: 4.7, w: 1.5, h: 0.4,
+      fontSize: small,
+      fontFace,
+    }
+
+    const maxImageDimension = { w: 5.4, h: 3.6 }
+    const imagePosition = right ? { x: 0.5, y: 1, ...maxImageDimension } : { x: 4, y: 1, ...maxImageDimension };
+
+  const getDimensions = (width: number, height: number) => {
+    const widthRatio = maxImageDimension.w / width;
+    const heightRatio = maxImageDimension.h / height;
+
+    const scale = Math.min(widthRatio, heightRatio);
+
+    return {
+      w: width * scale,
+      h: height * scale,
+    };
+  };
 
     return (
-      <Slide style={{
+      <Slide hidden={!enabled} style={{
         backgroundColor: "#feffff"
       }}>
         <Image
@@ -249,10 +309,11 @@ export function CRMProvider({ children }: { children: ReactNode }) {
           style={{ x: 9.4, y: 0.2, w: 0.4, h: 0.3 }}
         />
         <Text style={{
-          x: 0.5, y: 0.9, w: 3, h: 4,
+          ...textPosition,
           fontSize: small,
           fontFace,
           verticalAlign: 'bottom',
+          align: right ? 'right' : 'left',
         }}>
           <Text.Bullet {...bulletOptions} style={{
             fontSize: big,
@@ -294,29 +355,39 @@ export function CRMProvider({ children }: { children: ReactNode }) {
             {freight ? `Frete incluso` : ''}
           </Text.Bullet>
         </Text>
-        <Image
-          src={{ kind: "path", path: "https://placehold.co/600x400?text=Imagem" }}
-          style={{ x: 4, y: 1, w: 5.4, h: 3.6 }}
-        />
+        {image ?
+          <Image
+            src={{ kind: "path", path: image.path }}
+            style={{ ...imagePosition, ...getDimensions(image.width, image.height)}}
+          />
+          :
+          <Text style={{
+            ...imagePosition,
+            fontSize: big,
+            fontFace,
+            verticalAlign: 'middle',
+            align: 'center',
+            backgroundColor: "#eeeeee"
+          }}>
+            Sem Imagem
+          </Text>
+        }
         <Text style={{
-          x: 4, y: 4.7, w: 1.5, h: 0.4,
-          fontSize: small,
-          fontFace,
+          ...captionOptions,
+          x: right ? 0.5 : 4,
         }}>
           Portfólio, ACERVO
         </Text>
         <Text style={{
-          x: 6, y: 4.7, w: 1.5, h: 0.4,
-          fontSize: small,
-          fontFace,
+          ...captionOptions,
+          x: right ? 2.4 : 6,
           align: 'center',
         }}>
           acervomobilia.com
         </Text>
         <Text style={{
-          x: 7.9, y: 4.7, w: 1.5, h: 0.4,
-          fontSize: small,
-          fontFace,
+          ...captionOptions,
+          x: right ? 0.5 : 7.9,
           align: 'right',
         }}>
           {designer && finish.designer ? `designer ${finish.designer}` : ''}
@@ -327,13 +398,45 @@ export function CRMProvider({ children }: { children: ReactNode }) {
 
   const downloadPresentation = async () => {
     try {
+      if (!proposal) {
+        throw new Error('Proposal are undefined');
+      }
+
       const version = proposal.versions.find(version => version.num === versionNum);
+
+      if (!version) {
+        throw new Error('Version are undefined');
+      }
 
       const slides = version.products.filter(product => product.enabled).map(product => createProductSlide(product));
 
       const buffer = await render(
         <Presentation>
+          <Slide>
+            <Image style={{
+              x: 0,
+              y: 0,
+              w: '100%',
+              h: '100%',
+            }} src={{ kind: "path", path: "/slide1.jpg" }} />
+          </Slide>
+          <Slide>
+            <Image style={{
+              x: 0,
+              y: 0,
+              w: '100%',
+              h: '100%',
+            }} src={{ kind: "path", path: "/slide2.jpg" }} />
+          </Slide>
           {slides}
+          <Slide>
+            <Image style={{
+              x: 0,
+              y: 0,
+              w: '100%',
+              h: '100%',
+            }} src={{ kind: "path", path: "/slideFinal.jpg" }} />
+          </Slide>
         </Presentation>,
         { outputType: "blob" }
       );
@@ -348,6 +451,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error generating presentation:", error);
+      deleteToast(error);
     }
   };
 
@@ -361,6 +465,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         calculatePrice,
         handleEnableToggle,
         updateProductQuantity,
+        deleteProduct,
         updateProposalStatus,
         updateProposalPriority,
         updatePresentationToggle,
@@ -369,7 +474,9 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         setPresentationToggle,
         complementInfo,
         createProductSlide,
-        downloadPresentation
+        downloadPresentation,
+        popups,
+        setPopupOpen,
       }}
     >
       {children}
