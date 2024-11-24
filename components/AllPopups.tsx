@@ -11,17 +11,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from 'lucide-react';
 import { translationFields } from '@/lib/utils';
 import { Dispatch, SetStateAction } from "react";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import React from "react";
-import { useCRMContext, Popups } from "@/hooks/useCRMContext";
 
-export function DeleteAlert({ submit }: { submit: () => void }) {
+export function DeleteAlert({ submit, children }: { submit: () => void, children: React.ReactNode }) {
   return (
     <AlertDialog>
-      <AlertDialogTrigger className='flex gap-2 items-center justify-center transition-opacity hover:opacity-50 rounded-none h-9.5 border-0 border-b border-primary text-primary px-4'><Trash2 className='w-4 h-4' />APAGAR</AlertDialogTrigger>
+      <AlertDialogTrigger asChild>
+        {children}
+      </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Você tem certeza que deseja apagar?</AlertDialogTitle>
@@ -61,11 +61,9 @@ export function ConfirmAlert({ submit, popupOpen, setPopupOpen, conflicts, reset
   )
 }
 
-export function CRMPopup({ children, type, button }: { children: React.ReactNode, type: Popups, button: React.ReactNode }) {
-  const { setPopupOpen, popups } = useCRMContext();
-
+export function CRMPopup({ children, button, setPopupOpen, popupOpen }: { children: React.ReactNode, button: React.ReactNode, setPopupOpen: React.Dispatch<React.SetStateAction<boolean>>, popupOpen: boolean }) {
   return (
-    <Dialog onOpenChange={(val) => setPopupOpen(type, val)} open={popups[type]}>
+    <Dialog onOpenChange={setPopupOpen} open={popupOpen}>
       <DialogTrigger asChild>
         {button}
       </DialogTrigger>

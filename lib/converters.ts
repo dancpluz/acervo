@@ -278,7 +278,6 @@ const proposalConverter: FirestoreDataConverter<ProposalT> = {
       observations: proposal.observations,
       actions: proposal.actions,
       versions: proposal.versions ? proposal.versions : [],
-      total: proposal.total ? proposal.total : 0,
       last_updated: serverTimestamp(),
       created_at: proposal.created_at ? proposal.created_at : serverTimestamp(),
     };
@@ -306,8 +305,9 @@ const proposalConverter: FirestoreDataConverter<ProposalT> = {
       origin: data.origin,
       observations: data.observations,
       actions: data.actions,
-      versions: await Promise.all(data.versions.map(async (version: VersionT) => ({
+      versions: data.versions ? await Promise.all(data.versions.map(async (version: VersionT) => ({
         num: version.num,
+        complement: version.complement,
         products: await Promise.all(version.products.map(async (product) => {
           const factory = product.factory ? await getDoc(product.factory.withConverter(factoryConverter)) : '';
           const markup = product.markup ? await getDoc(product.markup.withConverter(markupConverter)) : '';
@@ -320,8 +320,7 @@ const proposalConverter: FirestoreDataConverter<ProposalT> = {
           return {...product, image, factory: factory ? factory.data() as FactoryT : '', markup: markup ? markup.data() as MarkupT : '', freight: freight ? freight.data() as FreightT : ''};
           })
         )})
-      )),
-      total: data.total,
+      )) : [],
       last_updated: data.last_updated,
       created_at: data.created_at,
     };

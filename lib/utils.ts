@@ -3,8 +3,8 @@ import { twMerge } from "tailwind-merge";
 import { FieldT, TableFieldT, AllFieldTypes, EnumFieldT } from '@/lib/fields';
 import { z } from "zod";
 import slugify from 'slugify';
-import createNumberMask from 'text-mask-addons/dist/createNumberMask';
 import { Timestamp } from "firebase/firestore";
+import { MarkupT, ProductT } from "./types";
 
 export const translationFields: { [key: string]: string } = {
   company_name: 'Nome/Razão Social',
@@ -30,6 +30,14 @@ export const mapEnum = {
   '4': 'Esperando',
   '5': 'Negociação',
   '6': 'Fechado',
+}
+
+export const paymentEnum = {
+  'cash': 'Dinheiro',
+  'debit': 'Cartão de Débito',
+  'credit': 'Cartão de Crédito',
+  'bankslip': 'Boleto',
+  'pix': 'Pix',
 }
 
 export const entityTitles: { [key: string]: EntityTitleT } = {
@@ -94,18 +102,12 @@ export function timestampToDate(timestamp: Timestamp) {
   return new Date(timestamp.seconds*1000)
 }
 
-export const costMask = createNumberMask({
-    prefix: 'R$ ',
-    thousandsSeparatorSymbol: '.',
-    allowDecimal: true,
-    decimalSymbol: ',',
-  })
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function unformatNumber(str: string, percent: boolean = false) {
+export function unformatNumber(str?: string, percent: boolean = false) {
+  if (!str) return 0;
   return parseFloat(str.replace('R$ ', '').replaceAll('.', '').replaceAll(',', '.')) * (percent ? 0.01 : 1)
 }
 
@@ -172,7 +174,7 @@ export function formatFields(fields: AllFieldTypes | { [key: string]: TableField
       defaultValues[key] = '';
       validationValues[key] = optionals.includes(key) ? value.validation.optional().or(z.literal('')) : value.validation;
     } else if (arrayKeys.includes(key) || Array.isArray(value)) {
-      // Se for vetor ou pedidos, tem que fazer um objeto com todos os campos
+      // Se for vetor, tem que fazer um objeto com todos os campos
       defaultValues[key] = [];
       validationValues[key] = z.array(z.object(Object.values(value).reduce((acc: { [key: string]: z.ZodType<any, any> }, { value, validation }: any) => { acc[value] = validation; return acc; }, {}))).optional()
     } else {
@@ -205,3 +207,60 @@ export const stringToSlug = (str: string) => {
     strict: true, // Remove special characters
   });
 };
+
+export const groupProductsByAmbient = (products: ProductT[]): Record<string, ProductT[]> => {
+  const ambients = {};
+
+  products.forEach((product) => {
+    if (product.ambient) {
+      const slug = stringToSlug(product.ambient)
+
+      const originalCategoryKey = Object.keys(ambients).find((key) => stringToSlug(key) === slug) || product.ambient;
+
+      if (!ambients[originalCategoryKey]) {
+        ambients[originalCategoryKey] = [];
+      }
+
+      ambients[originalCategoryKey].push(product);
+    } else {
+      if (!ambients['Sem Categoria']) {
+        ambients['Sem Categoria'] = [];
+      }
+      ambients['Sem Categoria'].push(product);
+    }
+
+  });
+
+  return ambients;
+};
+
+export function calculatePriceMarkup(cost: number, markup: MarkupT, quantity: number) {
+  const markup12 = markup && cost ? unformatNumber(markup['12x'] as string) * cost * quantity : 0
+  const markup6 = markup && cost ? Number(markup12) * (1 - unformatNumber(markup['6x'] as string, true)) : 0
+  const markupCash = markup && cost ? Number(markup12) * (1 - unformatNumber(markup['cash'] as string, true)) : 0
+
+  return { markup12, markup6, markupCash }
+}
+
+export async function resolvePromises(data: any): Promise<any> {
+  if (data instanceof Promise) {
+    return await data;
+  }
+
+  if (Array.isArray(data)) {
+    return await Promise.all(data.map(resolvePromises));
+  }
+
+  if (data !== null && typeof data === 'object') {
+    const resolvedData = { ...data };
+    const entries = await Promise.all(
+      Object.entries(data).map(async ([key, value]) => [key, await resolvePromises(value)])
+    );
+    for (const [key, value] of entries) {
+      resolvedData[key] = value;
+    }
+    return resolvedData;
+  }
+
+  return data;
+}

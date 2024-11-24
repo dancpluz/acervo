@@ -7,6 +7,8 @@ import { converters } from '@/lib/converters';
 import ProposalView from "@/components/ProposalView";
 import ProposalSidebar from "@/components/ProposalSidebar";
 import { PriorityProposal } from '@/components/PriorityIndicator';
+import { resolvePromises } from '@/lib/utils'
+import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,35 +19,14 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }))
 }
 
-async function resolvePromises(data: any): Promise<any> {
-  if (data instanceof Promise) {
-    return await data;
-  }
-
-  if (Array.isArray(data)) {
-    return await Promise.all(data.map(resolvePromises));
-  }
-
-  if (data !== null && typeof data === 'object') {
-    const resolvedData = { ...data };
-    const entries = await Promise.all(
-      Object.entries(data).map(async ([key, value]) => [key, await resolvePromises(value)])
-    );
-    for (const [key, value] of entries) {
-      resolvedData[key] = value;
-    }
-    return resolvedData;
-  }
-
-  return data;
-}
-
 export default async function Propostas({ params: { slug } }: { params: { slug: string } }) {
   const proposal = await getDoc(doc(db,'proposal',slug).withConverter(converters['proposal']));
   let data = await proposal.data()
 
   if (data) {
     data = await resolvePromises(data);
+  } else {
+    notFound()
   }
 
   return (
