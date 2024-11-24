@@ -4,7 +4,7 @@ import { updateIndex } from '@/lib/dbWrite';
 import { UseFormReturn } from 'react-hook-form';
 import { entityTitles } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
-import { deleteToast } from '@/hooks/general';
+import { errorToast } from '@/hooks/general';
 import { converters } from '@/lib/converters';
 import db from '@/lib/firebase';
 import { setDoc, doc, collection, updateDoc, getDoc } from 'firebase/firestore';
@@ -13,26 +13,23 @@ import { storage } from '@/lib/firebase';
 import { ref, uploadBytes } from "firebase/storage";
 import { ProductT, VersionT } from '@/lib/types';
 
-
 export interface FormActionsT {
   proposalSubmit: (values: any) => Promise<void>;
   productSubmit: (values: any) => Promise<void>;
-  editSubmit: (values: any) => Promise<void>;
   saveProduct: boolean;
   setSaveProduct: React.Dispatch<React.SetStateAction<boolean>>;
-  deleteSubmit: () => Promise<void>;
   isEditing: boolean;
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function useCRMFormActions(
-  form: UseFormReturn,
   id: string,
+  setPopupOpen: React.Dispatch<React.SetStateAction<boolean>>,
   data?: any,
-  overrideFunction?: () => Promise<void>
+  setFunctions?: () => Promise<void>
 ): FormActionsT {
 
-  const { proposal, versionNum, setPopupOpen } = useCRMContext();
+  const { proposal, versionNum, getProposal, setProposal } = useCRMContext();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [saveProduct, setSaveProduct] = useState<boolean>(false);
@@ -44,17 +41,14 @@ export default function useCRMFormActions(
   //   console.log(form.formState.errors)
   // }, [form.formState]);
 
-  const handleOverrideFunction = async () => {
-    if (overrideFunction) {
-      await overrideFunction()
+  const handleSetFunctions = async () => {
+    if (data && setFunctions) {
+      await setFunctions()
     }
   }
 
   useEffect(() => {
-    if (data) {
-      form.reset(data);
-      handleOverrideFunction()
-    }
+    handleSetFunctions()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
@@ -63,9 +57,13 @@ export default function useCRMFormActions(
 
     try {
       try {
-        await setDoc(doc(collection(db, 'proposal'), id).withConverter(converters['proposal']), values)
+        if (data) {
+          const { versions } =  await getProposal();
 
-        if (!data) {
+          const updatedProposal = { ...proposal, ...values, versions }
+          await setDoc(doc(collection(db, 'proposal'), id).withConverter(converters['proposal']), updatedProposal, { merge: true })
+        } else {
+          await setDoc(doc(collection(db, 'proposal'), id).withConverter(converters['proposal']), values)
           await updateIndex('proposal', values.num)
         }
 
@@ -75,14 +73,15 @@ export default function useCRMFormActions(
       }
       
       toast({
-        title: `${entityTitle.singular[0].toUpperCase() + entityTitle.singular.slice(1)} adicionad${entityTitle.sufix} com sucesso!`,
+        title: `${entityTitle.singular[0].toUpperCase() + entityTitle.singular.slice(1)} ${data ? 'editad' : 'adicionad'}${entityTitle.sufix} com sucesso!`,
       });
 
-      setPopupOpen('proposal', false)
+      setPopupOpen(false)
+      setProposal(await getProposal(true))
       
     } catch (error) {
       console.log(error);
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
@@ -152,22 +151,21 @@ export default function useCRMFormActions(
 
           const versions = proposalData && proposalData.versions.length > 0 ? proposalData.versions.map((version: VersionT) => {
             if (version.num === versionNum) {
-                if (data) {
-                  const productIndex = version.products.findIndex((product: ProductT) => product.id === data.id);
-                  if (productIndex !== -1) {
-                    version.products[productIndex] = values;
-                    return version;
-                  }
+              version.complement = version.complement || { discount: 0, freight: 0, expiration: 0, deadline: 0, payment_method: '', general_info: '', info: '' }
+              if (data) {
+                const productIndex = version.products.findIndex((product: ProductT) => product.id === data.id);
+                if (productIndex !== -1) {
+                  version.products[productIndex] = values;
+                  return version;
                 }
-                return { ...version, products: [...version.products, values] }
+              }
+              return { ...version, products: [...version.products, values] }
             }
             return version;
           }) : [{ num: versionNum, products: [values] }]
 
           
           await updateDoc(proposalRef, { versions })
-
-          router.refresh()
           
         } else {
           throw new Error('Erro ao adicionar produto: Proposta não encontrada')
@@ -178,30 +176,21 @@ export default function useCRMFormActions(
       }
       
       toast({
-        title: `${entityTitle.singular[0].toUpperCase() + entityTitle.singular.slice(1)} adicionad${entityTitle.sufix} com sucesso!`,
+        title: `${entityTitle.singular[0].toUpperCase() + entityTitle.singular.slice(1)} ${data ? 'editad' : 'adicionad'}${entityTitle.sufix} com sucesso!`,
       });
 
-      setPopupOpen('product', false)
-      
+      setPopupOpen(false)
+      setProposal(await getProposal(true))
+
     } catch (error) {
       console.log(error);
-      deleteToast(error);
+      errorToast(error);
     }
-  }
-
-  async function editSubmit(values: any) {
-    console.log(values)
-  }
-
-  async function deleteSubmit() {
-    console.log('delete')
   }
 
   return {
     proposalSubmit,
     productSubmit,
-    editSubmit,
-    deleteSubmit,
     isEditing,
     setIsEditing,
     saveProduct,

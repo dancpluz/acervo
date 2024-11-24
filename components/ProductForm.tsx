@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { finishFields, productFields } from "@/lib/fields";
 import { formatFields, stringToSlug, unformatNumber, formatCurrency } from "@/lib/utils";
@@ -11,55 +11,58 @@ import { ReferenceField, InputField, SelectOtherField, SelectField, ImageField }
 import { Form } from "@/components/ui/form";
 import { FieldDiv } from "@/components/ui/div";
 import { Button } from "@/components/ui/button";
-import { CirclePlus, X } from 'lucide-react';
+import { CirclePlus } from 'lucide-react';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc } from 'firebase/firestore';
 import db from '@/lib/firebase';
 import { format } from 'date-fns';
-import { FactoryT, MarkupT, PersonT } from "@/lib/types";
+import { FactoryT, MarkupT, PersonT, ProductT } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
 import PriceBox from "@/components/PriceBox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { conformNumberToMask, costMask } from "@/lib/masks";
 
-const [defaultValues, fieldValidations] = formatFields(productFields);
+let [defaultValues, fieldValidations] = formatFields(productFields);
 defaultValues['quantity'] = '1';
 defaultValues['enabled'] = true;
 
-export default function ProductForm({ data } : { data?: any }) {
+export default function ProductForm({ data, setPopupOpen } : { data?: any, setPopupOpen: React.Dispatch<React.SetStateAction<boolean>> }) {
   const [shard, loading, error] = useDocumentData(doc(db, 'shard', 'product'));
+  
+  const [referenceInfo, setReferenceInfo] = useState<{ [key: string]: '' | FactoryT | MarkupT }>({ factory: '', markup: '' });
+  
+  if (data) {
+    const values = Object.assign({},data)
+    
+    const { factory, freight, markup, quantity,  cost, finish } = values as ProductT;
 
+    defaultValues = values;
+    defaultValues.factory = factory?.id || '';
+    defaultValues.freight = freight?.id || '';
+    defaultValues.markup = markup?.id || '';
+    defaultValues.cost = conformNumberToMask(cost.toString().replace('.', ','), costMask);
+    
+    const { depth, width, height } = finish
+    defaultValues.finish.depth = depth.toString()
+    defaultValues.finish.width = width.toString()
+    defaultValues.finish.height = height.toString()
+    defaultValues.quantity = quantity.toString()
+  }
+  
   const form = useForm<z.infer<typeof fieldValidations>>({
     resolver: zodResolver(fieldValidations),
     defaultValues,
     shouldFocusError: false,
   })
 
-  const [referenceInfo, setReferenceInfo] = useState<{ [key: string]: '' | FactoryT | MarkupT }>({ factory: '', markup: '' });
-
-  const selectedMarkup = referenceInfo.markup as MarkupT;
-  const selectedFactory = referenceInfo.factory as FactoryT;
-
-  const today = new Date();
-  const id = data ? data.id : `${loading || !shard ? '' : shard.index + 1}${form.watch('category') ? '_' + stringToSlug(form.watch('category') || '') : ''}${form.watch('name') ? '_' + stringToSlug(form.watch('name') || '') : ''}${selectedFactory ? '_' + stringToSlug((selectedFactory.person as PersonT).label || '') : ''}_${format(today, "dd-MM-yyyy")}`;
-
-
-  const markup12 = selectedMarkup && form.watch('cost') ? unformatNumber(selectedMarkup['12x'] as string) * unformatNumber(form.watch('cost')) : '';
-  const markup6 = selectedMarkup && form.watch('cost') ? Number(markup12) * (1 - unformatNumber(selectedMarkup['6x'] as string, true)) : '';
-  const markupCash = selectedMarkup && form.watch('cost') ? Number(markup12) * (1 - unformatNumber(selectedMarkup['cash'] as string, true)) : '';
-
-  const overrideFunction = async () => {
-    const { factory, freight, markup, image, quantity, category, cost, finish } = data;
+  const setFunctions = async () => {
+    const { factory, markup, image } = data as ProductT;
     if (factory) {
-      setReferenceInfo({...referenceInfo, factory: factory});
-      form.setValue('factory', factory.id)
-    }
-    if (freight) {
-      form.setValue('freight', freight.id)
+      setReferenceInfo((prev) => ({...prev, factory: factory as FactoryT}));
     }
     if (markup) {
-      setReferenceInfo({...referenceInfo, factory: markup});
-      form.setValue('markup', markup.id)
+      setReferenceInfo((prev) => ({ ...prev, markup: markup as MarkupT}));
     }
     if (image) {
       const response = await fetch(image.path);
@@ -76,21 +79,23 @@ export default function ProductForm({ data } : { data?: any }) {
 
       form.setValue('image', [fileObject])
     }
-    const { depth, width, height } = finish
-    
-    form.setValue('cost', cost.toString())
-    form.setValue('finish.depth', depth.toString())
-    form.setValue('finish.width', width.toString())
-    form.setValue('finish.height', height.toString())
-    form.setValue('quantity', quantity.toString())
-    form.setValue('category', category)
   }
+  
+  const selectedMarkup = referenceInfo.markup as MarkupT;
+  const selectedFactory = referenceInfo.factory as FactoryT;
+  
+  const today = new Date();
+  const id = data ? data.id : `${loading || !shard ? '' : shard.index + 1}${form.watch('category') ? '_' + stringToSlug(form.watch('category') || '') : ''}${form.watch('name') ? '_' + stringToSlug(form.watch('name') || '') : ''}${selectedFactory ? '_' + stringToSlug((selectedFactory.person as PersonT).label || '') : ''}_${format(today, "dd-MM-yyyy")}`;
+  
+  const markup12 = selectedMarkup && form.watch('cost') ? unformatNumber(selectedMarkup['12x'] as string) * unformatNumber(form.watch('cost')) : '';
+  const markup6 = selectedMarkup && form.watch('cost') ? Number(markup12) * (1 - unformatNumber(selectedMarkup['6x'] as string, true)) : '';
+  const markupCash = selectedMarkup && form.watch('cost') ? Number(markup12) * (1 - unformatNumber(selectedMarkup['cash'] as string, true)) : '';
 
   const {
     productSubmit,
     saveProduct,
     setSaveProduct,
-  } = useCRMFormActions(form, id, data, overrideFunction);
+  } = useCRMFormActions(id, setPopupOpen, data, setFunctions);
 
   // const checkPaths = [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
 
@@ -100,13 +105,6 @@ export default function ProductForm({ data } : { data?: any }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, shard, loading]);
-
-  const updateReferenceInfo = (key: string, value: '' | FactoryT | MarkupT) => {
-    setReferenceInfo((prevState) => ({
-      ...prevState,
-      [key]: value,
-    }));
-  };
 
   const submitLoading = form.formState.isSubmitting;
 
@@ -130,12 +128,12 @@ export default function ProductForm({ data } : { data?: any }) {
               </FieldDiv>
               <InputField path='' obj={productFields.observations} long />
               <FieldDiv>
-                <ReferenceField obj={productFields.factory} refPath='factory' onSelect={(e: FactoryT | MarkupT) => updateReferenceInfo('factory', e)} hint={'Ex. Punto'} person />
+                <ReferenceField obj={productFields.factory} refPath='factory' onSelect={(e: FactoryT) => setReferenceInfo((prev) => ({...prev, factory: e}))} hint={'Ex. Punto'} person />
                 <ReferenceField obj={productFields.freight} refPath='config, markup_freight, freight' hint={'Ex. Punto'} />
               </FieldDiv>
               <FieldDiv>
                 <InputField path='' obj={productFields.cost} />
-                <ReferenceField obj={productFields.markup} refPath='config, markup_freight, markup' onSelect={(e: FactoryT | MarkupT ) => updateReferenceInfo('markup', e)} hint={'Ex. Punto'} />
+                <ReferenceField obj={productFields.markup} refPath='config, markup_freight, markup' onSelect={(e: MarkupT ) => setReferenceInfo((prev) => ({...prev, markup: e}))} hint={'Ex. Punto'} />
               </FieldDiv>
               <Separator className='bg-alternate' orientation="horizontal" />
               <FieldDiv className='justify-between'>

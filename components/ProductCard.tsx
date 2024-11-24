@@ -6,11 +6,13 @@ import PriceBox from '@/components/PriceBox'
 import { MarkupT, ProductT, VersionT } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
 import { useCRMContext } from '@/hooks/useCRMContext'
-import { cn } from "@/lib/utils"
+import { cn, calculatePriceMarkup } from "@/lib/utils"
 import Image from 'next/image'
 import { Image as ImageIcon } from 'lucide-react';
 import ProductForm from "@/components/ProductForm";
-import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog'
+import { DeleteAlert } from '@/components/AllPopups'
+import { CRMPopup } from "@/components/AllPopups";
+import { useState } from 'react'
 
 export function GreyText({ className, children }: { className?: string, children: React.ReactNode }) {
   return <b className={cn('text-xs text-tertiary font-normal', className)}>{children}</b>
@@ -21,26 +23,27 @@ export function BlackText({ className, children }: { className?: string, childre
 }
 
 export default function ProductCard({ product, index }: { product: ProductT; index: number }) {
+  const [popupOpen, setPopupOpen] = useState(false)
 
-  const { proposal, setProposal, versionNum, calculatePrice, deleteProduct, handleEnableToggle, updateProductQuantity } = useCRMContext()
+  const { proposal, setProposal, versionNum, deleteProduct, handleEnableToggle, updateProductQuantity } = useCRMContext()
   const { id, name, quantity, finish, cost, enabled, markup, image } = product
   
-  const price = calculatePrice(cost, markup as MarkupT, quantity)
+  const price = calculatePriceMarkup(cost, markup as MarkupT, quantity)
 
   async function changeQuantity(quantity: number) {
     const versions = proposal.versions.map((version: VersionT) =>
       version.num === versionNum ?
         {
-          ...version, products: version.products.map((product: ProductT, i: number) =>
-            i === index ? { ...product, quantity } : product
+          ...version, products: version.products.map((product: ProductT) =>
+            product.id === id ? { ...product, quantity } : product
           )
         } : version
     )
 
-    setProposal((prev) => ({ ...prev, versions }))
+    setProposal((prev) => prev ? ({ ...prev, versions }) : prev)
 
     try {
-      await updateProductQuantity(index, quantity)
+      await updateProductQuantity(id, quantity)
     } catch (error) {
       console.error('Failed to update product enable status:', error)
     }
@@ -58,25 +61,25 @@ export default function ProductCard({ product, index }: { product: ProductT; ind
     }
   }
 
-  const handleDelete = async (index: number) => {
+  const handleDelete = async (deleteId: string) => {
     const versions = proposal.versions.map((version: VersionT) =>
       version.num === versionNum ?
         {
-          ...version, products: version.products.filter((product: ProductT, i: number) =>
-            i !== index
+          ...version, products: version.products.filter((product: ProductT) =>
+            product.id !== deleteId
           )
         } : version
     )
 
     setProposal((prev) => ({ ...prev, versions }))
     
-    await deleteProduct(index);
+    await deleteProduct(deleteId);
   }
   
   return (
     <div className="flex border border-secondary gap-4 p-4 rounded-lg justify-between">
       <div className="flex justify-center items-center border border-primary overflow-hidden rounded-2xl w-32 h-32">
-        {image ? 
+        {image && image.path.toLowerCase().includes("http") ? 
           <Image alt={id} className='object-cover' style={{ opacity: enabled ? 1 : 0.5 }} width={128} height={128} src={image.path} />
         :
           <ImageIcon className='text-primary'/>
@@ -84,7 +87,7 @@ export default function ProductCard({ product, index }: { product: ProductT; ind
       </div>
       <div style={{ opacity: enabled ? 1 : 0.5 }} className="flex flex-col grow">
         <div className="flex flex-col">
-          <span className="text-tertiary text-xs">Item {id ? id : index + 1}</span>
+          <span className="text-tertiary text-xs">Item {index + 1}{id && ` - ${id}`}</span>
           <h3 className="text-xl">{name}</h3>
         </div>
         <div className="flex grow justify-between">
@@ -151,23 +154,25 @@ export default function ProductCard({ product, index }: { product: ProductT; ind
             <EyeOff className="text-primary" />
           )}
         </Button>
-        <Dialog>
-          <DialogTrigger asChild>
+        <CRMPopup
+          button={
             <Button variant="ghost" className="p-1 h-auto">
               <Edit className="text-primary" />
             </Button>
-          </DialogTrigger>
-          <DialogContent className='w-[760px]'>
-            <ProductForm data={product} />
-          </DialogContent>
-        </Dialog>
-        <Button
-          onClick={() => handleDelete(index)}
-          variant="ghost"
-          className="p-1 h-auto"
+          }
+          popupOpen={popupOpen}
+          setPopupOpen={setPopupOpen}
         >
-          <Trash className="text-primary" />
-        </Button>
+          <ProductForm data={product} setPopupOpen={setPopupOpen} />
+        </CRMPopup>
+        <DeleteAlert submit={() => handleDelete(id)}>
+          <Button
+            variant="ghost"
+            className="p-1 h-auto"
+          >
+            <Trash className="text-primary" />
+          </Button>
+        </DeleteAlert>
       </div>
     </div>
   )

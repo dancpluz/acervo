@@ -2,12 +2,14 @@
 'use client'
 
 import db from '@/lib/firebase';
-import { MarkupT, ProductT, ProposalT, VersionT } from '@/lib/types';
-import { formatCurrency, unformatNumber } from '@/lib/utils';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { ComplementT, MarkupT, ProductT, ProposalT, VersionT } from '@/lib/types';
+import { formatCurrency, timestampToDate, calculatePriceMarkup, resolvePromises } from '@/lib/utils';
+import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 import { Presentation, render, Slide, Text, Image } from "react-pptx";
-import { deleteToast } from './general';
+import { errorToast } from './general';
+import { useRouter } from 'next/navigation'
+import { converters } from '@/lib/converters';
 
 export type PresentationToggleT = {
   sizes: boolean;
@@ -23,64 +25,36 @@ export type PresentationToggleT = {
   markupCash: boolean;
 }
 
-export type ComplementT = {
-  discount: number,
-  freight: number,
-  expiration: number,
-  deadline: number,
-  payment: string,
-  general_info: string,
-  info: string,
-}
-
 type CRMContextProps = {
   proposal?: ProposalT;
   setProposal: Dispatch<SetStateAction<ProposalT | undefined>>
   versionNum: number;
   setVersionNum: Dispatch<SetStateAction<number>>;
-  calculatePrice: (cost: number, markup: MarkupT, quantity: number) => { markup12: number; markup6: number; markupCash: number };
-  updateProductQuantity: (productIndex: number, quantity: number) => Promise<void>;
-  totalValues: { markup12: number; markup6: number; markupCash: number };
+  updateProductQuantity: (productId: string, quantity: number) => Promise<void>;
+  getTotalValues: () => { markup12: number; markup6: number; markupCash: number };
   updateProposalStatus: (status: string) => Promise<void>;
   updateProposalPriority: (priority: string) => Promise<void>;
   presentationToggle: { [id: string]: PresentationToggleT };
   setPresentationToggle: Dispatch<SetStateAction<{ [id: string]: PresentationToggleT }>>;
   updatePresentationToggle: (id: string, key: keyof PresentationToggleT, value: boolean) => void;
-  handleEnableToggle: (enabled: boolean, index: number) => Promise<void>;
-  complementInfo: ComplementT;
-  deleteProduct: (productIndex: number) => Promise<void>;
+  handleEnableToggle: (enabled: boolean, id: string) => Promise<void>;
+  deleteProduct: (productId: string) => Promise<void>;
+  deleteVersion: (num: number) => Promise<void>;
+  duplicateVersion: (num: number) => Promise<void>;
+  deleteProposal: () => Promise<void>;
+  getProposal: (resolve: boolean) => ProposalT;
   createProductSlide: (product: ProductT, left?: boolean) => JSX.Element;
   downloadPresentation: () => Promise<void>;
-  popups: Record<Popups, boolean>;
-  setPopupOpen: (key: Popups, value: boolean) => void;
+  updateComplement: (complement: ComplementT) => Promise<void>;
 };
-
-export type Popups = 'product' | 'proposal' | 'productEdit' | 'proposalEdit';
 
 const Context = createContext<CRMContextProps | null>(null);
 
 export function CRMProvider({ children }: { children: ReactNode }) {
   const [proposal, setProposal] = useState<ProposalT | undefined>(undefined);
-  const [totalValues, setTotalValues] = useState({ markup12: 0, markup6: 0, markupCash: 0 });
   const [versionNum, setVersionNum] = useState<number>(1);
   const [presentationToggle, setPresentationToggle] = useState<{ [id: string ]: PresentationToggleT }>({})
-  const [complementInfo, setComplementInfo] = useState<ComplementT>({
-    discount: 0,
-    freight: 0,
-    expiration: 0,
-    deadline: 0,
-    payment: 'boleto',
-    general_info: '',
-    info: '',
-  })
-  const [popups, setPopups] = useState<Record<Popups, boolean>>({
-    product: false,
-    proposal: false,
-    productEdit: false,
-    proposalEdit: false,
-  })
-
-  const setPopupOpen = (key: Popups, value: boolean) => setPopups(prev => ({ ...prev, [key]: value }))
+  const router = useRouter()
 
   const proposalRef = proposal ? doc(db, 'proposal', proposal.id) : undefined
 
@@ -113,26 +87,58 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     }
   }, [proposal]);
 
-  useEffect(() => {
+  function checkProposal() {
+    if (!proposalRef) {
+      throw new Error('Referência da proposta não está definida');
+    }
+    if (!proposal) {
+      throw new Error('Proposta não está definida');
+    }
+  }
+
+  function getTotalValues() {
     if (proposal) {
       let totalMarkup12 = 0;
       let totalMarkup6 = 0;
       let totalMarkupCash = 0;
-
+  
       for (const version of proposal.versions) {
         for (const product of version.products) {
           if (product.enabled) {
-            const { markup12, markup6, markupCash } = calculatePrice(product.cost, product.markup as MarkupT, product.quantity);
+            const { markup12, markup6, markupCash } = calculatePriceMarkup(product.cost, product.markup as MarkupT, product.quantity);
             totalMarkup12 += markup12;
             totalMarkup6 += markup6;
             totalMarkupCash += markupCash;
           }
         }
       }
-
-      setTotalValues({ markup12: totalMarkup12, markup6: totalMarkup6, markupCash: totalMarkupCash });
+  
+      return { markup12: totalMarkup12, markup6: totalMarkup6, markupCash: totalMarkupCash }
+    } else {
+      return { markup12: 0, markup6: 0, markupCash: 0 }
     }
-  }, [proposal]);
+  }
+
+  async function updateComplement(complement: ComplementT) {
+    try {
+      checkProposal()
+
+      const data = await getProposal();
+      const { versions } = data as ProposalT;
+
+      const newVersions = versions.map(version => version.num === versionNum ? ({ ...version, complement }) : version)
+      
+      await updateDoc(proposalRef, { versions: newVersions })
+
+      const newVersionsState = proposal.versions.map(version => version.num === versionNum ? ({ ...version, complement }) : version)
+      
+      setProposal((prev) => prev ? { ...prev, versions: newVersionsState } : prev)
+
+    } catch (error) {
+      console.log(error)
+      errorToast(error);
+    }
+  }
 
   function updatePresentationToggle(id: string, key: keyof PresentationToggleT, value: boolean) {
     setPresentationToggle(prev => ({ ...prev, [id]: { ...prev[id], [key]: value } }))
@@ -140,9 +146,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
 
   async function handleEnableToggle(enabled: boolean, id: string) {
     const newEnabledState = !enabled
-    if (!proposal) {
-      throw new Error('Proposal is undefined');
-    }
+    checkProposal()
+
     const versions = proposal.versions.map((version: VersionT) =>
       version.num === versionNum ?
         {
@@ -152,39 +157,55 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         } : version
     )
 
-    setProposal((prev) => prev ? { ...prev, versions } : undefined)
+    setProposal((prev) => prev ? { ...prev, versions } : prev)
 
     try {
       await updateProductEnable(id, newEnabledState)
     } catch (error) {
       console.error('Falha em habilitar/desabilitar produto:', error)
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
-  async function getProposal() {
-    if (!proposalRef) {
-      throw new Error('Proposal reference is undefined');
-    }
-    const proposal = await getDoc(proposalRef);
+  async function getProposal(resolve=false) {
+    checkProposal()
 
-    const data = proposal.data();
+    let newProposal;
+
+    if (resolve) {
+      const ref = doc(db, 'proposal', proposal.id).withConverter(converters['proposal'])
+      newProposal = await getDoc(ref);
+    } else {
+      newProposal = await getDoc(proposalRef);
+    }
+
+
+    let data = await newProposal.data();
+
     if (!data) {
       throw new Error('Proposal data is undefined');
+    }
+
+    if (resolve) {
+      data = await resolvePromises(data);
+      data.created_at = timestampToDate(data.created_at)
+      data.last_updated = timestampToDate(data.last_updated)
     }
 
     return data
   }
 
-  async function deleteProduct(productIndex: number) {
+  async function deleteProduct(productId: string) {
     try {
+      checkProposal()
+
       const data = await getProposal();
 
       const versions = data.versions.map((version: VersionT) =>
         version.num === versionNum ?
           {
-            ...version, products: version.products.filter((product: ProductT, index: number) =>
-              index !== productIndex
+            ...version, products: version.products.filter((product: ProductT) =>
+              product.id !== productId
             )
           } : version
       )
@@ -192,37 +213,41 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       await updateDoc(proposalRef, { versions })
     } catch (error) {
       console.log(error)
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
-  async function updateProductEnable(id: string, enable: boolean) {
+  async function updateProductEnable(productId: string, enable: boolean) {
     try {
+      checkProposal()
+
       const data = await getProposal();
 
       const versions = data.versions.map((version: VersionT) => 
         version.num === versionNum ? 
-        { ...version, products: version.products.map((product: ProductT, index: number) => 
-          id === product.id ? { ...product, enabled: enable } : product
+        { ...version, products: version.products.map((product: ProductT) => 
+          productId === product.id ? { ...product, enabled: enable } : product
         ) } : version
       )
 
       await updateDoc(proposalRef, { versions })
     } catch (error) {
       console.log(error)
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
-  async function updateProductQuantity(productIndex: number, quantity: number) {
+  async function updateProductQuantity(productId: string, quantity: number) {
     try {
+      checkProposal()
+
       const data = await getProposal();
       
       const versions = data.versions.map((version: VersionT) =>
         version.num === versionNum ?
           {
-            ...version, products: version.products.map((product: ProductT, index: number) =>
-              index === productIndex ? { ...product, quantity } : product
+            ...version, products: version.products.map((product: ProductT) =>
+              product.id === productId ? { ...product, quantity } : product
             )
           } : version
       )
@@ -230,40 +255,80 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       await updateDoc(proposalRef, { versions })
     } catch (error) {
       console.log(error)
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
   async function updateProposalStatus(status: string) {
     try {
-      if (!proposalRef) {
-        throw new Error('Proposal reference is undefined');
-      }
+      checkProposal()
+
       await updateDoc(proposalRef, { status })
     } catch (error) {
       console.log(error)
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
   async function updateProposalPriority(priority: string) {
     try {
-      if (!proposalRef) {
-        throw new Error('Proposal reference is undefined');
-      }
+      checkProposal()
+
       await updateDoc(proposalRef, { priority })
     } catch (error) {
       console.log(error)
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
-  function calculatePrice(cost: number, markup: MarkupT, quantity: number) {
-    const markup12 = markup && cost ? unformatNumber(markup['12x'] as string) * cost * quantity : 0
-    const markup6 = markup && cost ? Number(markup12) * (1 - unformatNumber(markup['6x'] as string, true)) : 0
-    const markupCash = markup && cost ? Number(markup12) * (1 - unformatNumber(markup['cash'] as string, true)) : 0
+  async function duplicateVersion(num: number) {
+    try {
+      checkProposal()
 
-    return { markup12, markup6, markupCash }
+      const data = await getProposal();
+      const { versions } = data;
+
+      const duplicatedVersion = versions.find((version: VersionT) => version.num === num)
+      const newNum = versions.length + 1
+      const newVersion = { versions: [...versions, {...duplicatedVersion, num: newNum }] }
+      
+      await updateDoc(proposalRef, newVersion)
+      setVersionNum(newNum)
+      router.refresh()
+    } catch (error) {
+      console.log(error)
+      errorToast(error);
+    }
+  }
+
+  async function deleteVersion(num: number) {
+    try {
+      checkProposal()
+
+      const data = await getProposal();
+      const { versions } = data;
+
+      const filteredVersions = versions.filter((version: VersionT) => version.num !== num)
+
+      await updateDoc(proposalRef, { versions: filteredVersions })
+      setVersionNum(filteredVersions.length > 0 ? filteredVersions.sort((a,b) => a.num - b.num)[0].num : 1)
+      router.refresh()
+    } catch (error) {
+      console.log(error)
+      errorToast(error);
+    }
+  }
+
+  async function deleteProposal() {
+    try {
+      checkProposal()
+
+      await deleteDoc(proposalRef);
+      router.push('/crm/propostas')
+    } catch (error) {
+      console.log(error)
+      errorToast(error);
+    }
   }
 
   const createProductSlide = (product: ProductT, right: boolean = false) => {
@@ -271,7 +336,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
 
     const { sizes, markupName, designer, frame, fabric, extra, images, markup12, markup6, freight, markupCash } = presentationToggle[id];
 
-    const price = calculatePrice(cost, markup as MarkupT, quantity)
+    const price = calculatePriceMarkup(cost, markup as MarkupT, quantity)
 
     const fontFace = 'Open Sans';
     const small = 10;
@@ -325,7 +390,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
             {name}
           </Text.Bullet>
           <Text.Bullet {...bulletOptions}>
-            {markupName ? `${markup.name}` : ''}
+            {markupName ? `${(markup as MarkupT).name}` : ''}
           </Text.Bullet>
           <Text.Bullet {...bulletOptions}>
             {frame ? `Base/Estrutura - ${finish.frame}` : ''}
@@ -355,7 +420,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
             {freight ? `Frete incluso` : ''}
           </Text.Bullet>
         </Text>
-        {image ?
+        {image && image.path.includes("http") ?
           <Image
             src={{ kind: "path", path: image.path }}
             style={{ ...imagePosition, ...getDimensions(image.width, image.height)}}
@@ -451,7 +516,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error generating presentation:", error);
-      deleteToast(error);
+      errorToast(error);
     }
   };
 
@@ -462,21 +527,22 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         setProposal,
         versionNum,
         setVersionNum,
-        calculatePrice,
         handleEnableToggle,
         updateProductQuantity,
+        deleteProposal,
         deleteProduct,
+        getProposal,
+        updateComplement,
+        deleteVersion,
+        duplicateVersion,
         updateProposalStatus,
         updateProposalPriority,
         updatePresentationToggle,
-        totalValues,
+        getTotalValues,
         presentationToggle,
         setPresentationToggle,
-        complementInfo,
         createProductSlide,
         downloadPresentation,
-        popups,
-        setPopupOpen,
       }}
     >
       {children}

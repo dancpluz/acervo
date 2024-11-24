@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Presentation } from "react-pptx";
 import Preview from "react-pptx/preview";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, calculatePriceMarkup } from "@/lib/utils";
 import { Eye, EyeOff, Edit, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PriceBox from "./PriceBox";
@@ -27,12 +27,11 @@ function ToggleBox({ children, productId, id }: { children: React.ReactNode, pro
 
 
 export default function PresentationSlides({ product, index }: { product: ProductT; index: number }) {
-
-  const { calculatePrice, createProductSlide, presentationToggle, updatePresentationToggle, handleEnableToggle } = useCRMContext()
+  const { createProductSlide, presentationToggle, updatePresentationToggle, handleEnableToggle } = useCRMContext()
 
   const { id, name, quantity, finish, cost, enabled, markup } = product
 
-  const price = calculatePrice(cost, markup as MarkupT, quantity)
+  const price = calculatePriceMarkup(cost, markup as MarkupT, quantity)
 
   const textStyle = 'text-sm leading-0 text-wrap'
 
@@ -55,7 +54,7 @@ export default function PresentationSlides({ product, index }: { product: Produc
       <div className='w-[20%] flex flex-col border border-secondary gap-4 p-4 rounded-lg justify-between'>
         <div style={{ opacity: enabled ? 1 : 0.5 }} className="flex flex-col gap-2 grow">
           <div className="flex flex-col">
-            <span className="text-tertiary text-xs truncate">Item {id ? id : index + 1}</span>
+            <span className="text-tertiary text-xs truncate">Item {index + 1}{id && ` - ${id}`}</span>
             <h3 className="text-xl">{name}</h3>
           </div>
           <div className='flex flex-col gap-2'>
