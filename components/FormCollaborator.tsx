@@ -13,12 +13,19 @@ import { ConfirmAlert, DeleteAlert } from "@/components/AllPopups";
 import FormButton from '@/components/FormButton';
 import { fillCepFields, formatFields, createDefaultArray } from "@/lib/utils";
 import useEntityFormActions from "@/hooks/useEntityFormActions";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const [defaultValues, fieldValidations] = formatFields(collaboratorFields);
+let [defaultValues, fieldValidations] = formatFields(collaboratorFields);
 
 const tabs = ['COLABORADOR', 'CONTATO E ENDEREÇO'];
 
 export default function FormCollaborator({ data, show }: { data?: any, show?: boolean }) {
+
+  if (data) {
+    defaultValues = data;
+    defaultValues.office = data.office?.id || '';
+  }
 
   const form = useForm<z.infer<typeof fieldValidations>>({
     resolver: zodResolver(fieldValidations),
@@ -41,13 +48,13 @@ export default function FormCollaborator({ data, show }: { data?: any, show?: bo
     setIsEditing,
     popupOpen,
     setPopupOpen,
-    conflicts 
-  } = useEntityFormActions(form, data, 'collaborator', checkPaths);
+    conflicts,
+  } = useEntityFormActions('collaborator', data, checkPaths);
   
   const formButtonProps = {
     setIsEditing,
     isEditing: show ? isEditing : undefined,
-    undoForm: data ? () => form.reset(data) : undefined,
+    undoForm: data ? () => form.reset() : undefined,
     state: form.formState,
   }
 
@@ -62,9 +69,11 @@ export default function FormCollaborator({ data, show }: { data?: any, show?: bo
           )}
         </TabsList>
         {show &&
-          <div className='flex grow justify-end'>
-            <DeleteAlert submit={() => deleteSubmit()} />
-          </div>
+          <DeleteAlert submit={deleteSubmit} >
+            <Button variant='ghost' className='flex gap-2 items-center justify-center transition-opacity hover:bg-transparent hover:opacity-50 rounded-none h-9.5 border-0 border-b border-primary text-primary px-4'>
+              <Trash2 className='w-4 h-4' />APAGAR
+            </Button>
+          </DeleteAlert>
         }
         <ConfirmAlert submit={form.handleSubmit(addSubmit)} popupOpen={popupOpen} setPopupOpen={setPopupOpen} conflicts={conflicts} resetForm={() => form.reset(undefined, { keepValues: true })} />
       </div>

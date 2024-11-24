@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { UseFormReturn } from 'react-hook-form';
 import { entityTitles } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
-import { deleteToast } from '@/hooks/general';
+import { errorToast } from '@/hooks/general';
 import db from '@/lib/firebase';
 import { setDoc, doc, collection, deleteDoc, addDoc } from 'firebase/firestore';
 import { converters } from '@/lib/converters';
@@ -45,7 +45,7 @@ export default function useConfigFormActions(
       router.refresh();
     } catch (error) {
       console.log(error);
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
@@ -55,7 +55,7 @@ export default function useConfigFormActions(
       form.reset({ keepDirty: true, keepDirtyValues: false });
     } catch (error) {
       console.log(error);
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
@@ -68,7 +68,7 @@ export default function useConfigFormActions(
       });
     } catch (error) {
       console.log(error);
-      deleteToast(error);
+      errorToast(error);
     }
   }
 

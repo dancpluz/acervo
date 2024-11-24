@@ -17,8 +17,10 @@ import FormButton from '@/components/FormButton';
 import { fillCepFields, formatFields, createDefaultArray } from "@/lib/utils";
 import useEntityFormActions from "@/hooks/useEntityFormActions";
 import { RepresentativeT } from "@/lib/types";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const [defaultValues, fieldValidations] = formatFields(factoryFields);
+let [defaultValues, fieldValidations] = formatFields(factoryFields);
 
 const tabs = ['FÁBRICAS', 'REPRESENTAÇÃO', 'OUTRAS INFORMAÇÕES'];
 
@@ -26,6 +28,23 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
 
   const [referenceInfo, setReferenceInfo] = useState<RepresentativeT | undefined>(undefined);
   const [directSale, setDirectSale] = useState<boolean>(data ? typeof data.direct_sale === 'number' ? true : false : false);
+
+  const setFunctions = () => {
+    if (data.representative) {
+      setReferenceInfo(data.representative);
+    }
+    if (data.office) {
+      setReferenceInfo(data.office);
+    }
+  }
+
+  if (data) {
+    defaultValues = data;
+    defaultValues.representative = data.representative?.id || '';
+    defaultValues.discount = data.discount ? (data.discount * 100).toString() : ''
+    defaultValues.direct_sale = data.direct_sale ? (data.direct_sale * 100).toString() : ''
+    defaultValues.office = data.office?.id || '';
+  }
 
   const form = useForm<z.infer<typeof fieldValidations>>({
     resolver: zodResolver(fieldValidations),
@@ -39,19 +58,6 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
   });
 
   const checkPaths = [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
-  
-  const overrideFunction = () => {
-    if (data.representative) {
-      setReferenceInfo(data.representative);
-      form.setValue('representative', data.representative.id)
-    }
-    if (data.discount) {
-      form.setValue('discount', (data.discount * 100).toString())
-    }
-    if (data.direct_sale) {
-      form.setValue('direct_sale', (data.direct_sale * 100).toString())
-    }
-  }
 
   const {
     addSubmit,
@@ -61,13 +67,13 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
     setIsEditing,
     popupOpen,
     setPopupOpen,
-    conflicts 
-  } = useEntityFormActions(form, data, 'factory', checkPaths, 'representative', overrideFunction);
+    conflicts,
+  } = useEntityFormActions('factory', checkPaths, data, 'representative', setFunctions);
 
   const formButtonProps = {
     setIsEditing,
     isEditing: show ? isEditing : undefined,
-    undoForm: data ? () => {overrideFunction(); form.reset(data)} : undefined,
+    undoForm: data ? () => { setFunctions(); form.reset() } : undefined,
     state: form.formState,
   }
 
@@ -81,10 +87,12 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
             <TabsTrigger key={tab} className={`${show ? 'text-sm' : 'text-base'}`} value={tab}>{tab}</TabsTrigger>
           )}
         </TabsList>
-      {show &&
-          <div className='flex grow justify-end'>
-            <DeleteAlert submit={() => deleteSubmit()} />
-          </div>
+        {show &&
+          <DeleteAlert submit={deleteSubmit} >
+            <Button variant='ghost' className='flex gap-2 items-center justify-center transition-opacity hover:bg-transparent hover:opacity-50 rounded-none h-9.5 border-0 border-b border-primary text-primary px-4'>
+              <Trash2 className='w-4 h-4' />APAGAR
+            </Button>
+          </DeleteAlert>
         }
         <ConfirmAlert submit={form.handleSubmit(addSubmit)} popupOpen={popupOpen} setPopupOpen={setPopupOpen} conflicts={conflicts} resetForm={() => form.reset(undefined, { keepValues: true })} />
       </div>

@@ -10,7 +10,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { Form } from "@/components/ui/form";
 import { EditTinyTable, TinyTable } from "@/components/TinyTable";
-import { InputField, SearchField, ShowField, SelectField, ReferenceField, PersonTypeRadio } from "@/components/AllFields";
+import { InputField, SearchField, SelectField, ReferenceField, PersonTypeRadio } from "@/components/AllFields";
 import { clientFisicalFields, clientJuridicalFields, fields, enumFields, contactFields } from "@/lib/fields";
 import { FormDiv, FieldDiv, TabDiv } from "@/components/ui/div";
 import { ConfirmAlert, DeleteAlert } from "@/components/AllPopups";
@@ -18,12 +18,14 @@ import FormButton from '@/components/FormButton';
 import { fillCepFields, formatFields, createDefaultArray } from "@/lib/utils";
 import useEntityFormActions from "@/hooks/useEntityFormActions";
 import { OfficeT } from "@/lib/types";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const [fisicalDefaultValues, fisicalFieldValidations] = formatFields(clientFisicalFields);
 
 const [juridicalDefaultValues, juridicalFieldValidations] = formatFields(clientJuridicalFields);
 
-const defaultValues = {...juridicalDefaultValues, person: { ...juridicalDefaultValues.person, info: { ...juridicalDefaultValues.person.info, ...fisicalDefaultValues.person.info } } }
+let defaultValues = {...juridicalDefaultValues, person: { ...juridicalDefaultValues.person, info: { ...juridicalDefaultValues.person.info, ...fisicalDefaultValues.person.info } } }
 
 const tabs = ['CLIENTE', 'CONTATO','ENDEREÇO', 'OUTRAS INFORMAÇÕES'];
 
@@ -33,6 +35,18 @@ export default function FormClient({ data, show }: { data?: any, show?: boolean 
   const [referenceInfo, setReferenceInfo] = useState<OfficeT | undefined>(undefined);
   const [sameAddress, setSameAddress] = useState<boolean>(false);
   const [personType, setPersonType] = useState<'Física' | 'Jurídica'>(initialPersonType);
+  
+  const setFunctions = () => {
+    if (data.office) {
+      setReferenceInfo(data.office);
+    }
+    setPersonType(initialPersonType)
+  }
+
+  if (data) {
+    defaultValues = data;
+    defaultValues.office = data.office?.id || '';
+  }
 
   const form = useForm<z.infer<typeof fisicalFieldValidations> | z.infer<typeof juridicalFieldValidations>>({
     resolver: zodResolver(personType === 'Física' ? fisicalFieldValidations : juridicalFieldValidations),
@@ -47,13 +61,6 @@ export default function FormClient({ data, show }: { data?: any, show?: boolean 
 
   const checkPaths = personType === 'Física' ? [['person', 'info', 'rg'], ['person', 'info', 'cpf'], ['person', 'info', 'info_email']] : [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
 
-  const overrideFunction = () => {
-    if (data.office) {
-      setReferenceInfo(data.office);
-      form.setValue('office', data.office.id)
-    }
-    setPersonType(initialPersonType)
-  }
 
   const {
     addSubmit,
@@ -64,12 +71,12 @@ export default function FormClient({ data, show }: { data?: any, show?: boolean 
     popupOpen,
     setPopupOpen,
     conflicts,
-  } = useEntityFormActions(form, data, 'client', checkPaths, 'office', overrideFunction);
+  } = useEntityFormActions('client', checkPaths, data, 'office', setFunctions);
 
   const formButtonProps = {
     setIsEditing,
     isEditing: show ? isEditing : undefined,
-    undoForm: data ? () => {overrideFunction(); form.reset(data)} : undefined,
+    undoForm: data ? () => { setFunctions(); form.reset() } : undefined,
     state: form.formState,
   }
 
@@ -84,10 +91,12 @@ export default function FormClient({ data, show }: { data?: any, show?: boolean 
           )}
         </TabsList>
         {show &&
-          <div className='flex grow justify-end'>
-            <DeleteAlert submit={() => deleteSubmit()} />
-          </div>
-          }
+          <DeleteAlert submit={deleteSubmit} >
+            <Button variant='ghost' className='flex gap-2 items-center justify-center transition-opacity hover:bg-transparent hover:opacity-50 rounded-none h-9.5 border-0 border-b border-primary text-primary px-4'>
+              <Trash2 className='w-4 h-4' />APAGAR
+            </Button>
+          </DeleteAlert>
+        }
         <ConfirmAlert submit={form.handleSubmit(addSubmit)} popupOpen={popupOpen} setPopupOpen={setPopupOpen} conflicts={conflicts} resetForm={() => form.reset(undefined, { keepValues: true })} />
       </div>
       <Form {...form}>

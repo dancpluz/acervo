@@ -1,6 +1,6 @@
 import { toast } from "@/components/ui/use-toast";
 
-export function deleteToast(error: any) {
+export function errorToast(error: any) {
   toast({
     variant: 'destructive',
     title: 'Ocorreu um erro inesperado',
