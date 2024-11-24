@@ -186,10 +186,20 @@ export type ActionT = {
   collaborator: CollaboratorT | DocumentReference;
 }
 
+export type ComplementT = {
+  discount: number,
+  freight: number,
+  expiration: number,
+  deadline: number,
+  payment_method: 'credit' | 'debit' | 'boleto' | 'pix',
+  general_info: string,
+  info: string,
+}
+
 export type VersionT = {
   num: number;
   products: ProductT[];
-  total: number;
+  complement: ComplementT;
   created_at: Date | Timestamp;
 }
 
@@ -208,7 +218,6 @@ export type ProposalT = {
   observations?: string;
   actions?: ActionT[];
   versions: VersionT[];
-  total: number;
   created_at: Date | Timestamp;
   last_updated: Date | Timestamp;
 }

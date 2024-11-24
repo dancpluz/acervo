@@ -33,18 +33,16 @@ import {
   CommandItem
 } from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CalendarIcon, ImageUp, Paperclip, Send, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
+import { ImageUp, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import useGetEntities from '@/hooks/useGetEntities';
 import { converters } from '@/lib/converters';
 import { useState } from 'react';
 import { Label } from './ui/label';
 import Image from "next/image";
 import { FileUploader, FileUploaderContent, FileUploaderItem, FileInput } from "@/components/ui/file-upload";
+import { DateTimePicker } from './ui/datetime-picker';
 
 export function SelectField({ path, customClass, obj, disabled }: { path?: string, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
@@ -241,7 +239,8 @@ export function InputField({ path, obj, autofill, customClass, percent, long, cm
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <div className='flex items-center gap-1'>
-              <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(fieldPath).isDirty, clear: () => form.resetField(fieldPath, { keepError: false, defaultValue: '' }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {onChange ? onChange : field.onChange(e); autofill ? autofill(e.target.value, form, path + '.') : ''; update ? update(fieldPath, e.target.value) : ''}} disabled={disabled} />
+              <Input
+              className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(fieldPath).isDirty, clear: () => form.resetField(fieldPath, { keepError: false, defaultValue: '' }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {onChange ? onChange : field.onChange(e); autofill ? autofill(e.target.value, form, path + '.') : ''; update ? update(fieldPath, e.target.value) : ''}} disabled={disabled} />
               {percent ? <span className='text-tertiary'>%</span> : ''}
               {cm ? <span className='text-tertiary text-sm'>cm</span> : ''}
             </div>
@@ -331,7 +330,7 @@ export function RadioField({ path, obj, optional, disabled, defaultValue }: { pa
   )
 }
 
-export function DateField({ path, obj }: { path?: string, obj: FieldT }) {
+export function DateTimeField({ path, obj }: { path?: string, obj: FieldT }) {
   const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
@@ -341,39 +340,9 @@ export function DateField({ path, obj }: { path?: string, obj: FieldT }) {
       render={({ field }) => (
         <FormItem>
           <FormLabel>{obj.label}</FormLabel>
-          <Popover>
-            <PopoverTrigger asChild>
-              <FormControl>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "pl-3 text-left font-normal",
-                    !field.value && "text-muted-foreground"
-                  )}
-                >
-                  {field.value ? (
-                    format(field.value, "PPP", { locale: ptBR })
-                  ) : (
-                    <span>{obj.placeholder}</span>
-                  )}
-                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                </Button>
-              </FormControl>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-background border border-secondary" align="center">
-              <Calendar
-                mode="single"
-                selected={field.value}
-                onSelect={field.onChange}
-                disabled={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  return date < today;
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <FormControl>
+            <DateTimePicker value={field.value} placeholder={obj.placeholder} onChange={field.onChange} />
+          </FormControl>
           <FormMessage />
         </FormItem>
       )}
@@ -407,7 +376,7 @@ export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
             reSelect={true}
             className='hover:border-dashed relative overflow-hidden aspect-square border rounded-md border-secondary'
           >
-            <FileInput className='flex static justify-center items-center size-full'>
+            <FileInput className='absolute flex static justify-center items-center size-full'>
               <ImageUp className="size-8 text-primary" />
               <span className="sr-only">Envie uma imagem</span>
             </FileInput>
@@ -471,4 +440,28 @@ export function SelectOtherField({ path, customClass, obj, disabled }: { path?: 
         </FormItem>
       )} />
   );
+}
+
+export function PriceField({ path, obj, onChange }: { path?: string, obj: FieldT, onChange: () => void }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
+  const form = useFormContext();
+
+  return (
+    <FormField
+      control={form.control}
+      name={fieldPath}
+      render={({ field }) => (
+        <FormItem>
+          <FormMessage className='z-10 right-2 top-1/2 -translate-y-1/2' />
+          <FormControl>
+            <div className='flex rounded-md border border-primary'>
+              <FormLabel className='py-1 px-2 flex items-center text-tertiary text-base text-center border-r border-primary'>
+                {obj.label}
+              </FormLabel>
+              <Input className={'h-auto py-1 px-2 text-base min-w-16 border-0'} mask={obj.mask} placeholder={obj.placeholder} {...field} onChange={(e) => { onChange ? onChange : field.onChange(e)}} />
+            </div>
+          </FormControl>
+        </FormItem>
+      )} />
+  )
 }

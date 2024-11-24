@@ -1,7 +1,7 @@
 import { z } from "zod";
 import cidades from '@/lib/cidades.json';
 import bancos from '@/lib/bancos.json';
-import { costMask } from '@/lib/utils';
+import { costMask, symbolCostMask, dayMask } from '@/lib/masks';
 import { unformatNumber } from '@/lib/utils';
 
 export type FieldT = {
@@ -19,7 +19,7 @@ export type EnumFieldT = {
   validation: z.ZodType<any, any>;
   optional?: z.ZodType<any, any>;
   placeholder?: string;
-  items: { value: string, label: string }[];
+  items: FieldItemT[];
 };
 
 export type TableFieldT = {
@@ -31,7 +31,12 @@ export type TableFieldT = {
   size?: string;
 };
 
-export const fieldItems: { [key: string] : { value: string, label: string }[] } = {
+export type FieldItemT = {
+  value: string;
+  label: string;
+}
+
+export const fieldItems: { [key: string] : FieldItemT[] } = {
   state: Object.keys(cidades).map((e) => ({ label: e, value: e })),
   bank: bancos.map((e) => ({ label: e, value: e })),
   tax_payer: [
@@ -175,7 +180,14 @@ export const fieldItems: { [key: string] : { value: string, label: string }[] } 
     { label: 'Escrivaninha', value: 'Escrivaninha' },
     { label: 'Estação de Trabalho', value: 'Estação de Trabalho' },
     { label: 'Buffet', value: 'Buffet' },
-  ]
+  ],
+  payment_method: [
+    { label: 'Dinheiro', value: 'cash' },
+    { label: 'Cartão de Débito', value: 'debit' },
+    { label: 'Cartão de Crédito', value: 'credit' },
+    { label: 'Boleto', value: 'bankslip' },
+    { label: 'Pix', value: 'pix' },
+  ],
 } as const;
 
 export const fields: { [key: string]: FieldT } = {
@@ -670,7 +682,7 @@ export const factoryFields = {
 export const actionFields: { [key: string]: FieldT | EnumFieldT } = {
   date: {
     value: 'date',
-    label: 'DATA*',
+    label: 'DATA E HORA*',
     placeholder: 'Escolha uma data',
     validation: z.date({ invalid_type_error: 'Selecione uma data' }),
   },
@@ -899,6 +911,57 @@ export const proposalFields = {
   },
   observations: fields.observations,
   actions: actionFields,
+}
+
+export const complementFields = {
+  discount: {
+    value: 'discount',
+    label: 'desc.',
+    placeholder: 'Ex. 100,00',
+    mask: symbolCostMask('-'),
+    validation: z.string().transform((val) => Math.abs(unformatNumber(val))).pipe(z.number({ invalid_type_error: 'Somente números.' })),
+  },
+  freight: {
+    value: 'freight',
+    label: 'frete',
+    placeholder: 'Ex. 100,00',
+    mask: symbolCostMask('+'),
+    validation: z.string().transform((val) => Math.abs(unformatNumber(val))).pipe(z.number({ invalid_type_error: 'Somente números.' })),
+  },
+  expiration: {
+    value: 'expiration',
+    label: 'validade',
+    mask: dayMask,
+    placeholder: 'Ex. 100,00',
+    validation: z.string().transform((val) => unformatNumber(val.split(' DIAS')[0])).pipe(z.number({ invalid_type_error: 'Somente números.' })),
+  },
+  deadline: {
+    value: 'deadline',
+    label: 'prazo',
+    mask: dayMask,
+    placeholder: 'Ex. 100,00',
+    validation: z.string().transform((val) => unformatNumber(val.split(' DIAS')[0])).pipe(z.number({ invalid_type_error: 'Somente números.' })),
+  },
+  payment_method: {
+    value: 'payment_method',
+    label: 'FORMA DE PAGAMENTO',
+    placeholder: 'Ex. 100,00',
+    // @ts-ignore
+    validation: z.enum([...fieldItems.payment_method.map(item => item.value), '']),
+    items: fieldItems.payment_method.sort((a, b) => a.label.localeCompare(b.label)),
+  },
+  general_info: {
+    value: 'general_info',
+    label: 'INFORMAÇÕES GERAIS',
+    placeholder: 'Ex. 100,00',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  info: {
+    value: 'info',
+    label: 'INFORMAÇÕES',
+    placeholder: 'Ex. 100,00',
+    validation: z.string().optional().or(z.literal('')),
+  },
 }
 
 type CollaboratorFieldsT = typeof collaboratorFields;
