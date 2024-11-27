@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { BorderDiv } from "@/components/ui/div";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
-import { formatPercent, unformatNumber, costMask, formatCurrency } from "@/lib/utils";
+import { formatPercent, unformatNumber, formatCurrency } from "@/lib/utils";
+import { costMask } from "@/lib/masks";
 import { Label } from "@/components/ui/label";
 import { FactoryT, FreightT, MarkupT, ProspectionT, PersonT } from "@/lib/types";
 import {
@@ -54,19 +55,18 @@ export default function BudgetCalculator() {
     }));
   };
 
-  
   const selectedFactory = referenceInfo.factory as FactoryT;
   const selectedFreight = referenceInfo.freight as FreightT;
   const selectedMarkup = referenceInfo.markup as MarkupT;
   const selectedProspection = referenceInfo.prospection as ProspectionT;
 
-  useEffect(() => {
-    if (!loading) {
-      console.log(factories)
-      console.log(markups)
-      console.log(prospections)
-    }
-  }, [selectedMarkup,factories, markups, prospections])
+  // useEffect(() => {
+  //   if (!loading) {
+  //     console.log(factories)
+  //     console.log(markups)
+  //     console.log(prospections)
+  //   }
+  // }, [selectedMarkup, factories, markups, prospections])
 
   function multiplyCost(value: number) {
     return unformatNumber(cost) * value;
