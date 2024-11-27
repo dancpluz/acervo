@@ -74,7 +74,7 @@ function ComplementBox({ title, value }: { title: string, value: string }) {
 }
 
 function ProductSlideCard({ product, index }: { product: ProductT; index: number }) {
-  const { id, name, quantity, finish, image, cost, enabled, markup } = product
+  const { id, name, quantity, finish, image, cost, markup } = product
   const price = calculatePriceMarkup(cost, markup as MarkupT, quantity)
 
   return (
@@ -116,7 +116,7 @@ function ProductSlideCard({ product, index }: { product: ProductT; index: number
               {Object.keys(price).map((key) => {
                 const translate = { markup12 : '12x', markup6: '6x', markupCash: 'à vista' }
                 return ( 
-                  <PriceBox title={translate[key]} value={formatCurrency(price[key])}/>
+                  <PriceBox key={key} title={translate[key]} value={formatCurrency(price[key])}/>
                 )
               }
               )}
@@ -138,7 +138,6 @@ export default function ProposalPDF() {
     const totalValues = getTotalValues()
 
     const { freight, discount, deadline, expiration, payment_method, info, general_info } = complement
-    console.log(complement)
     const total = totalValues.markupCash + freight
     const totalDiscount = total - discount
 
@@ -167,7 +166,7 @@ export default function ProposalPDF() {
                 <View key={ambient} style={tw('flex flex-col gap-2')}>
                   {ambient !== 'Sem Categoria' && <Text style={tw('text-base')}>{ambient.toUpperCase()}</Text>}
                   <View style={tw('flex flex-col gap-4')}>
-                    {productsAmbients.map((product, i) => 
+                    {productsAmbients.filter(({ quantity, enabled }) => enabled && quantity > 0).map((product, i) => 
                       <ProductSlideCard key={product.id} product={product} index={products.indexOf(product)} />
                     )}
                   </View>

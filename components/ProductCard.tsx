@@ -1,6 +1,5 @@
 'use client'
 
-import { Eye, EyeOff, Trash, Edit } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import PriceBox from '@/components/PriceBox'
 import { MarkupT, ProductT, VersionT } from '@/lib/types'
@@ -9,10 +8,7 @@ import { useCRMContext } from '@/hooks/useCRMContext'
 import { cn, calculatePriceMarkup } from "@/lib/utils"
 import Image from 'next/image'
 import { Image as ImageIcon } from 'lucide-react';
-import ProductForm from "@/components/ProductForm";
-import { DeleteAlert } from '@/components/AllPopups'
-import { CRMPopup } from "@/components/AllPopups";
-import { useState } from 'react'
+import ProductButtons from './ProductButtons'
 
 export function GreyText({ className, children }: { className?: string, children: React.ReactNode }) {
   return <b className={cn('text-xs text-tertiary font-normal', className)}>{children}</b>
@@ -23,9 +19,7 @@ export function BlackText({ className, children }: { className?: string, childre
 }
 
 export default function ProductCard({ product, index }: { product: ProductT; index: number }) {
-  const [popupOpen, setPopupOpen] = useState(false)
-
-  const { proposal, setProposal, versionNum, deleteProduct, handleEnableToggle, updateProductQuantity } = useCRMContext()
+  const { proposal, setProposal, versionNum, updateProductQuantity } = useCRMContext()
   const { id, name, quantity, finish, cost, enabled, markup, image } = product
   
   const price = calculatePriceMarkup(cost, markup as MarkupT, quantity)
@@ -61,31 +55,16 @@ export default function ProductCard({ product, index }: { product: ProductT; ind
     }
   }
 
-  const handleDelete = async (deleteId: string) => {
-    const versions = proposal.versions.map((version: VersionT) =>
-      version.num === versionNum ?
-        {
-          ...version, products: version.products.filter((product: ProductT) =>
-            product.id !== deleteId
-          )
-        } : version
-    )
-
-    setProposal((prev) => ({ ...prev, versions }))
-    
-    await deleteProduct(deleteId);
-  }
-  
   return (
     <div className="flex border border-secondary gap-4 p-4 rounded-lg justify-between">
-      <div className="flex justify-center items-center border border-primary overflow-hidden rounded-2xl w-32 h-32">
+      <div style={{ opacity: enabled && quantity > 0 ? 1 : 0.5 }} className="flex justify-center items-center border border-primary overflow-hidden rounded-2xl w-32 h-32">
         {image && image.path.toLowerCase().includes("http") ? 
-          <Image alt={id} className='object-cover' style={{ opacity: enabled ? 1 : 0.5 }} width={128} height={128} src={image.path} />
+          <Image alt={id} className='object-cover' width={128} height={128} src={image.path} />
         :
           <ImageIcon className='text-primary'/>
         }
       </div>
-      <div style={{ opacity: enabled ? 1 : 0.5 }} className="flex flex-col grow">
+      <div style={{ opacity: enabled && quantity > 0 ? 1 : 0.5 }} className="flex flex-col grow">
         <div className="flex flex-col">
           <span className="text-tertiary text-xs">Item {index + 1}{id && ` - ${id}`}</span>
           <h3 className="text-xl">{name}</h3>
@@ -143,36 +122,7 @@ export default function ProductCard({ product, index }: { product: ProductT; ind
         </div>
       </div>
       <div className="flex flex-col justify-between px-2 py-1">
-        <Button
-          onClick={() => handleEnableToggle(enabled, id)}
-          variant="ghost"
-          className="p-1 h-auto"
-        >
-          {enabled ? (
-            <Eye className="text-primary" />
-          ) : (
-            <EyeOff className="text-primary" />
-          )}
-        </Button>
-        <CRMPopup
-          button={
-            <Button variant="ghost" className="p-1 h-auto">
-              <Edit className="text-primary" />
-            </Button>
-          }
-          popupOpen={popupOpen}
-          setPopupOpen={setPopupOpen}
-        >
-          <ProductForm data={product} setPopupOpen={setPopupOpen} />
-        </CRMPopup>
-        <DeleteAlert submit={() => handleDelete(id)}>
-          <Button
-            variant="ghost"
-            className="p-1 h-auto"
-          >
-            <Trash className="text-primary" />
-          </Button>
-        </DeleteAlert>
+        <ProductButtons enabled={enabled} id={id} product={product} />
       </div>
     </div>
   )

@@ -42,7 +42,7 @@ type CRMContextProps = {
   deleteVersion: (num: number) => Promise<void>;
   duplicateVersion: (num: number) => Promise<void>;
   deleteProposal: () => Promise<void>;
-  getProposal: (resolve: boolean) => ProposalT;
+  getProposal: (resolve?: boolean) => ProposalT;
   createProductSlide: (product: ProductT, left?: boolean) => JSX.Element;
   downloadPresentation: () => Promise<void>;
   updateComplement: (complement: ComplementT) => Promise<void>;
@@ -473,7 +473,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         throw new Error('Version are undefined');
       }
 
-      const slides = version.products.filter(product => product.enabled).map(product => createProductSlide(product));
+      const slides = version.products.filter(({ enabled, quantity }) => enabled && quantity > 0).map(product => createProductSlide(product));
 
       const buffer = await render(
         <Presentation>
