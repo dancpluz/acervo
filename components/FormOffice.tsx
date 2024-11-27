@@ -23,7 +23,8 @@ const tabs = ['ESCRITÓRIO', 'CONTATO','ENDEREÇO'];
 export default function FormOffice({ data, show }: { data?: any, show?: boolean }) {
 
   if (data) {
-    defaultValues = data;
+    const values = Object.assign({}, data)
+    defaultValues = values;
   }
 
   const form = useForm<z.infer<typeof fieldValidations>>({

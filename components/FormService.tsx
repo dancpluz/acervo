@@ -31,7 +31,8 @@ export default function FormService({ data, show }: { data?: any, show?: boolean
   const initialPersonType = data ? data.person.info.cnpj === undefined ? 'Física' : 'Jurídica' : 'Física'
 
   if (data) {
-    defaultValues = data;
+    const values = Object.assign({}, data)
+    defaultValues = values;
   }
 
   const [personType, setPersonType] = useState<'Física' | 'Jurídica'>(initialPersonType);

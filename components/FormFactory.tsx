@@ -39,11 +39,12 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
   }
 
   if (data) {
-    defaultValues = data;
-    defaultValues.representative = data.representative?.id || '';
-    defaultValues.discount = data.discount ? (data.discount * 100).toString() : ''
-    defaultValues.direct_sale = data.direct_sale ? (data.direct_sale * 100).toString() : ''
-    defaultValues.office = data.office?.id || '';
+    const values = Object.assign({}, data);
+    values.representative = values.representative?.id || '';
+    values.discount = values.discount ? (values.discount * 100).toString() : ''
+    values.direct_sale = values.direct_sale ? (values.direct_sale * 100).toString() : ''
+    values.office = values.office?.id || '';
+    defaultValues = values;
   }
 
   const form = useForm<z.infer<typeof fieldValidations>>({

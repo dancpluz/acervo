@@ -44,8 +44,9 @@ export default function FormClient({ data, show }: { data?: any, show?: boolean 
   }
 
   if (data) {
-    defaultValues = data;
-    defaultValues.office = data.office?.id || '';
+    const values = Object.assign({}, data)
+    values.office = values.office?.id || '';
+    defaultValues = values;
   }
 
   const form = useForm<z.infer<typeof fisicalFieldValidations> | z.infer<typeof juridicalFieldValidations>>({
