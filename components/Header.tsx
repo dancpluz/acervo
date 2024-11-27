@@ -2,12 +2,12 @@ import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const icons = {
-  factory: '/icons/factory.svg',
-  client: '/icons/happy.svg',
-  representative: '/icons/briefcase.svg',
-  office: '/icons/chair.svg',
-  service: '/icons/hammer.svg',
-  collaborator: '/icons/people.svg',
+  fabricas: '/icons/factory.svg',
+  clientes: '/icons/happy.svg',
+  representacoes: '/icons/briefcase.svg',
+  escritorios: '/icons/chair.svg',
+  servicos: '/icons/hammer.svg',
+  colaboradores: '/icons/people.svg',
 }
 
 export type IconT = keyof typeof icons | string;

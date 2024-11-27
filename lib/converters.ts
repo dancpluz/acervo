@@ -1,7 +1,8 @@
-import db from "@/lib/firebase";
+import db, { storage } from "@/lib/firebase";
 import { FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot, serverTimestamp, getDoc, SnapshotOptions, doc } from "firebase/firestore";
 import { ClientT, CollaboratorT, FactoryT, FreightT, MarkupT, OfficeT, PersonT, ProductT, ProposalT, ProspectionT, RepresentativeT, ServiceT, VersionT } from "@/lib/types";
 import { formatPercent } from '@/lib/utils';
+import { getDownloadURL, ref } from "firebase/storage";
 
 const personConverter: FirestoreDataConverter<PersonT> = {
   toFirestore(person: WithFieldValue<PersonT>): DocumentData {
@@ -277,7 +278,6 @@ const proposalConverter: FirestoreDataConverter<ProposalT> = {
       observations: proposal.observations,
       actions: proposal.actions,
       versions: proposal.versions ? proposal.versions : [],
-      total: proposal.total ? proposal.total : 0,
       last_updated: serverTimestamp(),
       created_at: proposal.created_at ? proposal.created_at : serverTimestamp(),
     };
@@ -305,18 +305,22 @@ const proposalConverter: FirestoreDataConverter<ProposalT> = {
       origin: data.origin,
       observations: data.observations,
       actions: data.actions,
-      versions: await Promise.all(data.versions.map(async (version: VersionT) => ({
+      versions: data.versions ? await Promise.all(data.versions.map(async (version: VersionT) => ({
         num: version.num,
+        complement: version.complement,
         products: await Promise.all(version.products.map(async (product) => {
           const factory = product.factory ? await getDoc(product.factory.withConverter(factoryConverter)) : '';
           const markup = product.markup ? await getDoc(product.markup.withConverter(markupConverter)) : '';
           const freight = product.freight ? await getDoc(product.freight.withConverter(freightConverter)) : '';
+          let image = '';
+          if (product.image) {
+            image = { ...product.image, path: await getDownloadURL(ref(storage, product.image.path)).then(url => url).catch(error => '') }
+          }
           
-          return {...product, factory: factory ? factory.data() as FactoryT : '', markup: markup ? markup.data() as MarkupT : '', freight: freight ? freight.data() as FreightT : ''};
+          return {...product, image, factory: factory ? factory.data() as FactoryT : '', markup: markup ? markup.data() as MarkupT : '', freight: freight ? freight.data() as FreightT : ''};
           })
         )})
-      )),
-      total: data.total,
+      )) : [],
       last_updated: data.last_updated,
       created_at: data.created_at,
     };
@@ -338,6 +342,7 @@ const productConverter: FirestoreDataConverter<ProductT> = {
       freight: doc(db, 'config', 'markup_freight', 'freight', product.freight as string),
       cost: product.cost,
       markup: doc(db, 'config', 'markup_freight','markup', product.markup as string),
+      image: product.image,
       created_at: product.created_at ? product.created_at : serverTimestamp(),
     };
   },
@@ -350,6 +355,11 @@ const productConverter: FirestoreDataConverter<ProductT> = {
     const factory = data.factory ? await getDoc(data.factory.withConverter(factoryConverter)) : '';
     const markup = data.client ? await getDoc(data.markup.withConverter(markupConverter)) : '';
     const freight = data.freight ? await getDoc(data.freight.withConverter(freightConverter)) : '';
+    let image = '';
+    console.log(data.image)
+    if (data.image) {
+      image = await getDownloadURL(ref(storage, data.image)).then(url => url).catch(error => '');
+    }
     return {
       id: snapshot.id,
       num: data.num,
@@ -360,6 +370,7 @@ const productConverter: FirestoreDataConverter<ProductT> = {
       category: data.category,
       finish: data.finish,
       observations: data.observations,
+      image: image,
       factory: factory ? factory.data() as FactoryT : '',
       freight: freight ? freight.data() as FreightT : '',
       cost: data.cost,

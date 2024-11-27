@@ -10,9 +10,8 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-      },
+        hostname: 'firebasestorage.googleapis.com'
+      }
     ],
   },
   async redirects() {
@@ -30,6 +29,11 @@ const nextConfig = {
       {
         source: '/propostas',
         destination: '/crm/propostas',
+        permanent: false
+      },
+      {
+        source: '/cadastros',
+        destination: '/cadastros/fabricas',
         permanent: false
       }
     ]

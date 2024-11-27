@@ -1,4 +1,4 @@
-import { DocumentReference, FieldValue } from "firebase/firestore";
+import { DocumentReference, FieldValue, Timestamp } from "firebase/firestore";
 
 export type PersonT = {
   id: string;
@@ -60,7 +60,7 @@ export type FactoryT = {
   link_table: string;
   link_catalog: string;
   link_site: string;
-  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+  last_updated: FieldValue | Date | Timestamp;
 }
 
 export type WorkerT = {
@@ -74,14 +74,14 @@ export type RepresentativeT = {
   id: string;
   person: PersonT | DocumentReference;
   team: WorkerT[];
-  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+  last_updated: FieldValue | Date | Timestamp;
 }
 
 export type OfficeT = {
   id: string;
   person: PersonT | DocumentReference;
   team: WorkerT[];
-  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+  last_updated: FieldValue | Date | Timestamp;
 }
 
 export type ClientT = {
@@ -89,7 +89,7 @@ export type ClientT = {
   person: PersonT | DocumentReference;
   office: DocumentReference | OfficeT | '';
   order: OrderT[];
-  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+  last_updated: FieldValue | Date | Timestamp;
 }
 
 export type OrderT = {
@@ -107,14 +107,14 @@ export type CollaboratorT = {
   id: string;
   person: PersonT | DocumentReference;
   role: string;
-  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+  last_updated: FieldValue | Date | Timestamp;
 }
 
 export type ServiceT = {
   id: string;
   person: PersonT | DocumentReference;
   service: string;
-  last_updated: FieldValue | Date | { seconds: number, nanoseconds: number };
+  last_updated: FieldValue | Date | Timestamp;
 }
 
 export type MarkupT = {
@@ -156,6 +156,12 @@ export type FinishT = {
   link_3d?: string;
 }
 
+export type ImageT = {
+  path: string;
+  width: number;
+  height: number;
+}
+
 export type ProductT = {
   id: string; // Numero_categoria_nome do produto_data de criação
   num: number;
@@ -165,26 +171,36 @@ export type ProductT = {
   quantity: number;
   category: string;
   finish: FinishT;
-  //image: string;
+  image: ImageT | '';
   observations?: string;
   factory: FactoryT | DocumentReference | '';
   freight: FreightT | DocumentReference | '';
   cost: number;
   markup: MarkupT | DocumentReference | '';
-  created_at: Date | { seconds: number, nanoseconds: number };
+  created_at: Date | Timestamp;
 }
 
 export type ActionT = {
-  date: Date | { seconds: number, nanoseconds: number };
+  date: Date | Timestamp;
   description?: string;
   collaborator: CollaboratorT | DocumentReference;
+}
+
+export type ComplementT = {
+  discount: number,
+  freight: number,
+  expiration: number,
+  deadline: number,
+  payment_method: 'credit' | 'debit' | 'boleto' | 'pix',
+  general_info: string,
+  info: string,
 }
 
 export type VersionT = {
   num: number;
   products: ProductT[];
-  total: number;
-  created_at: Date | { seconds: number, nanoseconds: number };
+  complement: ComplementT;
+  created_at: Date | Timestamp;
 }
 
 export type ProposalT = {
@@ -202,7 +218,6 @@ export type ProposalT = {
   observations?: string;
   actions?: ActionT[];
   versions: VersionT[];
-  total: number;
-  created_at: Date | { seconds: number, nanoseconds: number };
-  last_updated: Date | { seconds: number, nanoseconds: number };
+  created_at: Date | Timestamp;
+  last_updated: Date | Timestamp;
 }

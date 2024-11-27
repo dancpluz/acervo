@@ -20,7 +20,7 @@ type Props = {
   undoForm?: () => void;
 }
 
-export default function FormButton({ nextValue, backValue, submit, state, isEditing, setIsEditing, undoForm }: Props) {
+export default function FormButton({ nextValue, state, backValue, submit, isEditing, setIsEditing, undoForm }: Props) {
   const error = state?.isValid ? false : undefined;
   const success = state?.isSubmitSuccessful && !isEditing;
   const loading = state?.isSubmitting;

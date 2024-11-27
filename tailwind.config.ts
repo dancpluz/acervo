@@ -61,29 +61,13 @@ const config = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		keyframes: {
-  			'slide-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-collapsible-content-height)'
-  				}
-  			},
-  			'slide-up': {
-  				from: {
-  					height: 'var(--radix-collapsible-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
-  			},
   			'accordion-down': {
   				from: {
   					height: '0'
   				},
   				to: {
   					height: 'var(--radix-accordion-content-height)'
-  				}
+  				},
   			},
   			'accordion-up': {
   				from: {
@@ -95,8 +79,6 @@ const config = {
   			}
   		},
   		animation: {
-  			'slide-down': 'slide-down 0.3s ease-out',
-  			'slide-up': 'slide-up 0.3s ease-out',
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
   		}

@@ -1,8 +1,8 @@
 'use client';
 
 import cidades from '@/lib/cidades.json';
-import { useEffect, useState, ChangeEvent } from 'react';
-import { useForm } from "react-hook-form";
+import { ChangeEvent } from 'react';
+import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,
@@ -33,17 +33,21 @@ import {
   CommandItem
 } from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CalendarIcon, ImageUp, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
+import { ImageUp, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import useGetEntities from '@/hooks/useGetEntities';
 import { converters } from '@/lib/converters';
+import { useState } from 'react';
+import { Label } from './ui/label';
+import Image from "next/image";
+import { FileUploader, FileUploaderContent, FileUploaderItem, FileInput } from "@/components/ui/file-upload";
+import { DateTimePicker } from './ui/datetime-picker';
 
-export function SelectField({ path, form, customClass, obj, disabled }: { path?: string, form: ReturnType<typeof useForm>, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
+export function SelectField({ path, customClass, obj, disabled }: { path?: string, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
+  const form = useFormContext();
+
   return (
     <FormField
       control={form.control}
@@ -52,10 +56,10 @@ export function SelectField({ path, form, customClass, obj, disabled }: { path?:
         <FormItem className={customClass}>
           <FormMessage />
           <FormLabel>{obj.label}</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
             <FormControl>
               <SelectTrigger className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} disabled={disabled}>
-                <SelectValue placeholder={disabled ? '' : disabled ?? obj.placeholder} />
+                <SelectValue placeholder={disabled ? '' : disabled ?? obj.placeholder}/>
               </SelectTrigger>
             </FormControl>
             <SelectContent>
@@ -67,11 +71,13 @@ export function SelectField({ path, form, customClass, obj, disabled }: { path?:
   );
 }
 
-export function ReferenceField<EntityT>({ path, form, refPath, obj, customClass, person, hint, onSelect, disabled }: { path?: string, form: ReturnType<typeof useForm>, refPath: string, obj: FieldT, customClass?: string, person?: boolean, hint: string, onSelect?: any, disabled?: boolean }) {
+export function ReferenceField<EntityT>({ path, refPath, obj, customClass, person, hint, onSelect, disabled }: { path?: string, refPath: string, obj: FieldT, customClass?: string, person?: boolean, hint: string, onSelect?: any, disabled?: boolean }) {
   
   const [data, loading, error] = useGetEntities<EntityT>(refPath, converters[obj.value]);
 
+  const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
+
   
   return (
     <FormField
@@ -139,8 +145,9 @@ export function ReferenceField<EntityT>({ path, form, refPath, obj, customClass,
   );
 }
 
-export function SearchField({ path, form, obj, customClass, hint, state, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: EnumFieldT, customClass?: string, hint: string, state?: string, disabled?: boolean }) {
+export function SearchField({ path, obj, customClass, hint, state, disabled }: { path?: string, obj: EnumFieldT, customClass?: string, hint: string, state?: string, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
+  const form = useFormContext();
   
   if (state && state !== 'reset') {
     obj.items = (cidades as { [key: string] : string[] })[state].map((e: string) => ({ label: e, value: e }));
@@ -219,7 +226,8 @@ export function ShowField({ text, placeholder, label }: {  text?: string, placeh
   )
 }
 
-export function InputField({ path, form, obj, autofill, customClass, percent, long, cm, disabled, update, onChange }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, cm?: boolean, disabled?: boolean, update?: any, onChange?: ChangeEvent }) {
+export function InputField({ path, obj, autofill, customClass, percent, long, cm, disabled, update, onChange }: { path?: string, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, cm?: boolean, disabled?: boolean, update?: any, onChange?: ChangeEvent }) {
+  const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -231,7 +239,8 @@ export function InputField({ path, form, obj, autofill, customClass, percent, lo
           <FormLabel>{obj.label}</FormLabel>
           <FormControl>
             <div className='flex items-center gap-1'>
-              <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(fieldPath).isDirty, clear: () => form.resetField(fieldPath, { keepError: false, defaultValue: '' }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {onChange ? onChange : field.onChange(e); autofill ? autofill(e.target.value, form, path + '.') : ''; update ? update(fieldPath, e.target.value) : ''}} disabled={disabled} />
+              <Input
+              className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} long={long} mask={obj.mask} actions={{ isDirty: form.getFieldState(fieldPath).isDirty, clear: () => form.resetField(fieldPath, { keepError: false, defaultValue: '' }), copy: () => navigator.clipboard.writeText(field.value) }} placeholder={disabled ? '' : obj.placeholder} {...field} onChange={(e) => {onChange ? onChange : field.onChange(e); autofill ? autofill(e.target.value, form, path + '.') : ''; update ? update(fieldPath, e.target.value) : ''}} disabled={disabled} />
               {percent ? <span className='text-tertiary'>%</span> : ''}
               {cm ? <span className='text-tertiary text-sm'>cm</span> : ''}
             </div>
@@ -241,8 +250,10 @@ export function InputField({ path, form, obj, autofill, customClass, percent, lo
   )
 }
 
-export function TitleField({ path, form, obj, customClass, disabled }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any }) {
+export function TitleField({ path, obj, customClass, disabled }: { path?: string, obj: FieldT, autofill?: (...args: any[]) => void, customClass?: string, percent?: boolean, long?: boolean, disabled?: boolean, update?: any }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
+  const form = useFormContext();
+
   return (
     <FormField
       control={form.control}
@@ -258,7 +269,22 @@ export function TitleField({ path, form, obj, customClass, disabled }: { path?: 
   )
 }
 
-export function RadioField({ path, form, obj, optional, disabled, defaultValue }: { path?: string, form: ReturnType<typeof useForm>, obj: EnumFieldT, optional?: boolean, disabled?: boolean, defaultValue?: string }) {
+export function PersonTypeRadio({ defaultValue, setPersonType, disabled }: { defaultValue: string, setPersonType: (value: 'Física' | 'Jurídica') => void, disabled?: boolean }) {
+  return (
+    <RadioGroup className='flex-col p-0 border-0 gap-1 grow items-stretch max-w-56' onValueChange={setPersonType} defaultValue={defaultValue}>
+      <Label>TIPO DE PESSOA</Label>
+      <div className="flex gap-1 grow">
+        <RadioGroupItem label="Física" value="Física" disabled={disabled} className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 w-full`}
+          />
+        <RadioGroupItem label="Jurídica" value="Jurídica" disabled={disabled} className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 w-full`}
+          />
+      </div>
+    </RadioGroup>
+  )
+}
+
+export function RadioField({ path, obj, optional, disabled, defaultValue }: { path?: string, obj: EnumFieldT, optional?: boolean, disabled?: boolean, defaultValue?: string }) {
+  const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -304,7 +330,8 @@ export function RadioField({ path, form, obj, optional, disabled, defaultValue }
   )
 }
 
-export function DateField({ path, form, obj }: { path?: string, form: ReturnType<typeof useForm>, obj: FieldT }) {
+export function DateTimeField({ path, obj }: { path?: string, obj: FieldT }) {
+  const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -313,39 +340,9 @@ export function DateField({ path, form, obj }: { path?: string, form: ReturnType
       render={({ field }) => (
         <FormItem>
           <FormLabel>{obj.label}</FormLabel>
-          <Popover>
-            <PopoverTrigger asChild>
-              <FormControl>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "pl-3 text-left font-normal",
-                    !field.value && "text-muted-foreground"
-                  )}
-                >
-                  {field.value ? (
-                    format(field.value, "PPP", { locale: ptBR })
-                  ) : (
-                    <span>{obj.placeholder}</span>
-                  )}
-                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                </Button>
-              </FormControl>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-background border border-secondary" align="center">
-              <Calendar
-                mode="single"
-                selected={field.value}
-                onSelect={field.onChange}
-                disabled={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  return date < today;
-                }}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <FormControl>
+            <DateTimePicker value={field.value} placeholder={obj.placeholder} onChange={field.onChange} />
+          </FormControl>
           <FormMessage />
         </FormItem>
       )}
@@ -353,7 +350,18 @@ export function DateField({ path, form, obj }: { path?: string, form: ReturnType
   )
 }
 
-export function ImageField({ form, obj, path }: { form: ReturnType<typeof useForm>, obj: FieldT, path: string }) {
+export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
+  const form = useFormContext();
+
+  const dropzone = {
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.webp', ]
+    },
+    multiple: false,
+    maxFiles: 1,
+    maxSize: 50 * 1024 * 1024, // 50MB
+  }
+
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   return (
     <FormField
@@ -361,10 +369,97 @@ export function ImageField({ form, obj, path }: { form: ReturnType<typeof useFor
       name={fieldPath}
       render={({ field }) => (
         <FormItem>
+          <FileUploader
+            value={field.value}
+            onValueChange={field.onChange}
+            dropzoneOptions={dropzone}
+            reSelect={true}
+            className='hover:border-dashed relative overflow-hidden aspect-square border rounded-md border-secondary'
+          >
+            <FileInput className='absolute flex static justify-center items-center size-full'>
+              <ImageUp className="size-8 text-primary" />
+              <span className="sr-only">Envie uma imagem</span>
+            </FileInput>
+            {field.value && field.value.length > 0 && (
+              <FileUploaderContent className="absolute size-full top-1/2 p-2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                {field.value.length > 0 && 
+                  <FileUploaderItem
+                      index={0}
+                      aria-roledescription={`Imagem contendo ${
+                        field.value[0].name
+                      }`}
+                      className="p-0 size-full aspect-square"
+                    >
+                      <Image
+                        src={URL.createObjectURL(field.value[0])}
+                        alt={field.value[0].name}
+                        className="object-cover rounded-md h-full w-full"
+                        width={300}
+                        height={300}
+                      />
+                    </FileUploaderItem>
+                  }
+              </FileUploaderContent>
+            )}
+          </FileUploader>
+          <FormMessage className='top-2 right-auto left-2' />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+export function SelectOtherField({ path, customClass, obj, disabled }: { path?: string, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
+  const form = useFormContext();
+  const [isOther, setIsOther] = useState(false)
+
+  return (
+    <FormField
+      control={form.control}
+      name={fieldPath}
+      render={({ field }) => (
+        <FormItem className={customClass}>
           <FormMessage />
           <FormLabel>{obj.label}</FormLabel>
+          {isOther ?
+            <Input className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} actions={{ isDirty: true, clear: () => {form.resetField(fieldPath, { keepError: false, defaultValue: '' }); setIsOther(false)}, copy: () => navigator.clipboard.writeText(field.value) }} placeholder='Escreva outro' {...field}  disabled={disabled} />
+          :
+            <Select onValueChange={(val) => val === 'Outro' ? setIsOther(true) : field.onChange(val)} defaultValue={field.value} value={field.value}>
+              <FormControl>
+                <SelectTrigger className={disabled ? 'disabled:cursor-default disabled:opacity-100' : ''} disabled={disabled}>
+                  <SelectValue placeholder={disabled ? '' : disabled ?? obj.placeholder}/>
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {(obj.items).map(({ value, label }) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                <SelectItem onClick={() => setIsOther(true)} value={'Outro'}>Outro</SelectItem>
+              </SelectContent>
+            </Select>
+          }
+        </FormItem>
+      )} />
+  );
+}
+
+export function PriceField({ path, obj, onChange }: { path?: string, obj: FieldT, onChange: () => void }) {
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
+  const form = useFormContext();
+
+  return (
+    <FormField
+      control={form.control}
+      name={fieldPath}
+      render={({ field }) => (
+        <FormItem>
+          <FormMessage className='z-10 right-2 top-1/2 -translate-y-1/2' />
           <FormControl>
-            <Input type='file' accept="image/*" icon={<ImageUp className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary h-8 w-8' />} className='w-auto h-auto' {...field} />
+            <div className='flex rounded-md border border-primary'>
+              <FormLabel className='py-1 px-2 flex items-center text-tertiary text-base text-center border-r border-primary'>
+                {obj.label}
+              </FormLabel>
+              <Input className={'h-auto py-1 px-2 text-base min-w-16 border-0'} mask={obj.mask} placeholder={obj.placeholder} {...field} onChange={(e) => { onChange ? onChange : field.onChange(e)}} />
+            </div>
           </FormControl>
         </FormItem>
       )} />

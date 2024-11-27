@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { addEntity, updateEntity, deleteEntity } from '@/lib/dbWrite';
 import { checkExistingFields } from '@/lib/dbRead';
-import { UseFormReturn } from 'react-hook-form';
 import { entityTitles } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
-import { deleteToast } from '@/hooks/general';
+import { errorToast } from '@/hooks/general';
 
 export interface FormActionsT {
   addSubmit: (values: any) => Promise<void>;
@@ -19,11 +18,11 @@ export interface FormActionsT {
 }
 
 export default function useEntityFormActions(
-  form: UseFormReturn,
-  data: any,
   entity: string,
   check: string[][],
+  data?: any,
   entityRef?: string,
+  setFunctions?: () => void
 ): FormActionsT {
 
   const router = useRouter();
@@ -33,15 +32,15 @@ export default function useEntityFormActions(
   const entityTitle = entityTitles[entity];
 
   // useEffect(() => {
-  //   console.log(form.getValues());
+  //   console.log(form.formState.errors);
   // }, [form.formState]);
 
   useEffect(() => {
-    if (data) {
-      form.reset(data);
+    if (data && setFunctions) {
+      setFunctions()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
+
 
   async function addSubmit(values: any) {
     try {
@@ -74,7 +73,7 @@ export default function useEntityFormActions(
       }
     } catch (error) {
       console.log(error);
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
@@ -87,14 +86,15 @@ export default function useEntityFormActions(
       });
     } catch (error) {
       console.log(error);
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
   async function deleteSubmit() {
     try {
-      for (const [entity, ref] of Object.entries(data.refs)) {
-        await deleteEntity(entity as string, ref as string);
+      await deleteEntity(entity, data.id);
+      if (entityRef && data[entityRef]) {
+        await deleteEntity(entityRef, data[entityRef].person.id);
       }
 
       toast({
@@ -103,7 +103,7 @@ export default function useEntityFormActions(
       router.refresh();
     } catch (error) {
       console.log(error);
-      deleteToast(error);
+      errorToast(error);
     }
   }
 
@@ -115,6 +115,6 @@ export default function useEntityFormActions(
     setIsEditing,
     popupOpen,
     setPopupOpen,
-    conflicts
+    conflicts,
   };
 }

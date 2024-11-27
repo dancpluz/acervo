@@ -2,7 +2,7 @@
 
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -17,14 +17,35 @@ import FormButton from '@/components/FormButton';
 import { fillCepFields, formatFields, createDefaultArray } from "@/lib/utils";
 import useEntityFormActions from "@/hooks/useEntityFormActions";
 import { RepresentativeT } from "@/lib/types";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const [defaultValues, fieldValidations] = formatFields(factoryFields);
+let [defaultValues, fieldValidations] = formatFields(factoryFields);
+
+const tabs = ['FÁBRICAS', 'REPRESENTAÇÃO', 'OUTRAS INFORMAÇÕES'];
 
 export default function FormFactory({ data, show }: { data?: any, show?: boolean }) {
-  const tabs = ['FÁBRICAS', 'REPRESENTAÇÃO', 'OUTRAS INFORMAÇÕES'];
 
   const [referenceInfo, setReferenceInfo] = useState<RepresentativeT | undefined>(undefined);
-  const [directSale, setDirectSale] = useState<boolean>(false);
+  const [directSale, setDirectSale] = useState<boolean>(data ? typeof data.direct_sale === 'number' ? true : false : false);
+
+  const setFunctions = () => {
+    if (data.representative) {
+      setReferenceInfo(data.representative);
+    }
+    if (data.office) {
+      setReferenceInfo(data.office);
+    }
+  }
+
+  if (data) {
+    const values = Object.assign({}, data);
+    values.representative = values.representative?.id || '';
+    values.discount = values.discount ? (values.discount * 100).toString() : ''
+    values.direct_sale = values.direct_sale ? (values.direct_sale * 100).toString() : ''
+    values.office = values.office?.id || '';
+    defaultValues = values;
+  }
 
   const form = useForm<z.infer<typeof fieldValidations>>({
     resolver: zodResolver(fieldValidations),
@@ -38,7 +59,7 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
   });
 
   const checkPaths = [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
-  
+
   const {
     addSubmit,
     editSubmit,
@@ -47,8 +68,17 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
     setIsEditing,
     popupOpen,
     setPopupOpen,
-    conflicts 
-  } = useEntityFormActions(form, data, 'factory', checkPaths, 'representative');
+    conflicts,
+  } = useEntityFormActions('factory', checkPaths, data, 'representative', setFunctions);
+
+  const formButtonProps = {
+    setIsEditing,
+    isEditing: show ? isEditing : undefined,
+    undoForm: data ? () => { setFunctions(); form.reset() } : undefined,
+    state: form.formState,
+  }
+
+  const disabled = show && !isEditing;
 
   return (
     <Tabs className='bg-secondary/20' defaultValue={tabs[0]}>
@@ -58,10 +88,12 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
             <TabsTrigger key={tab} className={`${show ? 'text-sm' : 'text-base'}`} value={tab}>{tab}</TabsTrigger>
           )}
         </TabsList>
-      {show &&
-          <div className='flex grow justify-end'>
-            <DeleteAlert submit={() => deleteSubmit()} />
-          </div>
+        {show &&
+          <DeleteAlert submit={deleteSubmit} >
+            <Button variant='ghost' className='flex gap-2 items-center justify-center transition-opacity hover:bg-transparent hover:opacity-50 rounded-none h-9.5 border-0 border-b border-primary text-primary px-4'>
+              <Trash2 className='w-4 h-4' />APAGAR
+            </Button>
+          </DeleteAlert>
         }
         <ConfirmAlert submit={form.handleSubmit(addSubmit)} popupOpen={popupOpen} setPopupOpen={setPopupOpen} conflicts={conflicts} resetForm={() => form.reset(undefined, { keepValues: true })} />
       </div>
@@ -72,43 +104,43 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
               <div className='flex gap-8'>
                 <FormDiv>
                   <FieldDiv>
-                    <InputField path='person.info' obj={fields.company_name} form={form} disabled={show && !isEditing} />
-                    <InputField path='person.info' obj={fields.fantasy_name} form={form} disabled={show && !isEditing} />
+                    <InputField path='person.info' obj={fields.company_name}  disabled={disabled} />
+                    <InputField path='person.info' obj={fields.fantasy_name}  disabled={disabled} />
                   </FieldDiv>
                   <FieldDiv>
-                    <InputField path='person.info' obj={fields.info_email} form={form} disabled={show && !isEditing} />
-                    <InputField path='person.info' obj={fields.cnpj} form={form} disabled={show && !isEditing} />
+                    <InputField path='person.info' obj={fields.info_email} disabled={disabled} />
+                    <InputField path='person.info' obj={fields.cnpj} disabled={disabled} />
                   </FieldDiv>
                   <FieldDiv>
-                    <SelectField path='person.info' obj={enumFields.tax_payer} form={form} disabled={show && !isEditing} />
-                    <InputField path='person.info' obj={fields.state_register} form={form} disabled={show && !isEditing} />
-                    <InputField path='person.info' obj={fields.municipal_register} form={form} disabled={show && !isEditing} />
+                    <SelectField path='person.info' obj={enumFields.tax_payer} disabled={disabled} />
+                    <InputField path='person.info' obj={fields.state_register} disabled={disabled} />
+                    <InputField path='person.info' obj={fields.municipal_register} disabled={disabled} />
                   </FieldDiv>
                   <FieldDiv>
-                    <SearchField path='person.payment' obj={enumFields.bank} form={form} hint={'Ex. Bradesco'} customClass={'overflow-hidden text-ellipsis'} disabled={show && !isEditing} />
-                    <InputField path='person.payment' obj={fields.pix} form={form} disabled={show && !isEditing} />
+                    <SearchField path='person.payment' obj={enumFields.bank} hint={'Ex. Bradesco'} customClass={'overflow-hidden text-ellipsis'} disabled={disabled} />
+                    <InputField path='person.payment' obj={fields.pix} disabled={disabled} />
                   </FieldDiv>
                   <FieldDiv>
-                    <InputField path='person.payment' obj={fields.account} form={form} disabled={show && !isEditing} />
-                    <InputField path='person.payment' obj={fields.agency} form={form} disabled={show && !isEditing}/>
+                    <InputField path='person.payment' obj={fields.account} disabled={disabled} />
+                    <InputField path='person.payment' obj={fields.agency} disabled={disabled}/>
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
                   <FieldDiv>
-                    <InputField path='person.info.tax_address' obj={fields.cep} autofill={fillCepFields} form={form} customClass={'grow-0 min-w-36'} disabled={show && !isEditing}/>
-                    <InputField path='person.info.tax_address' obj={fields.address} form={form} customClass={'grow'} disabled={show && !isEditing}/>
-                    <InputField path='person.info.tax_address' obj={fields.number} form={form} customClass={'grow-0 min-w-36'} disabled={show && !isEditing}/>
+                    <InputField path='person.info.tax_address' obj={fields.cep} autofill={fillCepFields} customClass={'grow-0 min-w-36'} disabled={disabled}/>
+                    <InputField path='person.info.tax_address' obj={fields.address} customClass={'grow'} disabled={disabled}/>
+                    <InputField path='person.info.tax_address' obj={fields.number} customClass={'grow-0 min-w-36'} disabled={disabled}/>
                   </FieldDiv>
                   <FieldDiv>
-                    <SearchField path='person.info.tax_address' obj={enumFields.state} form={form} hint={'Ex. DF'} customClass={'grow-0 min-w-44'} state={'reset'} disabled={show && !isEditing} />
-                    <SearchField path='person.info.tax_address' obj={enumFields.city} form={form} hint={'Ex. Brasília'} state={form.watch('person.info.tax_address.state')} customClass={'grow-0 min-w-44'} disabled={show && !isEditing} />
-                    <InputField path='person.info.tax_address' obj={fields.complement} form={form} customClass={'grow'} disabled={show && !isEditing}/>
+                    <SearchField path='person.info.tax_address' obj={enumFields.state} hint={'Ex. DF'} customClass={'grow-0 min-w-44'} state={'reset'} disabled={disabled} />
+                    <SearchField path='person.info.tax_address' obj={enumFields.city} hint={'Ex. Brasília'} state={form.watch('person.info.tax_address.state')} customClass={'grow-0 min-w-44'} disabled={disabled} />
+                    <InputField path='person.info.tax_address' obj={fields.complement} customClass={'grow'} disabled={disabled}/>
                   </FieldDiv>
                   <div>
-                    {show && !isEditing ? <TinyTable title='' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
-                    : <EditTinyTable title='' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(createDefaultArray(contactFields))} remove={contactForm.remove} prefix='person.contact' form={form} order={["name", "detail", "phone", "telephone"]} /> }
+                    {disabled ? <TinyTable title='' columns={contactFields} rows={contactForm.fields} placeholder={'Sem contatos'} order={["name", "detail", "phone", "telephone"]} />
+                    : <EditTinyTable title='' columns={contactFields} rows={contactForm.fields} append={() => contactForm.append(createDefaultArray(contactFields))} remove={contactForm.remove} prefix='person.contact' order={["name", "detail", "phone", "telephone"]} /> }
                   </div>
-                  <FormButton nextValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} />
+                  <FormButton nextValue={tabs[1]} {...formButtonProps} />
                 </FormDiv>
               </div>
             </TabDiv>
@@ -117,12 +149,12 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
             <TabDiv>
               <div className='flex gap-8'>
                 <FormDiv>
-                  <ReferenceField customClass={'grow-0'} obj={fields.representative} refPath='representative' onSelect={(e: RepresentativeT) => setReferenceInfo(e)} form={form} hint={'Ex. Punto'} disabled={show && !isEditing} person />
+                  <ReferenceField customClass={'grow-0'} obj={fields.representative} refPath='representative' onSelect={(e: RepresentativeT) => setReferenceInfo(e)} hint={'Ex. Punto'} disabled={disabled} person />
                   <ShowField text={referenceInfo ? referenceInfo.person.info.info_email : ''} label={'EMAIL DA REPRESENTAÇÃO'} placeholder={'Selecione uma Representação'} />
                 </FormDiv>
                 <FormDiv>
                   <TinyTable title='CONTATOS DA REPRESENTAÇÃO' columns={contactFields} rows={referenceInfo ? referenceInfo.person.contact : []} placeholder={referenceInfo ? 'Sem contatos' : 'Selecione uma Representação'} order={["name", "detail", "phone", "telephone"]} /> 
-                  <FormButton backValue={tabs[0]} state={form.formState} nextValue={tabs[2]} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} />
+                  <FormButton backValue={tabs[0]} nextValue={tabs[2]} {...formButtonProps} />
                 </FormDiv>
               </div>
             </TabDiv>
@@ -131,37 +163,37 @@ export default function FormFactory({ data, show }: { data?: any, show?: boolean
             <TabDiv>
               <div className='flex gap-8'>
                 <FormDiv>
-                  <RadioField obj={enumFields.pricing} form={form} defaultValue={form.watch('pricing')} disabled={show && !isEditing}/>
-                  <RadioField obj={enumFields.style} form={form} defaultValue={form.watch('style')} optional disabled={show && !isEditing}/>
-                  <RadioField obj={enumFields.ambient} form={form} defaultValue={form.watch('ambient')} disabled={show && !isEditing}/>
+                  <RadioField obj={enumFields.pricing} defaultValue={form.watch('pricing')} disabled={disabled}/>
+                  <RadioField obj={enumFields.style} defaultValue={form.watch('style')} optional disabled={disabled}/>
+                  <RadioField obj={enumFields.ambient} defaultValue={form.watch('ambient')} disabled={disabled}/>
                 </FormDiv>
                 <FormDiv>
                   <FieldDiv>
-                    <InputField obj={fields.discount} form={form} percent disabled={show && !isEditing} />
+                    <InputField obj={fields.discount} percent disabled={disabled} />
                     <RadioGroup className='flex-col p-0 border-0 gap-1 grow items-stretch' defaultValue={directSale ? 'Sim' : 'Não'}>
                       <Label>VENDA DIRETA?</Label>
                       <div className="flex gap-1 grow">
-                        <RadioGroupItem value='Sim' label='Sim' disabled={show && !isEditing}
+                        <RadioGroupItem value='Sim' label='Sim' disabled={disabled}
                           className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 w-full`}
                           onClick={() => { setDirectSale(true); form.setValue('direct_sale','0') }} />
-                        <RadioGroupItem value="Não" label="Não" disabled={show && !isEditing}
+                        <RadioGroupItem value="Não" label="Não" disabled={disabled}
                           className={`data-[state=unchecked]:disabled:hover:bg-secondary transition-colors disabled:cursor-default disabled:opacity-100 w-full`}
                           onClick={() => { setDirectSale(false); form.setValue('direct_sale','') }} />
                       </div>
                     </RadioGroup>
-                    <InputField obj={fields.direct_sale} form={form} percent disabled={show && !isEditing || !directSale} />
+                    <InputField obj={fields.direct_sale} percent disabled={disabled || !directSale} />
                   </FieldDiv>
                   <FieldDiv>
-                    <InputField path='person' obj={fields.observations} form={form} long disabled={show && !isEditing}/>
+                    <InputField path='person' obj={fields.observations} long disabled={disabled}/>
                   </FieldDiv>
                 </FormDiv>
                 <FormDiv>
-                  <InputField obj={fields.link_catalog} form={form} disabled={show && !isEditing} />
-                  <InputField obj={fields.link_table} form={form} disabled={show && !isEditing} />
-                  <InputField obj={fields.link_site} form={form} disabled={show && !isEditing} />
+                  <InputField obj={fields.link_catalog} disabled={disabled} />
+                  <InputField obj={fields.link_table} disabled={disabled} />
+                  <InputField obj={fields.link_site} disabled={disabled} />
                 </FormDiv>
               </div>
-              <FormButton backValue={tabs[1]} state={form.formState} setIsEditing={setIsEditing} isEditing={show ? isEditing : undefined} undoForm={data ? () => form.reset(data) : undefined} submit={!show} />
+              <FormButton backValue={tabs[1]} {...formButtonProps} submit={!show} />
             </TabDiv>
           </TabsContent>
         </form>

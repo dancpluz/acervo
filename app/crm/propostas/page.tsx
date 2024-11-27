@@ -3,9 +3,9 @@ import { ChangeTab, StatusFilter } from "@/components/StatusButtons";
 import { columns } from "./proposalcolumns";
 import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { CirclePlus } from "lucide-react";
-import ProposalForm from "@/components/ProposalForm";
+import ProposalForm, { ProposalDialog } from "@/components/ProposalForm";
+import { CRMPopup } from "@/components/AllPopups";
 
 export default function CRM() {
   return (
@@ -27,16 +27,7 @@ export default function CRM() {
       </div>
       <DataTable entity={'proposal'} search={'name'} columns={columns} link={'/crm/propostas/'} />
       <div className="flex justify-between">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <CirclePlus />NOVA PROPOSTA
-            </Button>
-          </DialogTrigger>
-          <DialogContent className='w-[760px]'>
-            <ProposalForm />
-          </DialogContent>
-        </Dialog>
+      <ProposalDialog />
       </div>
     </div>
   )
