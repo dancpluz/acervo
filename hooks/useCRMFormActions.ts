@@ -35,12 +35,6 @@ export default function useCRMFormActions(
   const [saveProduct, setSaveProduct] = useState<boolean>(false);
   //const [conflicts, setConflicts] = useState<{ [key: string]: [string, number] } | undefined>(undefined);
 
-  // useEffect(() => {
-  //   console.log(form.getValues());
-  //   console.log('errors: ')
-  //   console.log(form.formState.errors)
-  // }, [form.formState]);
-
   const handleSetFunctions = async () => {
     if (data && setFunctions) {
       await setFunctions()
@@ -54,6 +48,8 @@ export default function useCRMFormActions(
 
   async function proposalSubmit(values: any) {
     const entityTitle = entityTitles['proposal'];
+    delete values.temp
+    delete values.temp_edit
 
     try {
       try {
@@ -62,6 +58,8 @@ export default function useCRMFormActions(
 
           const updatedProposal = { ...proposal, ...values, versions }
           await setDoc(doc(collection(db, 'proposal'), id).withConverter(converters['proposal']), updatedProposal, { merge: true })
+          setProposal(await getProposal(true))
+
         } else {
           await setDoc(doc(collection(db, 'proposal'), id).withConverter(converters['proposal']), values)
           await updateIndex('proposal', values.num)
@@ -76,9 +74,7 @@ export default function useCRMFormActions(
         title: `${entityTitle.singular[0].toUpperCase() + entityTitle.singular.slice(1)} ${data ? 'editad' : 'adicionad'}${entityTitle.sufix} com sucesso!`,
       });
 
-      setPopupOpen(false)
-      setProposal(await getProposal(true))
-      
+      setPopupOpen(false)      
     } catch (error) {
       console.log(error);
       errorToast(error);

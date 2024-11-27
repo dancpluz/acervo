@@ -14,7 +14,8 @@ export default function ActionForm({ path, append, remove, edit}: { path: string
         {edit ? 
           <Pencil onClick={edit} className='cursor-pointer hover:text-primary/80 h-6 w-6 text-primary' /> 
             : 
-          <CirclePlus onClick={append} className='cursor-pointer hover:text-primary/80 h-6 w-6 text-primary' /> }
+          <CirclePlus onClick={append} className='cursor-pointer hover:text-primary/80 h-6 w-6 text-primary' />
+        }
       </div>
     </div>
   )

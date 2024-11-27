@@ -28,9 +28,11 @@ import { ClientT, CollaboratorT, OfficeT, ProposalT } from "@/lib/types";
 import { PriorityField } from "@/components/PriorityIndicator";
 import { CRMPopup } from "./AllPopups";
 
-let [defaultValues, fieldValidations] = formatFields(proposalFields, ['actions', 'products'])
+let [defaultValues, fieldValidations] = formatFields({...proposalFields, temp: proposalFields.actions, temp_edit: proposalFields.actions }, ['actions', 'products'])
 defaultValues['status'] = '1';
 defaultValues['priority'] = '1';
+defaultValues['temp'] = '';
+defaultValues['temp_edit'] = '';
 
 export default function ProposalForm({ data, setPopupOpen }: { data?: ProposalT, setPopupOpen: React.Dispatch<React.SetStateAction<boolean>> }) {
   const [shard, loading, error] = useDocumentData(doc(db, 'shard', 'proposal'));
@@ -59,14 +61,18 @@ export default function ProposalForm({ data, setPopupOpen }: { data?: ProposalT,
     defaultValues.collaborator = collaborator?.id || '';
     defaultValues.client = client?.id || '';
     defaultValues.office = office?.id || '';
+    
     if (actions && actions.length > 0) {
-      const newActions = actions.map(action => ({ ...action, date: timestampToDate(action.date as Timestamp) }))
-      defaultValues.actions = newActions
+      const newActions = actions.map((action) => {
+        const date = action.date instanceof Date ? action.date : timestampToDate(action.date as Timestamp)
+        return { ...action, date }
+      })
+      defaultValues.actions = newActions;
     }
   }
 
   const form = useForm<z.infer<typeof fieldValidations>>({
-    resolver: zodResolver(fieldValidations),
+    resolver: zodResolver(z.object({ ...fieldValidations.shape, temp: fieldValidations.shape.temp.optional().or(z.literal('')), temp_edit: fieldValidations.shape.temp_edit.optional().or(z.literal('')) })),
     defaultValues,
     shouldFocusError: false,
   })
@@ -94,10 +100,20 @@ export default function ProposalForm({ data, setPopupOpen }: { data?: ProposalT,
     await form.trigger('temp')
     if (!form.formState.errors.temp) {
       fieldArray.append(form.getValues('temp'))
-      form.resetField('temp', { defaultValue: '' })
+      form.resetField('temp')
       setActionPopupOpen(false)
     }
   }
+
+  const editItem = async (index: number) => {
+    await form.trigger('temp_edit')
+    if (!form.formState.errors.temp_edit) {
+      fieldArray.update(index, form.getValues('temp_edit'))
+      form.resetField('temp_edit')
+      setActionPopupOpen(false)
+    }
+  }
+
 
   const submitLoading = form.formState.isSubmitting && !form.formState.isDirty;
   
@@ -137,24 +153,31 @@ export default function ProposalForm({ data, setPopupOpen }: { data?: ProposalT,
               <div className='flex gap-1 flex-col'>
                 <FormLabel>AÇÕES</FormLabel>
                 <div className='flex gap-1 flex-wrap'>
-                  {fieldArray.fields.map((action, i) => 
-                    <Popover key={action.id}>
-                      <PopoverTrigger asChild>
-                        <Button type='button' className='border text-sm border-primary rounded-full text-foreground bg-background hover:bg-secondary/20 h-auto py-1 px-2'>
-                          {action.date instanceof Date ? format(action.date, 'dd/MM/yyyy (HH:mm)') : format(timestampToDate(action.date as Timestamp), 'dd/MM/yyyy (HH:mm)')}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className='flex flex-col p-4 w-[320px] border border-secondary bg-background justify-between'>
-                        <PopoverClose className='absolute top-4 right-4'>
-                          <X className="h-5 w-5 text-primary/60 hover:text-primary" />
-                        </PopoverClose>
-                        <ActionForm path={'actions.' + i} remove={() => fieldArray.remove(i)} edit={() => console.log('test', i)} />
-                      </PopoverContent>
-                    </Popover>
+                  {fieldArray.fields.sort((a,b) => a.date - b.date).map((action) => 
+                    {
+                      const index = fieldArray.fields.indexOf(action)
+
+                      return (
+                      <Popover key={action.id}>
+                        <PopoverTrigger asChild>
+                          <Button onClick={() => form.setValue('temp_edit', fieldArray.fields[index])} type='button' className='border text-sm border-primary rounded-full text-foreground bg-background hover:bg-secondary/20 h-auto py-1 px-2'>
+                            {format(action.date, 'dd/MM/yyyy (HH:mm)')}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className='flex flex-col p-4 w-[320px] border border-secondary bg-background justify-between'>
+                          <PopoverClose className='absolute top-4 right-4'>
+                            <X className="h-5 w-5 text-primary/60 hover:text-primary" />
+                          </PopoverClose>
+                          {index}
+                          <ActionForm path={'temp_edit'} remove={() => fieldArray.remove(index)} edit={() => editItem(index)} />
+                        </PopoverContent>
+                      </Popover>
+                      )
+                    }
                   )}
-                  <Popover open={actionPopupOpen} onOpenChange={setActionPopupOpen}>
+                  <Popover open={actionPopupOpen} onOpenChange={() => { actionPopupOpen && form.resetField('temp');setActionPopupOpen(prev => !prev) }}>
                     <PopoverTrigger asChild>
-                      <Button type='button' className='gap-1 rounded-full text-sm border border-primary text-foreground bg-background hover:bg-secondary/20 h-auto py-1 px-2 pl-1'>
+                      <Button onClick={() => form.setValue('temp', { date: '', description: '', collaborator: '' })} type='button' className='gap-1 rounded-full text-sm border border-primary text-foreground bg-background hover:bg-secondary/20 h-auto py-1 px-2 pl-1'>
                         <CirclePlus className='h-5 w-5 text-primary' />Nova ação
                       </Button>
                     </PopoverTrigger>

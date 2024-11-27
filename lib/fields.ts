@@ -696,7 +696,7 @@ export const actionFields: { [key: string]: FieldT | EnumFieldT } = {
     value: 'collaborator',
     label: 'COLABORADOR',
     placeholder: 'Selecione um Colaborador',
-    validation: z.string().optional().or(z.literal('')),
+    validation: z.string().min(1, 'Selecione um Colaborador.'),
   },
 }
 
