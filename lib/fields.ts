@@ -731,17 +731,41 @@ export const finishFields = {
     placeholder: 'Ex. Estrutura em madeira cumaru',
     validation: z.string().min(1, 'Campo não preenchido.'),
   },
+  frame_img: {
+    value: 'frame_img',
+    label: '',
+    validation: z.array(z.instanceof(File).refine((file) => file.size < 4 * 1024 * 1024, {
+      message: "Arquivo deve ter que 4MB",
+    }),
+    { invalid_type_error: 'Adicione uma imagem.' }).optional().or(z.literal('')),
+  },
   fabric: {
     value: 'fabric',
     label: 'TAMPO/TECIDO*',
     placeholder: 'Ex. Tule branco',
     validation: z.string().min(1, 'Campo não preenchido.'),
   },
+  fabric_img: {
+    value: 'fabric_img',
+    label: '',
+    validation: z.array(z.instanceof(File).refine((file) => file.size < 4 * 1024 * 1024, {
+      message: "Arquivo deve ter que 4MB",
+    }),
+    { invalid_type_error: 'Adicione uma imagem.' }).optional().or(z.literal('')),
+  },
   extra: {
     value: 'extra',
     label: 'ACAB. 3/OBS',
     placeholder: 'Ex. Acabamento em laminas de madeira',
     validation: z.string().optional().or(z.literal('')),
+  },
+  extra_img: {
+    value: 'extra_img',
+    label: '',
+    validation: z.array(z.instanceof(File).refine((file) => file.size < 4 * 1024 * 1024, {
+      message: "Arquivo deve ter que 4MB",
+    }),
+    { invalid_type_error: 'Adicione uma imagem.' }).optional().or(z.literal('')),
   },
   link_finishes: {
     value: 'link_finishes',
@@ -834,7 +858,7 @@ export const productFields = {
     value: 'image',
     label: '',
     validation: z.array(z.instanceof(File).refine((file) => file.size < 4 * 1024 * 1024, {
-      message: "File size must be less than 4MB",
+      message: "Arquivo deve ter que 4MB",
     }),
     { invalid_type_error: 'Adicione uma imagem.' }).optional().or(z.literal('')),
   }

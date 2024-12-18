@@ -4,7 +4,9 @@ import { FieldT, TableFieldT, AllFieldTypes, EnumFieldT } from '@/lib/fields';
 import { z } from "zod";
 import slugify from 'slugify';
 import { Timestamp } from "firebase/firestore";
-import { MarkupT, ProductT } from "./types";
+import { FactoryT, FreightT, ImageT, MarkupT, ProductT, ProspectionT } from "./types";
+import { ref, uploadBytes } from "firebase/storage";
+import { storage } from "./firebase";
 
 export const translationFields: { [key: string]: string } = {
   company_name: 'Nome/Razão Social',
@@ -263,4 +265,88 @@ export async function resolvePromises(data: any): Promise<any> {
   }
 
   return data;
+}
+
+export function calculateCostMarkup(cost: string, selectedFactory?: FactoryT, selectedFreight?: FreightT, selectedMarkup?: MarkupT, selectedProspection?: ProspectionT, useDirectSale?: boolean) {
+  function multiplyCost(value: number) {
+    return unformatNumber(cost) * value;
+  }
+
+  const direct_sale = useDirectSale && selectedFactory?.direct_sale ? selectedFactory.direct_sale : 0;
+  const discount = selectedFactory?.discount ? selectedFactory.discount : 0;
+  const freight = selectedFreight?.fee ? unformatNumber(selectedFreight.fee as string, true) : 0;
+  const prospection = selectedProspection?.tax ? unformatNumber(selectedProspection.tax as string, true) : 0;
+  const costBase = cost && selectedMarkup ? (unformatNumber(cost) - multiplyCost(discount) + multiplyCost(direct_sale)) * unformatNumber(selectedMarkup['12x'] as string) : 0;
+  return selectedMarkup ? {
+    'costBase': costBase,
+    '12x': costBase * (1 + freight + prospection),
+    '6x': (costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['6x'] as string, true)),
+    'cash': (costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['cash'] as string, true))
+  } : { 'costBase': 0, '12x': 0, '6x': 0, 'cash': 0 };
+}
+
+export async function uploadImageToFirestore(images: File[], path: string[]): Promise<ImageT | ''> {
+  if (images && images.length > 0) {
+    const imageId = path.join('/')
+    const storageRef = ref(storage, imageId);
+    const upload = await uploadBytes(storageRef, images[0]).then((snapshot) => {
+      return true;
+    }).catch((error) => {
+      console.log(error);
+      return false;
+    });
+
+    if (upload) {
+      const dimensions = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            resolve({ width: img.width, height: img.height });
+          };
+          img.onerror = (err) => {
+            reject(err);
+          };
+          if (e.target?.result) {
+            img.src = e.target.result as string;
+          }
+        };
+
+        reader.onerror = (err) => {
+          reject(err);
+        };
+
+        reader.readAsDataURL(images[0]);
+      });
+
+
+      return {
+        path: imageId,
+        width: dimensions.width,
+        height: dimensions.height
+      };
+
+    } else {
+      return '';
+    }
+  } else {
+    return '';
+  }
+}
+
+export async function imageToFileObject(image: ImageT): Promise<File> {
+  const response = await fetch(image.path);
+  const blob = await response.blob();
+
+  // Extract name from URL or give it a default name
+  const name = image.path.split('/').pop() || 'image.jpg';
+
+  // Create a File object
+  const fileObject = new File([blob], name, {
+    type: blob.type,
+    lastModified: Date.now(),
+  });
+
+  return fileObject
 }

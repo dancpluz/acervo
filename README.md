@@ -1,11 +1,31 @@
-- [ ] Filtros e dados gerais de propostas
-- [ ] Ações
 - [ ] Fotos Acabamentos
+  - [x] ProductForm
+  - [ ] ProductCard
+  - [ ] Slides
+  - [ ] PDF
+- [ ] Filtros e tabela de propostas
+- [ ] Alinhamento fotos Slide
+- [ ] Arrumar posição das tabs de versão
+- [ ] Atualizar proposal quando mexer nas versões
+- [ ] Ações
+  - [ ] Checklist
+  - [ ] Data mudar de cor
+  - [ ] Arquivos
+  - [ ] Valores padrão
+- [ ] Desconto e frete porcentagem
+- [ ] Botões Valores x vezes
+- [ ] Aparecer observações e links produtos
+- [ ] Filtros
+- [ ] Frete e desconto nos produtos
+  - [x] ProductForm
+  - [ ] ProductCard
+  - [ ] Slides
+  - [ ] PDF
 - [ ] Ordenar lista
-- [ ] Arquivo em ações
 - [ ] Toasts de confirmação
 - [ ] Ocultar todos
 - [ ] Adicionar entidades durante proposta
+- [x] Calculadora de orçamento fix
 - [x] Apagar produto
 - [x] Editar produto
 - [x] Integrar imagens
@@ -22,6 +42,7 @@
 
 BACKLOG:
 
+- [ ] Kanban
 - [ ] API pra emitir nota fiscal
 - [ ] useMemo pra performance
 - [ ] Botões de ação: email, whatsapp

@@ -350,7 +350,7 @@ export function DateTimeField({ path, obj }: { path?: string, obj: FieldT }) {
   )
 }
 
-export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
+export function ImageField({ obj, path, small }: { obj: FieldT, path: string, small?: boolean }) {
   const form = useFormContext();
 
   const dropzone = {
@@ -368,20 +368,20 @@ export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
       control={form.control}
       name={fieldPath}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className='grow-0'>
           <FileUploader
             value={field.value}
             onValueChange={field.onChange}
             dropzoneOptions={dropzone}
             reSelect={true}
-            className='hover:border-dashed relative overflow-hidden aspect-square border rounded-md border-secondary'
+            className={cn('hover:border-dashed relative overflow-hidden aspect-square border rounded-md border-secondary', small ? 'size-16 rounded-2xl' : '')}
           >
-            <FileInput className='absolute flex static justify-center items-center size-full'>
-              <ImageUp className="size-8 text-primary" />
+            <FileInput className='absolute flex justify-center items-center size-full'>
+              <ImageUp className={cn("text-primary", small ? 'size-5' : 'size-8')} />
               <span className="sr-only">Envie uma imagem</span>
             </FileInput>
             {field.value && field.value.length > 0 && (
-              <FileUploaderContent className="absolute size-full top-1/2 p-2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <FileUploaderContent className={cn("absolute size-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2", small ? '' : 'p-2')}>
                 {field.value.length > 0 && 
                   <FileUploaderItem
                       index={0}
@@ -394,8 +394,8 @@ export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
                         src={URL.createObjectURL(field.value[0])}
                         alt={field.value[0].name}
                         className="object-cover rounded-md h-full w-full"
-                        width={300}
-                        height={300}
+                        width={small ? 64 : 300}
+                        height={small ? 64 : 300}
                       />
                     </FileUploaderItem>
                   }
