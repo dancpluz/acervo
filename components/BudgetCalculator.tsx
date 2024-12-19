@@ -63,7 +63,7 @@ export default function BudgetCalculator() {
   const freight = selectedFreight?.fee ? unformatNumber(selectedFreight.fee as string, true) : 0;
   const prospection = selectedProspection?.tax ? unformatNumber(selectedProspection.tax as string, true) : 0;
 
-  const result = calculateCostMarkup(cost, selectedFactory, selectedFreight, selectedMarkup, selectedProspection, useDirectSale);
+  const result = calculateCostMarkup({ cost, selectedFactory, selectedFreight, selectedMarkup, selectedProspection, useDirectSale });
 
   return (
     <div className='flex gap-4'>

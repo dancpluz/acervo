@@ -90,7 +90,7 @@ export default function ProductForm({ data, setPopupOpen } : { data?: any, setPo
   const today = new Date();
   const id = data ? data.id : `${loading || !shard ? '' : shard.index + 1}${form.watch('category') ? '_' + stringToSlug(form.watch('category') || '') : ''}${form.watch('name') ? '_' + stringToSlug(form.watch('name') || '') : ''}${selectedFactory ? '_' + stringToSlug((selectedFactory.person as PersonT).label || '') : ''}_${format(today, "dd-MM-yyyy")}`;
 
-  const result = calculateCostMarkup(form.watch('cost'), selectedFactory, selectedFreight, selectedMarkup);
+  const result = calculateCostMarkup({ cost: form.watch('cost'), selectedFactory, selectedFreight, selectedMarkup });
 
   const {
     productSubmit,

@@ -2,14 +2,15 @@
 'use client'
 
 import db from '@/lib/firebase';
-import { ComplementT, MarkupT, ProductT, ProposalT, VersionT } from '@/lib/types';
-import { formatCurrency, timestampToDate, calculatePriceMarkup, resolvePromises } from '@/lib/utils';
+import { ComplementT, FactoryT, FreightT, MarkupT, ProductT, ProposalT, VersionT } from '@/lib/types';
+import { formatCurrency, timestampToDate, calculateCostMarkup, resolvePromises, getSlideImageDimensions } from '@/lib/utils';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
 import { Presentation, render, Slide, Text, Image } from "react-pptx";
 import { errorToast } from './general';
 import { useRouter } from 'next/navigation'
 import { converters } from '@/lib/converters';
+import { FinishSlideImage } from '@/components/AllImages';
 
 export type PresentationToggleT = {
   sizes: boolean;
@@ -105,10 +106,10 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       for (const version of proposal.versions) {
         for (const product of version.products) {
           if (product.enabled) {
-            const { markup12, markup6, markupCash } = calculatePriceMarkup(product.cost, product.markup as MarkupT, product.quantity);
-            totalMarkup12 += markup12;
-            totalMarkup6 += markup6;
-            totalMarkupCash += markupCash;
+            const price = calculateCostMarkup({ cost: product.cost.toString(), selectedFactory: product.factory as FactoryT, selectedFreight: product.freight as FreightT, selectedMarkup: product.markup as MarkupT, quantity: product.quantity});
+            totalMarkup12 += price['12x'];
+            totalMarkup6 += price['6x'];
+            totalMarkupCash += price['cash'];
           }
         }
       }
@@ -332,11 +333,11 @@ export function CRMProvider({ children }: { children: ReactNode }) {
   }
 
   const createProductSlide = (product: ProductT, right: boolean = false) => {
-    const { id, name, quantity, finish, cost, image, enabled, markup } = product
+    const { id, name, factory, freight: selectedFreight, finish, cost, image, enabled, markup } = product
 
     const { sizes, markupName, designer, frame, fabric, extra, images, markup12, markup6, freight, markupCash } = presentationToggle[id];
 
-    const price = calculatePriceMarkup(cost, markup as MarkupT, quantity)
+    const price = calculateCostMarkup({ cost: cost.toString(), selectedFactory: factory as FactoryT, selectedFreight: selectedFreight as FreightT, selectedMarkup: markup as MarkupT })
 
     const fontFace = 'Open Sans';
     const small = 10;
@@ -350,20 +351,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       fontFace,
     }
 
-    const maxImageDimension = { w: 5.4, h: 3.6 }
-    const imagePosition = right ? { x: 0.5, y: 1, ...maxImageDimension } : { x: 4, y: 1, ...maxImageDimension };
-
-  const getDimensions = (width: number, height: number) => {
-    const widthRatio = maxImageDimension.w / width;
-    const heightRatio = maxImageDimension.h / height;
-
-    const scale = Math.min(widthRatio, heightRatio);
-
-    return {
-      w: width * scale,
-      h: height * scale,
-    };
-  };
+    const maxImageDimension = { w: 4.32, h: 2.88 }
+    const imagePosition = right ? { x: 0.5, y: 1.75, ...maxImageDimension } : { x: 4, y: 1.75, ...maxImageDimension };
 
     return (
       <Slide hidden={!enabled} style={{
@@ -408,22 +397,29 @@ export function CRMProvider({ children }: { children: ReactNode }) {
             {`A partir de`}
           </Text.Bullet>
           <Text.Bullet {...bulletOptions} style={{ bold: true, paraSpaceBefore: space, paraSpaceAfter: space }}>
-            {markup12 ? `${formatCurrency(price.markup12)} UND. em 12x` : ''}
+            {markup12 ? `${formatCurrency(price['12x'])} UND. em 12x` : ''}
           </Text.Bullet>
           <Text.Bullet {...bulletOptions} style={{ bold: true, paraSpaceBefore: space, paraSpaceAfter: space }}>
-            {markup6 ? `${formatCurrency(price.markup6)} UND. em 6x` : ''}
+            {markup6 ? `${formatCurrency(price['6x'])} UND. em 6x` : ''}
           </Text.Bullet>
           <Text.Bullet {...bulletOptions} style={{ color: '#a53825', fontSize: small + 2, bold: true, paraSpaceBefore: space, paraSpaceAfter: space }}>
-            {markupCash ? `${formatCurrency(price.markupCash)} UND. à vista` : ''}
+            {markupCash ? `${formatCurrency(price['cash'])} UND. à vista` : ''}
           </Text.Bullet>
           <Text.Bullet {...bulletOptions} style={{ color: '#a53825', bold: true, paraSpaceBefore: space, paraSpaceAfter: space }}>
             {freight ? `Frete incluso` : ''}
           </Text.Bullet>
         </Text>
+        {images && 
+          <>
+            <FinishSlideImage image={finish.frame_img} text={'BASE/ESTRUTURA'} right={right} index={0} />
+            <FinishSlideImage image={finish.fabric_img} text={'TECIDO/TAMPO'} right={right} index={1} />
+            <FinishSlideImage image={finish.extra_img} text={'ACAB 3/OBS'} right={right} index={2} />
+          </>
+        }
         {image && image.path.includes("http") ?
           <Image
             src={{ kind: "path", path: image.path }}
-            style={{ ...imagePosition, ...getDimensions(image.width, image.height)}}
+            style={{ ...imagePosition, ...getSlideImageDimensions(image.width, image.height, maxImageDimension)}}
           />
           :
           <Text style={{

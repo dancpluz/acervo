@@ -1,25 +1,25 @@
 - [ ] Fotos Acabamentos
   - [x] ProductForm
-  - [ ] ProductCard
-  - [ ] Slides
+  - [x] ProductCard
+  - [x] Slides
   - [ ] PDF
 - [ ] Filtros e tabela de propostas
 - [ ] Alinhamento fotos Slide
-- [ ] Arrumar posição das tabs de versão
+- [x] Arrumar posição das tabs de versão
 - [ ] Atualizar proposal quando mexer nas versões
 - [ ] Ações
   - [ ] Checklist
   - [ ] Data mudar de cor
   - [ ] Arquivos
   - [ ] Valores padrão
-- [ ] Desconto e frete porcentagem
+- [ ] Desconto e frete porcentagem no complemento
 - [ ] Botões Valores x vezes
 - [ ] Aparecer observações e links produtos
 - [ ] Filtros
 - [ ] Frete e desconto nos produtos
   - [x] ProductForm
-  - [ ] ProductCard
-  - [ ] Slides
+  - [x] ProductCard
+  - [x] Slides
   - [ ] PDF
 - [ ] Ordenar lista
 - [ ] Toasts de confirmação

@@ -7,7 +7,7 @@ import { unformatNumber } from '@/lib/utils';
 export type FieldT = {
   value: string;
   label: string;
-  placeholder: string;
+  placeholder?: string;
   validation: z.ZodType<any, any>;
   optional?: z.ZodType<any, any>;
   mask?: (string | RegExp)[];

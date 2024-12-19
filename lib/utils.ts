@@ -267,66 +267,97 @@ export async function resolvePromises(data: any): Promise<any> {
   return data;
 }
 
-export function calculateCostMarkup(cost: string, selectedFactory?: FactoryT, selectedFreight?: FreightT, selectedMarkup?: MarkupT, selectedProspection?: ProspectionT, useDirectSale?: boolean) {
+type CostMarkupProps = {
+  cost: string,
+  quantity?: number,
+  selectedFactory?: FactoryT,
+  selectedFreight?: FreightT,
+  selectedMarkup?: MarkupT,
+  selectedProspection?: ProspectionT,
+  useDirectSale?: boolean
+}
+
+export function calculateCostMarkup({ cost, quantity, selectedFactory, selectedFreight, selectedMarkup, selectedProspection, useDirectSale }: CostMarkupProps) {
   function multiplyCost(value: number) {
     return unformatNumber(cost) * value;
   }
 
+  const newQuantity = quantity === undefined ? 1 : quantity
   const direct_sale = useDirectSale && selectedFactory?.direct_sale ? selectedFactory.direct_sale : 0;
   const discount = selectedFactory?.discount ? selectedFactory.discount : 0;
   const freight = selectedFreight?.fee ? unformatNumber(selectedFreight.fee as string, true) : 0;
   const prospection = selectedProspection?.tax ? unformatNumber(selectedProspection.tax as string, true) : 0;
   const costBase = cost && selectedMarkup ? (unformatNumber(cost) - multiplyCost(discount) + multiplyCost(direct_sale)) * unformatNumber(selectedMarkup['12x'] as string) : 0;
   return selectedMarkup ? {
-    'costBase': costBase,
-    '12x': costBase * (1 + freight + prospection),
-    '6x': (costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['6x'] as string, true)),
-    'cash': (costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['cash'] as string, true))
+    'costBase': costBase * newQuantity,
+    '12x': (costBase * (1 + freight + prospection)) * newQuantity,
+    '6x': ((costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['6x'] as string, true))) * newQuantity,
+    'cash': ((costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['cash'] as string, true)) * newQuantity)
   } : { 'costBase': 0, '12x': 0, '6x': 0, 'cash': 0 };
 }
 
 export async function uploadImageToFirestore(images: File[], path: string[]): Promise<ImageT | ''> {
   if (images && images.length > 0) {
-    const imageId = path.join('/')
+    const imageId = path.join('/');
     const storageRef = ref(storage, imageId);
-    const upload = await uploadBytes(storageRef, images[0]).then((snapshot) => {
-      return true;
-    }).catch((error) => {
+
+    // Load the image and crop it to 1:1 aspect ratio
+    const { blob, size } = await new Promise<{ blob: Blob; size: number }>((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        if (!e.target?.result) {
+          reject(new Error("Failed to read image data"));
+          return;
+        }
+
+        const img = new Image();
+        img.onload = () => {
+          const cropSize = Math.min(img.width, img.height); // Crop to the smaller dimension
+          const canvas = document.createElement("canvas");
+          canvas.width = cropSize;
+          canvas.height = cropSize;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Failed to create canvas context"));
+            return;
+          }
+
+          const offsetX = (img.width - cropSize) / 2;
+          const offsetY = (img.height - cropSize) / 2;
+
+          ctx.drawImage(img, offsetX, offsetY, cropSize, cropSize, 0, 0, cropSize, cropSize);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve({ blob, size: cropSize });
+            } else {
+              reject(new Error("Failed to create blob from canvas"));
+            }
+          }, "image/jpeg");
+        };
+
+        img.onerror = (err) => reject(err);
+        img.src = e.target.result as string;
+      };
+
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(images[0]);
+    });
+
+    // Upload the cropped image to Firebase
+    const upload = await uploadBytes(storageRef, blob).then(() => true).catch((error) => {
       console.log(error);
       return false;
     });
 
     if (upload) {
-      const dimensions = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => {
-            resolve({ width: img.width, height: img.height });
-          };
-          img.onerror = (err) => {
-            reject(err);
-          };
-          if (e.target?.result) {
-            img.src = e.target.result as string;
-          }
-        };
-
-        reader.onerror = (err) => {
-          reject(err);
-        };
-
-        reader.readAsDataURL(images[0]);
-      });
-
-
       return {
         path: imageId,
-        width: dimensions.width,
-        height: dimensions.height
+        width: size,
+        height: size,
       };
-
     } else {
       return '';
     }
@@ -350,3 +381,15 @@ export async function imageToFileObject(image: ImageT): Promise<File> {
 
   return fileObject
 }
+
+export function getSlideImageDimensions(width: number, height: number, maxImageDimension: { w: number, h: number }) {
+  const widthRatio = maxImageDimension.w / width;
+  const heightRatio = maxImageDimension.h / height;
+
+  const scale = Math.min(widthRatio, heightRatio);
+
+  return {
+    w: width * scale,
+    h: height * scale,
+  };
+};

@@ -7,8 +7,8 @@ import { FileDown, LoaderCircle } from 'lucide-react';
 import { useCRMContext } from "@/hooks/useCRMContext";
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { MarkupT, ProductT } from "@/lib/types";
-import { calculatePriceMarkup, formatCurrency, paymentEnum, groupProductsByAmbient, cn } from '@/lib/utils'
+import { FactoryT, FreightT, MarkupT, ProductT } from "@/lib/types";
+import { calculateCostMarkup, formatCurrency, paymentEnum, groupProductsByAmbient, cn } from '@/lib/utils'
 import { conformNumberToMask, symbolCostMask, dayMask } from "@/lib/masks";
 
 Font.register({
@@ -74,8 +74,8 @@ function ComplementBox({ title, value }: { title: string, value: string }) {
 }
 
 function ProductSlideCard({ product, index }: { product: ProductT; index: number }) {
-  const { id, name, quantity, finish, image, cost, markup } = product
-  const price = calculatePriceMarkup(cost, markup as MarkupT, quantity)
+  const { id, name, quantity, finish, image, cost, markup, factory, freight } = product
+  const price = calculateCostMarkup({ cost: cost.toString(), quantity, selectedFactory: factory as FactoryT, selectedFreight: freight as FreightT, selectedMarkup: markup as MarkupT })
 
   return (
     <View style={tw('flex flex-row border border-secondary  gap-2 p-4 rounded-lg justify-between')}>
@@ -114,7 +114,7 @@ function ProductSlideCard({ product, index }: { product: ProductT; index: number
             </Text>
             <View style={tw('flex flex-row gap-2')}>
               {Object.keys(price).map((key) => {
-                const translate = { markup12 : '12x', markup6: '6x', markupCash: 'à vista' }
+                const translate = { '12x' : '12x', '6x': '6x', 'cash': 'à vista' }
                 return ( 
                   <PriceBox key={key} title={translate[key]} value={formatCurrency(price[key])}/>
                 )

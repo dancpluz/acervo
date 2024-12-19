@@ -2,13 +2,13 @@
 
 import { Button } from '@/components/ui/button'
 import PriceBox from '@/components/PriceBox'
-import { MarkupT, ProductT, VersionT } from '@/lib/types'
+import { FactoryT, FreightT, MarkupT, ProductT, VersionT } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
 import { useCRMContext } from '@/hooks/useCRMContext'
-import { cn, calculatePriceMarkup } from "@/lib/utils"
-import Image from 'next/image'
+import { cn, calculateCostMarkup } from "@/lib/utils"
 import { Image as ImageIcon } from 'lucide-react';
 import ProductButtons from './ProductButtons'
+import { FinishImage, ProductImage } from './AllImages'
 
 export function GreyText({ className, children }: { className?: string, children: React.ReactNode }) {
   return <b className={cn('text-xs text-tertiary font-normal', className)}>{children}</b>
@@ -20,9 +20,11 @@ export function BlackText({ className, children }: { className?: string, childre
 
 export default function ProductCard({ product, index }: { product: ProductT; index: number }) {
   const { proposal, setProposal, versionNum, updateProductQuantity } = useCRMContext()
-  const { id, name, quantity, finish, cost, enabled, markup, image } = product
+  const { id, name, quantity, finish, cost, enabled, markup, factory, freight, image } = product
   
-  const price = calculatePriceMarkup(cost, markup as MarkupT, quantity)
+  const price = calculateCostMarkup({ cost: cost.toString(), quantity, selectedFactory: factory as FactoryT, selectedFreight: freight as FreightT, selectedMarkup: markup as MarkupT })
+
+  const { frame_img, fabric_img, extra_img } = finish;
 
   async function changeQuantity(quantity: number) {
     const versions = proposal.versions.map((version: VersionT) =>
@@ -57,20 +59,25 @@ export default function ProductCard({ product, index }: { product: ProductT; ind
 
   return (
     <div className="flex border border-secondary gap-4 p-4 rounded-lg justify-between">
-      <div style={{ opacity: enabled && quantity > 0 ? 1 : 0.5 }} className="flex justify-center items-center border border-primary overflow-hidden rounded-2xl w-32 h-32">
+      <div style={{ opacity: enabled && quantity > 0 ? 1 : 0.5 }} className="flex relative justify-center items-center border border-primary overflow-hidden rounded-2xl w-32 h-32">
         {image && image.path.toLowerCase().includes("http") ? 
-          <Image alt={id} className='object-cover' width={128} height={128} src={image.path} />
+          <ProductImage alt={id} image={image} />
         :
           <ImageIcon className='text-primary'/>
         }
+        <div className='absolute flex gap-1 bottom-0 left-0 p-1'>
+          <FinishImage tooltip='BASE/ESTRUTURA' alt={'frame_img-' + id} image={frame_img} />
+          <FinishImage tooltip='TAMPO/TECIDO' alt={'fabric_img-' + id} image={fabric_img} />
+          <FinishImage tooltip='ACAB.3/OBS' alt={'extra_img-' + id} image={extra_img} />
+        </div>
       </div>
       <div style={{ opacity: enabled && quantity > 0 ? 1 : 0.5 }} className="flex flex-col grow">
         <div className="flex flex-col">
           <span className="text-tertiary text-xs">Item {index + 1}{id && ` - ${id}`}</span>
           <h3 className="text-xl">{name}</h3>
         </div>
-        <div className="flex grow justify-between">
-          <div className="flex flex-col grow">
+        <div className="flex grow justify-between gap-4">
+          <div className="flex flex-col grow max-w-[30%]">
             <BlackText>
               {finish.width}cm<GreyText> x </GreyText>
               {finish.depth}cm<GreyText> x </GreyText>
@@ -81,7 +88,7 @@ export default function ProductCard({ product, index }: { product: ProductT; ind
               {finish.designer ? finish.designer : '-'}
             </BlackText>
           </div>
-          <div className="flex flex-col grow">
+          <div className="flex flex-col grow max-w-[40%]">
             <BlackText>
               <GreyText>BASE/ESTRUTURA </GreyText>
               {finish.frame}
@@ -91,7 +98,7 @@ export default function ProductCard({ product, index }: { product: ProductT; ind
               {finish.fabric}
             </BlackText>
           </div>
-          <div className="flex flex-col grow">
+          <div className="flex flex-col grow max-w-[30%]">
             <BlackText>
               <GreyText>ACAB.3/OBS </GreyText>
               {finish.extra ? finish.extra : '-'}
@@ -115,9 +122,9 @@ export default function ProductCard({ product, index }: { product: ProductT; ind
             </Button>
           </div>
           <div className="flex gap-2">
-            <PriceBox className="text-sm p-[6px]" title="12x" text={formatCurrency(price.markup12)} />
-            <PriceBox className="text-sm p-[6px]" title="6x" text={formatCurrency(price.markup6)} />
-            <PriceBox className="text-sm p-[6px]" title="á vista" text={formatCurrency(price.markupCash)} />
+            <PriceBox className="text-sm p-[6px]" title="12x" text={formatCurrency(price['12x'])} />
+            <PriceBox className="text-sm p-[6px]" title="6x" text={formatCurrency(price['6x'])} />
+            <PriceBox className="text-sm p-[6px]" title="á vista" text={formatCurrency(price['cash'])} />
           </div>
         </div>
       </div>

@@ -1,11 +1,11 @@
 /* eslint-disable jsx-a11y/alt-text */
 import { PresentationToggleT, useCRMContext } from "@/hooks/useCRMContext";
-import { MarkupT, ProductT } from "@/lib/types";
+import { FactoryT, FreightT, MarkupT, ProductT } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 import { Presentation } from "react-pptx";
 import Preview from "react-pptx/preview";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatCurrency, calculatePriceMarkup } from "@/lib/utils";
+import { formatCurrency, calculateCostMarkup } from "@/lib/utils";
 import PriceBox from "./PriceBox";
 import { BlackText, GreyText } from "./ProductCard";
 import ProductButtons from './ProductButtons'
@@ -29,9 +29,9 @@ function ToggleBox({ children, productId, id }: { children: React.ReactNode, pro
 export default function PresentationSlides({ product, index }: { product: ProductT; index: number }) {
   const { createProductSlide, presentationToggle, updatePresentationToggle } = useCRMContext()
 
-  const { id, name, quantity, finish, cost, enabled, markup } = product
+  const { id, name, quantity, factory, freight, finish, cost, enabled, markup } = product
 
-  const price = calculatePriceMarkup(cost, markup as MarkupT, quantity)
+  const price = calculateCostMarkup({ cost: cost.toString(), quantity, selectedFactory: factory as FactoryT, selectedFreight: freight as FreightT, selectedMarkup: markup as MarkupT })
 
   const textStyle = 'text-sm leading-0 text-wrap'
 
@@ -97,12 +97,12 @@ export default function PresentationSlides({ product, index }: { product: Produc
                 {finish.height}cm
               </BlackText>
             </ToggleBox>
-            {/* <ToggleBox productId={id} id='images'>
+            <ToggleBox productId={id} id='images'>
               <GreyText className='text-sm'>IMAGENS ACABAMENTOS </GreyText>
-            </ToggleBox> */}
-            <PriceBox className='py-1 text-sm' title='12x' text={formatCurrency(price.markup12)} active={markup12} onClick={() => updatePresentationToggle(id, 'markup12', !markup12)} />
-            <PriceBox className='py-1 text-sm' title='6x' text={formatCurrency(price.markup6)} active={markup6} onClick={() => updatePresentationToggle(id, 'markup6', !markup6)} />
-            <PriceBox className='py-1 text-sm' title='á vista' text={formatCurrency(price.markupCash)} active={markupCash} onClick={() => updatePresentationToggle(id, 'markupCash', !markupCash)} />
+            </ToggleBox>
+            <PriceBox className='py-1 text-sm' title='12x' text={formatCurrency(price['12x'])} active={markup12} onClick={() => updatePresentationToggle(id, 'markup12', !markup12)} />
+            <PriceBox className='py-1 text-sm' title='6x' text={formatCurrency(price['6x'])} active={markup6} onClick={() => updatePresentationToggle(id, 'markup6', !markup6)} />
+            <PriceBox className='py-1 text-sm' title='á vista' text={formatCurrency(price['cash'])} active={markupCash} onClick={() => updatePresentationToggle(id, 'markupCash', !markupCash)} />
             <ToggleBox productId={id} id='freight'>
               <GreyText className='text-sm'>FRETE INCLUSO </GreyText>
             </ToggleBox>
