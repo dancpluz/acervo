@@ -1,10 +1,12 @@
-- [ ] Fotos Acabamentos
+10/01/2025
+
+- [x] Fotos Acabamentos
   - [x] ProductForm
   - [x] ProductCard
   - [x] Slides
-  - [ ] PDF
+  - [x] PDF
 - [ ] Filtros e tabela de propostas
-- [ ] Alinhamento fotos Slide
+- [x] Alinhamento fotos Slide - Slider
 - [x] Arrumar posição das tabs de versão
 - [ ] Atualizar proposal quando mexer nas versões
 - [ ] Ações
@@ -16,15 +18,18 @@
 - [ ] Botões Valores x vezes
 - [ ] Aparecer observações e links produtos
 - [ ] Filtros
-- [ ] Frete e desconto nos produtos
+- [x] Frete e desconto nos produtos
   - [x] ProductForm
   - [x] ProductCard
   - [x] Slides
-  - [ ] PDF
+  - [x] PDF
 - [ ] Ordenar lista
 - [ ] Toasts de confirmação
 - [ ] Ocultar todos
 - [ ] Adicionar entidades durante proposta
+
+27/11/2024
+
 - [x] Calculadora de orçamento fix
 - [x] Apagar produto
 - [x] Editar produto
