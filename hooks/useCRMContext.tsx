@@ -24,6 +24,7 @@ export type PresentationToggleT = {
   markup12: boolean;
   markup6: boolean;
   markupCash: boolean;
+  imageX: number;
 }
 
 type CRMContextProps = {
@@ -37,7 +38,7 @@ type CRMContextProps = {
   updateProposalPriority: (priority: string) => Promise<void>;
   presentationToggle: { [id: string]: PresentationToggleT };
   setPresentationToggle: Dispatch<SetStateAction<{ [id: string]: PresentationToggleT }>>;
-  updatePresentationToggle: (id: string, key: keyof PresentationToggleT, value: boolean) => void;
+  updatePresentationToggle: (id: string, key: keyof PresentationToggleT, value: boolean | number) => void;
   handleEnableToggle: (enabled: boolean, id: string) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   deleteVersion: (num: number) => Promise<void>;
@@ -72,6 +73,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       markup12: true,
       markup6: true,
       markupCash: true,
+      imageX: 0,
     }
     const productIds = Object.keys(presentationToggle)
 
@@ -141,7 +143,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  function updatePresentationToggle(id: string, key: keyof PresentationToggleT, value: boolean) {
+  function updatePresentationToggle(id: string, key: keyof PresentationToggleT, value: boolean | number) {
     setPresentationToggle(prev => ({ ...prev, [id]: { ...prev[id], [key]: value } }))
   }
 
@@ -335,7 +337,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
   const createProductSlide = (product: ProductT, right: boolean = false) => {
     const { id, name, factory, freight: selectedFreight, finish, cost, image, enabled, markup } = product
 
-    const { sizes, markupName, designer, frame, fabric, extra, images, markup12, markup6, freight, markupCash } = presentationToggle[id];
+    const { sizes, markupName, designer, frame, fabric, extra, images, markup12, markup6, freight, markupCash, imageX } = presentationToggle[id];
 
     const price = calculateCostMarkup({ cost: cost.toString(), selectedFactory: factory as FactoryT, selectedFreight: selectedFreight as FreightT, selectedMarkup: markup as MarkupT })
 
@@ -352,8 +354,8 @@ export function CRMProvider({ children }: { children: ReactNode }) {
     }
 
     const maxImageDimension = { w: 4.32, h: 2.88 }
-    const imagePosition = right ? { x: 0.5, y: 1.75, ...maxImageDimension } : { x: 4, y: 1.75, ...maxImageDimension };
-
+    const imagePosition = right ? { x: 0.5 + imageX, y: 1.75, ...maxImageDimension } : { x: 4 + imageX, y: 1.75, ...maxImageDimension };
+    
     return (
       <Slide hidden={!enabled} style={{
         backgroundColor: "#feffff"
@@ -409,11 +411,14 @@ export function CRMProvider({ children }: { children: ReactNode }) {
             {freight ? `Frete incluso` : ''}
           </Text.Bullet>
         </Text>
-        {images && 
+        {images ?
           <>
             <FinishSlideImage image={finish.frame_img} text={'BASE/ESTRUTURA'} right={right} index={0} />
             <FinishSlideImage image={finish.fabric_img} text={'TECIDO/TAMPO'} right={right} index={1} />
             <FinishSlideImage image={finish.extra_img} text={'ACAB 3/OBS'} right={right} index={2} />
+          </>
+          :
+          <>
           </>
         }
         {image && image.path.includes("http") ?

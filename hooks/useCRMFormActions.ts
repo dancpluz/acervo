@@ -111,9 +111,21 @@ export default function useCRMFormActions(
           const proposalDoc = await getDoc(proposalRef)
           const proposalData = proposalDoc.data()
 
+          const defaultComplement = {
+            discount: 0,
+            freight: 0,
+            expiration: 5,
+            deadline: 90,
+            payment_method: '',
+            general_info: `Pedimos atenção a alguns pontos que antes do fechamento do pedido:
+1) Conferir com atenção as dimensões das peças; 
+2) Conferir com atenção os acabamentos, caso eles já tenham sido escolhidos;`,
+            info: ''
+          }
+
           const versions = proposalData && proposalData.versions.length > 0 ? proposalData.versions.map((version: VersionT) => {
             if (version.num === versionNum) {
-              version.complement = version.complement || { discount: 0, freight: 0, expiration: 0, deadline: 0, payment_method: '', general_info: '', info: '' }
+              version.complement = version.complement || defaultComplement
               if (data) {
                 const productIndex = version.products.findIndex((product: ProductT) => product.id === data.id);
                 if (productIndex !== -1) {

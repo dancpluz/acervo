@@ -5,11 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Presentation } from "react-pptx";
 import Preview from "react-pptx/preview";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatCurrency, calculateCostMarkup } from "@/lib/utils";
+import { formatCurrency, calculateCostMarkup, getSlideImageDimensions } from "@/lib/utils";
 import PriceBox from "./PriceBox";
 import { BlackText, GreyText } from "./ProductCard";
 import ProductButtons from './ProductButtons'
-
+import { Slider } from "@/components/ui/slider"
 
 function ToggleBox({ children, productId, id }: { children: React.ReactNode, productId: string, id: keyof PresentationToggleT }) {
   const { presentationToggle, updatePresentationToggle } = useCRMContext()
@@ -29,13 +29,16 @@ function ToggleBox({ children, productId, id }: { children: React.ReactNode, pro
 export default function PresentationSlides({ product, index }: { product: ProductT; index: number }) {
   const { createProductSlide, presentationToggle, updatePresentationToggle } = useCRMContext()
 
-  const { id, name, quantity, factory, freight, finish, cost, enabled, markup } = product
+  const { id, name, quantity, factory, freight, finish, image, cost, enabled, markup } = product
 
   const price = calculateCostMarkup({ cost: cost.toString(), quantity, selectedFactory: factory as FactoryT, selectedFreight: freight as FreightT, selectedMarkup: markup as MarkupT })
 
   const textStyle = 'text-sm leading-0 text-wrap'
 
-  const { images, markup12, markup6, markupCash } = presentationToggle[id];
+  const { images, markup12, markup6, markupCash, imageX } = presentationToggle[id];
+
+  const dimensions = getSlideImageDimensions(image.width, image.height, { w: 4.32, h: 2.88 })
+  const maxPosition = 10 - 4.32 - dimensions.w
 
   return (
     <div className='flex gap-4'>
@@ -97,9 +100,21 @@ export default function PresentationSlides({ product, index }: { product: Produc
                 {finish.height}cm
               </BlackText>
             </ToggleBox>
+            {maxPosition > 0 &&
+              <div className='flex flex-col gap-2'>
+                <GreyText className='text-sm'>POSIÇÃO DA IMAGEM</GreyText>
+                <Slider
+                  onValueChange={(e) => updatePresentationToggle(id, 'imageX', e[0])}
+                  defaultValue={[imageX]}
+                  max={maxPosition}
+                  step={0.01}
+                />
+              </div>
+            }
+            {images && 
             <ToggleBox productId={id} id='images'>
               <GreyText className='text-sm'>IMAGENS ACABAMENTOS </GreyText>
-            </ToggleBox>
+            </ToggleBox>}
             <PriceBox className='py-1 text-sm' title='12x' text={formatCurrency(price['12x'])} active={markup12} onClick={() => updatePresentationToggle(id, 'markup12', !markup12)} />
             <PriceBox className='py-1 text-sm' title='6x' text={formatCurrency(price['6x'])} active={markup6} onClick={() => updatePresentationToggle(id, 'markup6', !markup6)} />
             <PriceBox className='py-1 text-sm' title='á vista' text={formatCurrency(price['cash'])} active={markupCash} onClick={() => updatePresentationToggle(id, 'markupCash', !markupCash)} />
