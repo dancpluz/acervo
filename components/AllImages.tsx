@@ -3,11 +3,11 @@
 import { useState } from "react"
 import { ImageT } from "@/lib/types"
 import Image from "next/image"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { LoaderCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Text, Image as SlideImage } from "react-pptx";
+import { CustomTooltip } from "./AllPopups"
 
 
 export function ProductImage({ image, alt }: { image?: ImageT | '', alt: string }) {
@@ -85,26 +85,21 @@ export function FinishImage({ tooltip, image, alt }: { tooltip: string, image?: 
   if (!image || !image.path.toLowerCase().includes("http")) return null
 
   return (
-    <TooltipProvider delayDuration={200}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className="overflow-hidden border border-primary rounded-xl size-8 cursor-pointer"
-            onClick={() => setIsOpen(true)}
-          >
-            <Image
-              alt={alt}
-              className='object-cover h-full w-full'
-              width={64}
-              height={64}
-              src={image.path}
-            />
-          </div>
-        </TooltipTrigger>
-        <TooltipContent className='text-foreground bg-background'>
-          <p>{tooltip}</p>
-        </TooltipContent>
-      </Tooltip>
+    <>
+      <CustomTooltip tooltip={tooltip}>
+        <div
+          className="overflow-hidden border border-primary rounded-xl size-8 cursor-pointer"
+          onClick={() => setIsOpen(true)}
+        >
+          <Image
+            alt={alt}
+            className='object-cover h-full w-full'
+            width={64}
+            height={64}
+            src={image.path}
+          />
+        </div>
+      </CustomTooltip>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent onInteractOutside={() => setIsOpen(false)} className="overflow-hidden sm:max-w-[425px]">
           <div className="relative min-w-[200px] min-h-[100px]">
@@ -127,7 +122,7 @@ export function FinishImage({ tooltip, image, alt }: { tooltip: string, image?: 
           </div>
         </DialogContent>
       </Dialog>
-    </TooltipProvider>
+    </>
   )
 }
 

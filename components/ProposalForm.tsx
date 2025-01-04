@@ -16,6 +16,9 @@ import { CirclePlus, X } from 'lucide-react';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc, Timestamp } from 'firebase/firestore';
 import db from '@/lib/firebase';
+import FormFactory from "@/components/FormFactory";
+import FormOffice from "@/components/FormOffice";
+import FormClient from "@/components/FormClient";
 import { format } from 'date-fns';
 import {
   Popover,
@@ -114,7 +117,6 @@ export default function ProposalForm({ data, setPopupOpen }: { data?: ProposalT,
     }
   }
 
-
   const submitLoading = form.formState.isSubmitting && !form.formState.isDirty;
   
   return (
@@ -139,12 +141,12 @@ export default function ProposalForm({ data, setPopupOpen }: { data?: ProposalT,
           </div>
           <FormDiv className='flex-row gap-4 w-full'>
             <FieldDiv className='flex-col gap-4 w-full'>
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.collaborator} refPath='collaborator' onSelect={(e: CollaboratorT) => setReferenceInfo((prev) => ({...prev, collaborator: e}))} hint={'Ex. Punto'} person />
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.client} refPath='client' onSelect={(e: ClientT) => setReferenceInfo((prev) => ({...prev, client: e}))} hint={'Ex. Punto'} person />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.collaborator} refPath='collaborator' onSelect={(e: CollaboratorT) => setReferenceInfo((prev) => ({...prev, collaborator: e}))} addForm={<FormFactory />} hint={'Ex. Punto'} person />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.client} refPath='client' onSelect={(e: ClientT) => setReferenceInfo((prev) => ({...prev, client: e}))} addForm={<FormClient />} hint={'Ex. Punto'} person />
               <InputField customClass={'grow-0'} path='' obj={fields.observations} long />
             </FieldDiv>
             <FieldDiv className='flex-col gap-4 w-full grow-0'>
-              <ReferenceField customClass={'grow-0'} obj={proposalFields.office} refPath='office' onSelect={(e: OfficeT) => setReferenceInfo((prev) => ({...prev, office: e}))} hint={'Ex. Punto'} person />
+              <ReferenceField customClass={'grow-0'} obj={proposalFields.office} refPath='office' onSelect={(e: OfficeT) => setReferenceInfo((prev) => ({...prev, office: e}))} addForm={<FormOffice />} hint={'Ex. Punto'} person />
               <div className='flex gap-2'>
                 <SelectField path='' obj={proposalFields.client_type} />
                 <SelectField path='' obj={proposalFields.project_type} />

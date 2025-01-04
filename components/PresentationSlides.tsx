@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/alt-text */
 import { PresentationToggleT, useCRMContext } from "@/hooks/useCRMContext";
 import { FactoryT, FreightT, MarkupT, ProductT } from "@/lib/types";
 import { Label } from "@/components/ui/label";
@@ -30,12 +29,13 @@ export default function PresentationSlides({ product, index }: { product: Produc
   const { createProductSlide, presentationToggle, updatePresentationToggle } = useCRMContext()
 
   const { id, name, quantity, factory, freight, finish, image, cost, enabled, markup } = product
+  const { frame_img, fabric_img, extra_img } = finish
 
   const price = calculateCostMarkup({ cost: cost.toString(), quantity, selectedFactory: factory as FactoryT, selectedFreight: freight as FreightT, selectedMarkup: markup as MarkupT })
 
   const textStyle = 'text-sm leading-0 text-wrap'
 
-  const { images, markup12, markup6, markupCash, imageX } = presentationToggle[id];
+  const { markup12, markup6, markupCash, imageX } = presentationToggle[id];
 
   const dimensions = getSlideImageDimensions(image.width, image.height, { w: 4.32, h: 2.88 })
   const maxPosition = 10 - 4.32 - dimensions.w
@@ -111,7 +111,7 @@ export default function PresentationSlides({ product, index }: { product: Produc
                 />
               </div>
             }
-            {images && 
+            {(frame_img || fabric_img || extra_img) && 
             <ToggleBox productId={id} id='images'>
               <GreyText className='text-sm'>IMAGENS ACABAMENTOS </GreyText>
             </ToggleBox>}

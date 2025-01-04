@@ -14,6 +14,7 @@ import {
 import { translationFields } from '@/lib/utils';
 import { Dispatch, SetStateAction } from "react";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import React from "react";
 
 export function DeleteAlert({ submit, children }: { submit: () => void, children: React.ReactNode }) {
@@ -71,5 +72,20 @@ export function CRMPopup({ children, button, setPopupOpen, popupOpen }: { childr
         {children}
       </DialogContent>
     </Dialog>
+  )
+}
+
+export function CustomTooltip({ tooltip, children, delayDuration=200 }: { tooltip?: string, dialog?: React.ReactNode, children: React.ReactNode, delayDuration?: number }) {
+  return (
+    <TooltipProvider delayDuration={delayDuration}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {children}
+        </TooltipTrigger>
+        <TooltipContent className='text-foreground bg-background'>
+          <p>{tooltip}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }

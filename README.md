@@ -16,7 +16,7 @@
   - [ ] Valores padrão
 - [ ] Desconto e frete porcentagem no complemento
 - [ ] Botões Valores x vezes
-- [ ] Aparecer observações e links produtos
+- [x] Aparecer observações e links produtos
 - [ ] Filtros
 - [x] Frete e desconto nos produtos
   - [x] ProductForm
@@ -26,7 +26,7 @@
 - [ ] Ordenar lista
 - [ ] Toasts de confirmação
 - [ ] Ocultar todos
-- [ ] Adicionar entidades durante proposta
+- [x] Adicionar entidades durante proposta
 
 27/11/2024
 
@@ -46,7 +46,7 @@
 - [x] Slides proposta
 
 BACKLOG:
-
+- [ ] Salvar configurações do slide
 - [ ] Kanban
 - [ ] API pra emitir nota fiscal
 - [ ] useMemo pra performance

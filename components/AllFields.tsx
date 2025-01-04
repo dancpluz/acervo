@@ -43,6 +43,7 @@ import { Label } from './ui/label';
 import Image from "next/image";
 import { FileUploader, FileUploaderContent, FileUploaderItem, FileInput } from "@/components/ui/file-upload";
 import { DateTimePicker } from './ui/datetime-picker';
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 
 export function SelectField({ path, customClass, obj, disabled }: { path?: string, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
@@ -71,22 +72,34 @@ export function SelectField({ path, customClass, obj, disabled }: { path?: strin
   );
 }
 
-export function ReferenceField<EntityT>({ path, refPath, obj, customClass, person, hint, onSelect, disabled }: { path?: string, refPath: string, obj: FieldT, customClass?: string, person?: boolean, hint: string, onSelect?: any, disabled?: boolean }) {
+export function ReferenceField<EntityT>({ path, refPath, obj, customClass, person, hint, onSelect, addForm, disabled }: { path?: string, refPath: string, obj: FieldT, customClass?: string, person?: boolean, hint: string, onSelect?: any, addForm?: React.ReactNode, disabled?: boolean }) {
   
   const [data, loading, error] = useGetEntities<EntityT>(refPath, converters[obj.value]);
 
   const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
 
-  
   return (
     <FormField
       control={form.control}
       name={fieldPath}
       render={({ field }) => (
         <FormItem className={customClass}>
-          <FormMessage />
-          <FormLabel>{obj.label}</FormLabel>
+          <div className='flex justify-between'>
+            <FormLabel className='relative'>{obj.label}
+              <FormMessage className='-right-5' />
+            </FormLabel>
+            {addForm &&
+              <Dialog>
+                <DialogTrigger asChild>
+                  <u className='text-sm text-primary cursor-pointer leading-none'>ADICIONAR {obj.label.replace('*','')}</u>
+                </DialogTrigger>
+                <DialogContent className='w-10/12 top-[30%] translate-y-[0%]'>
+                  {addForm}
+                </DialogContent>
+              </Dialog>
+            }
+          </div>
           <Popover open={disabled ? false : undefined}>
             <PopoverTrigger className={disabled ? 'cursor-default' : ''} asChild>
               <FormControl>
