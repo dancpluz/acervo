@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ImageUp, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, unformatNumber } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
 import useGetEntities from '@/hooks/useGetEntities';
 import { converters } from '@/lib/converters';
@@ -45,6 +45,7 @@ import { FileUploader, FileUploaderContent, FileUploaderItem, FileInput } from "
 import { DateTimePicker } from './ui/datetime-picker';
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { Checkbox } from './ui/checkbox';
+import { percentMask } from '@/lib/masks'
 
 export function SelectField({ path, customClass, obj, disabled }: { path?: string, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
@@ -476,7 +477,7 @@ export function CheckboxField({ path, obj, disabled }: { path?: string, obj: Fie
   )
 }
 
-export function PriceField({ path, obj, onChange }: { path?: string, obj: FieldT, onChange: () => void }) {
+export function PriceField({ path, obj, markup12, setPercent }: { path?: string, obj: FieldT, markup12?: number, setPercent?: (event: React.ChangeEvent<HTMLInputElement>) => void }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   const form = useFormContext();
 
@@ -492,7 +493,12 @@ export function PriceField({ path, obj, onChange }: { path?: string, obj: FieldT
               <FormLabel className='py-1 px-2 flex items-center text-tertiary text-base text-center border-r border-primary'>
                 {obj.label}
               </FormLabel>
-              <Input className={'h-auto py-1 px-2 text-base min-w-16 border-0'} mask={obj.mask} placeholder={obj.placeholder} {...field} onChange={(e) => { onChange ? onChange : field.onChange(e)}} />
+              <Input className={'h-auto py-1 px-2 text-base min-w-16 border-0'} mask={obj.mask} placeholder={obj.placeholder} {...field} onChange={field.onChange} />
+              {setPercent && markup12 && 
+                <div className='border-primary border-l'>
+                  <Input value={Math.round((unformatNumber(field.value) / markup12) * 100).toString().replace('.',',')} className={'h-auto py-1 px-2 text-base max-w-48 border-0'} mask={percentMask} placeholder={'%'} onChange={setPercent} />
+                </div>
+              }
             </div>
           </FormControl>
         </FormItem>

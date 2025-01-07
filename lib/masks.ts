@@ -30,3 +30,11 @@ export const costMask = createNumberMask({
   decimalSymbol: ',',
 })
 
+export const percentMask = createNumberMask({
+  prefix: '',
+  suffix: '%',
+  thousandsSeparatorSymbol: '.',
+  allowDecimal: true,
+  decimalSymbol: ',',
+})
+

@@ -5,7 +5,6 @@
   - [x] ProductCard
   - [x] Slides
   - [x] PDF
-- [ ] Filtros e tabela de propostas
 - [x] Alinhamento fotos Slide - Slider
 - [x] Arrumar posição das tabs de versão
 - [ ] Atualizar proposal quando mexer nas versões
@@ -17,7 +16,7 @@
   - [x] Form
   - [x] Delete
   - [x] Edit
-- [ ] Desconto e frete porcentagem no complemento
+- [x] Desconto e frete porcentagem no complemento
 - [ ] Botões Valores x vezes
 - [x] Aparecer observações e links produtos
 - [ ] Filtros
@@ -26,6 +25,7 @@
   - [x] ProductCard
   - [x] Slides
   - [x] PDF
+- [ ] Filtros e tabela de propostas
 - [ ] Ordenar lista
 - [ ] Toasts de confirmação
 - [ ] Ocultar todos
