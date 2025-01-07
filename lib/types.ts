@@ -181,9 +181,11 @@ export type ProductT = {
 }
 
 export type ActionT = {
+  id: string;
+  done: boolean;
   date: Date | Timestamp;
   description?: string;
-  collaborator: CollaboratorT | DocumentReference;
+  collaborator: CollaboratorT | DocumentReference | string;
 }
 
 export type ComplementT = {

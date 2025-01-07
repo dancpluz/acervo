@@ -10,10 +10,13 @@
 - [x] Arrumar posição das tabs de versão
 - [ ] Atualizar proposal quando mexer nas versões
 - [ ] Ações
-  - [ ] Checklist
-  - [ ] Data mudar de cor
+  - [x] Checklist
+  - [x] Data mudar de cor
   - [ ] Arquivos
   - [ ] Valores padrão
+  - [x] Form
+  - [x] Delete
+  - [x] Edit
 - [ ] Desconto e frete porcentagem no complemento
 - [ ] Botões Valores x vezes
 - [x] Aparecer observações e links produtos

@@ -680,6 +680,18 @@ export const factoryFields = {
 }
 
 export const actionFields: { [key: string]: FieldT | EnumFieldT } = {
+  id: {
+    value: 'id',
+    label: '',
+    placeholder: '',
+    validation: z.string().optional().or(z.literal('')),
+  },
+  done: {
+    value: 'done',
+    label: 'FEITO',
+    placeholder: '',
+    validation: z.boolean().optional().or(z.literal('')),
+  },
   date: {
     value: 'date',
     label: 'DATA E HORA*',

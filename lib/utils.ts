@@ -393,3 +393,22 @@ export function getSlideImageDimensions(width: number, height: number, maxImageD
     h: height * scale,
   };
 };
+
+export function getInsertIndex<T extends { date: Date }>(array: T[], date: Date) {
+  const newDate = date.getTime();
+  let low = 0;
+  let high = array.length;
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    const midDate = array[mid].date.getTime();
+
+    if (midDate < newDate) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  return low;
+}

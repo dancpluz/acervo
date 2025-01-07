@@ -44,6 +44,7 @@ import Image from "next/image";
 import { FileUploader, FileUploaderContent, FileUploaderItem, FileInput } from "@/components/ui/file-upload";
 import { DateTimePicker } from './ui/datetime-picker';
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { Checkbox } from './ui/checkbox';
 
 export function SelectField({ path, customClass, obj, disabled }: { path?: string, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
@@ -453,6 +454,26 @@ export function SelectOtherField({ path, customClass, obj, disabled }: { path?: 
         </FormItem>
       )} />
   );
+}
+
+export function CheckboxField({ path, obj, disabled }: { path?: string, obj: FieldT, disabled?: boolean }) {
+  const form = useFormContext();
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
+  return (
+    <FormField
+      control={form.control}
+      name={fieldPath}
+      render={({ field }) => (
+        <FormItem className='flex-row items-center'>
+          <FormMessage />
+          <FormControl>
+            <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={disabled} />
+          </FormControl>
+          <FormLabel>{obj.label}</FormLabel>
+        </FormItem>
+      )}
+    />
+  )
 }
 
 export function PriceField({ path, obj, onChange }: { path?: string, obj: FieldT, onChange: () => void }) {

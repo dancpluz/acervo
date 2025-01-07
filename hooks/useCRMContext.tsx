@@ -2,7 +2,7 @@
 'use client'
 
 import db from '@/lib/firebase';
-import { ComplementT, FactoryT, FreightT, MarkupT, ProductT, ProposalT, VersionT } from '@/lib/types';
+import { ActionT, ComplementT, FactoryT, FreightT, MarkupT, ProductT, ProposalT, VersionT } from '@/lib/types';
 import { formatCurrency, timestampToDate, calculateCostMarkup, resolvePromises, getSlideImageDimensions } from '@/lib/utils';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction, useEffect } from 'react';
@@ -11,6 +11,7 @@ import { errorToast } from './general';
 import { useRouter } from 'next/navigation'
 import { converters } from '@/lib/converters';
 import { FinishSlideImage } from '@/components/AllImages';
+import { toast } from '@/components/ui/use-toast';
 
 export type PresentationToggleT = {
   sizes: boolean;
@@ -44,7 +45,7 @@ type CRMContextProps = {
   deleteVersion: (num: number) => Promise<void>;
   duplicateVersion: (num: number) => Promise<void>;
   deleteProposal: () => Promise<void>;
-  getProposal: (resolve?: boolean) => ProposalT;
+  getProposal: (resolve?: boolean) => Promise<ProposalT | undefined>;
   createProductSlide: (product: ProductT, left?: boolean) => JSX.Element;
   downloadPresentation: () => Promise<void>;
   updateComplement: (complement: ComplementT) => Promise<void>;
@@ -195,7 +196,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       data.last_updated = timestampToDate(data.last_updated)
     }
 
-    return data
+    return data as ProposalT;
   }
 
   async function deleteProduct(productId: string) {
@@ -278,6 +279,28 @@ export function CRMProvider({ children }: { children: ReactNode }) {
       checkProposal()
 
       await updateDoc(proposalRef, { priority })
+    } catch (error) {
+      console.log(error)
+      errorToast(error);
+    }
+  }
+
+  async function updateProposalActions(actions: ActionT[]) {
+    try {
+      checkProposal()
+
+      const newActions = actions.map((action) => {
+        const ref = doc(db, "collaborator",action.collaborator)
+        return { ...action, collaborator: ref }
+      })
+
+      await updateDoc(proposalRef, { actions: newActions })
+
+      setProposal((prev) => prev ? { ...prev, actions } : prev)
+
+      toast({
+        title: `Ações atualizadas com sucesso!`,
+      });
     } catch (error) {
       console.log(error)
       errorToast(error);
@@ -539,6 +562,7 @@ export function CRMProvider({ children }: { children: ReactNode }) {
         updateProposalStatus,
         updateProposalPriority,
         updatePresentationToggle,
+        updateProposalActions,
         getTotalValues,
         presentationToggle,
         setPresentationToggle,
