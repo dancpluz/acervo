@@ -1,7 +1,7 @@
 'use client'
 
 import { formatFields, unformatNumber } from "@/lib/utils";
-import { dayMask, symbolCostMask, conformNumberToMask, percentMask } from "@/lib/masks";
+import { dayMask, symbolCostMask, conformNumberToMask } from "@/lib/masks";
 import { useForm } from "react-hook-form";
 import { complementFields } from '@/lib/fields';
 import { zodResolver } from "@hookform/resolvers/zod";

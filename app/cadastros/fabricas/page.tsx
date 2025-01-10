@@ -12,9 +12,9 @@ import FormFactory from "@/components/FormFactory";
 
 export default function Fabricas() {
   return (
-    <TabsContent value="fabricas">
-      <div className="flex flex-col gap-4 py-4">
-        <DataTable entity={'factory'} search={'name'} columns={columns}>
+    <TabsContent className='flex flex-col grow' value="fabricas">
+      <div className="flex flex-col grow gap-4 py-4">
+        <DataTable filterKeys={['pricing', 'style', 'ambient']} entity={'factory'} search={'name'} columns={columns}>
           <FormFactory show />
         </DataTable>
         <div className="flex justify-between">

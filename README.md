@@ -19,13 +19,13 @@
 - [x] Desconto e frete porcentagem no complemento
 - [ ] Botões Valores x vezes
 - [x] Aparecer observações e links produtos
-- [ ] Filtros
+- [x] Filtros Cadastros
 - [x] Frete e desconto nos produtos
   - [x] ProductForm
   - [x] ProductCard
   - [x] Slides
   - [x] PDF
-- [ ] Filtros e tabela de propostas
+- [x] Filtros e tabela de propostas
 - [ ] Ordenar lista
 - [ ] Toasts de confirmação
 - [ ] Ocultar todos
@@ -49,12 +49,13 @@
 - [x] Slides proposta
 
 BACKLOG:
+- [ ] Guardar params ao mudar de pagina
 - [ ] Salvar configurações do slide
 - [ ] Kanban
 - [ ] API pra emitir nota fiscal
 - [ ] useMemo pra performance
 - [ ] Botões de ação: email, whatsapp
-- [ ] queryparams
+- [x] queryparams
 - [ ] Integração com o digisac
 - [ ] Importar em massa planilha
 - [ ] Melhorar botão venda direta

@@ -6,7 +6,7 @@ import Chip from "@/components/Chip";
 import SortHeader from "@/components/SortHeader";
 import Image from "next/image";
 import Link from "next/link";
-import { fieldItems } from '@/lib/fields';
+import { fieldItems } from '@/lib/items';
 import { formatPercent } from '@/lib/utils';
 
 export const columns: ColumnDef<FactoryT>[] = [

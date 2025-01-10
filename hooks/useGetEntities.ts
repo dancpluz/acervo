@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, FirestoreDataConverter } from 'firebase/firestore';
+import { collection, or, FirestoreDataConverter, getCountFromServer, query, where, QueryFieldFilterConstraint } from 'firebase/firestore';
 import db from '@/lib/firebase';
+import { FilterKeys, filters } from '@/lib/filters';
+import { useSearchParams } from 'next/navigation'
 
 // MUITO MAL OTIMIZADO
 
@@ -27,19 +29,48 @@ async function resolvePromisesDeep(obj: any): Promise<any> {
 export default function useGetEntities<EntityT>(
   entity: string,
   converter: FirestoreDataConverter<EntityT>,
+  filterKeys: FilterKeys[] = []
 ) {
   const [resolvedEntities, setResolvedEntities] = useState<EntityT[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
+  const [count, setCount] = useState<number>(0);
 
   const pathSegments = entity.split(',').map(segment => segment.trim());
 
   const collectionRef = collection(db, ...pathSegments as [string]).withConverter(converter);
 
-  const [snapshots, firebaseLoading, firebaseError] = useCollectionData(collectionRef);
+  const searchParams = useSearchParams()
+  const querySegments = filterKeys.reduce<QueryFieldFilterConstraint[]>((acc, key) => {
+    const { param } = filters[key];
+    if (param && searchParams.has(param)) {
+      acc.push(where(key, '==', searchParams.get(param)));
+    }
+    return acc;
+  }, []);
+
+  const q = querySegments.length > 0 && filterKeys.length > 0 ? query(collectionRef, or(
+    ...querySegments
+  )) : collectionRef;
+
+  const [snapshots, firebaseLoading, firebaseError] = useCollectionData(q);
 
   useEffect(() => {
-    if (snapshots && snapshots.length > 0) {
+    const getCount = async () => {
+      try {
+        const snapshot = await getCountFromServer(collectionRef);
+        const count = snapshot.data().count;
+        setCount(count);
+        setLoading(false);
+      } catch (err) {
+        setError(err);
+        setLoading(false);
+      }
+    };
+
+    getCount();    
+
+    if (snapshots) {
       const resolveEntities = async () => {
         try {
           const resolvedSnapshots = await Promise.all(snapshots);
@@ -58,11 +89,12 @@ export default function useGetEntities<EntityT>(
     } else {
       setLoading(firebaseLoading);
     }
-  }, [snapshots, firebaseLoading]);
+  }, [snapshots, firebaseLoading, searchParams]);
   
   return [
     resolvedEntities,
     loading || firebaseLoading,
     error || firebaseError,
+    count
   ]
 };

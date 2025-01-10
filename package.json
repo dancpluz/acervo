@@ -39,6 +39,7 @@
     "lucide-react": "^0.468.0",
     "next": "14.2.21",
     "nextjs-toploader": "^3.7.15",
+    "nuqs": "^2.3.0",
     "react": "^18",
     "react-day-picker": "^9",
     "react-dom": "^18",
