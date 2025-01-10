@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { BorderDiv } from "@/components/ui/div";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Input } from "@/components/ui/input"
-import { formatPercent, unformatNumber, formatCurrency } from "@/lib/utils";
+import { formatPercent, calculateCostMarkup, unformatNumber, formatCurrency } from "@/lib/utils";
 import { costMask } from "@/lib/masks";
 import { Label } from "@/components/ui/label";
 import { FactoryT, FreightT, MarkupT, ProspectionT, PersonT } from "@/lib/types";
@@ -44,7 +44,6 @@ export default function BudgetCalculator() {
 
   const [cost, setCost] = useState('');
   const [useDirectSale, setUseDirectSale] = useState<boolean>(false);
-  // const [selectedFactory, setSelectedFactory] = useState<{refs: { factory: string }, person: {info: {company_name: string, fantasy_name: string}}, direct_sale: number | '', discount: number | ''} | undefined>(undefined);
 
   const [referenceInfo, setReferenceInfo] = useState<{ [key: string]: '' | FactoryT | FreightT | MarkupT | ProspectionT }>({ factory: '',freight: '', markup: '', prospection: '' });
 
@@ -60,28 +59,11 @@ export default function BudgetCalculator() {
   const selectedMarkup = referenceInfo.markup as MarkupT;
   const selectedProspection = referenceInfo.prospection as ProspectionT;
 
-  // useEffect(() => {
-  //   if (!loading) {
-  //     console.log(factories)
-  //     console.log(markups)
-  //     console.log(prospections)
-  //   }
-  // }, [selectedMarkup, factories, markups, prospections])
-
-  function multiplyCost(value: number) {
-    return unformatNumber(cost) * value;
-  }
-
-  const direct_sale = useDirectSale && selectedFactory.direct_sale ? selectedFactory.direct_sale : 0;
   const discount = selectedFactory?.discount ? selectedFactory.discount : 0;
   const freight = selectedFreight?.fee ? unformatNumber(selectedFreight.fee as string, true) : 0;
   const prospection = selectedProspection?.tax ? unformatNumber(selectedProspection.tax as string, true) : 0;
-  const costBase = cost && selectedMarkup ? (unformatNumber(cost) - multiplyCost(discount) + multiplyCost(direct_sale)) * unformatNumber(selectedMarkup['12x'] as string) : 0
-  const result = selectedMarkup ? {
-    '12x': costBase * (1 + freight + prospection),
-    '6x': (costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['6x'] as string, true)),
-    'cash': (costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['cash'] as string, true))
-  } : undefined
+
+  const result = calculateCostMarkup({ cost, selectedFactory, selectedFreight, selectedMarkup, selectedProspection, useDirectSale });
 
   return (
     <div className='flex gap-4'>
@@ -144,7 +126,7 @@ export default function BudgetCalculator() {
                     onClick={() => { setUseDirectSale(false) }} />
                 </div>
               </RadioGroup>
-              <span className='text-base text-tertiary'>{selectedFactory ? selectedFactory.direct_sale ? `Venda Direta: ${formatPercent(selectedFactory.direct_sale)} ${cost && `(+${formatCurrency(selectedFactory.direct_sale * unformatNumber(cost))})`}` : 'Essa fábrica não possui venda direta' : ''}</span>
+              <span className='text-base text-tertiary'>{selectedFactory ? selectedFactory.direct_sale ? `Venda Direta: ${formatPercent(selectedFactory.direct_sale)} ${cost `(+${formatCurrency(selectedFactory.direct_sale * unformatNumber(cost))})`}` : 'Essa fábrica não possui venda direta' : ''}</span>
             </div>
           </div>
         </BorderDiv>
@@ -165,31 +147,31 @@ export default function BudgetCalculator() {
             <div className='flex flex-col grow items-center'>
               <h3 className='text-base'>12x</h3>
               <p className='text-sm text-tertiary'>{selectedMarkup ? selectedMarkup['12x'] + 'x' : '-'}</p>
-              <p className='text-sm text-tertiary'>{costBase ? formatCurrency(costBase) : ''}</p>
+              <p className='text-sm text-tertiary'>{result['costBase'] ? formatCurrency(result['costBase']) : ''}</p>
             </div>
             <div className='flex flex-col grow items-center border-r border-l border-secondary'>
               <h3 className='text-base'>6x</h3>
               <p className='text-sm text-tertiary'>{selectedMarkup ? selectedMarkup['6x'] + '%' : '-'}</p>
-              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * (unformatNumber(selectedMarkup['6x'], true) + freight + prospection)) : ''}</p>
+              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '+' + formatCurrency(unformatNumber(cost) * (unformatNumber(selectedMarkup['6x'], true) + freight + prospection)) : ''}</p>
             </div>
             <div className='flex flex-col grow items-center'>
               <h3 className='text-base'>à vista</h3>
               <p className='text-sm text-tertiary'>{selectedMarkup ? selectedMarkup['cash'] + '%' : '-'}</p>
-              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '-' + formatCurrency(unformatNumber(cost) * (unformatNumber(selectedMarkup['cash'], true) + freight + prospection)) : ''}</p>
+              <p className='text-sm text-tertiary'>{selectedMarkup && cost ? '+' + formatCurrency(unformatNumber(cost) * (unformatNumber(selectedMarkup['cash'], true) + freight + prospection)) : ''}</p>
             </div>
           </div>
         </BorderDiv>
         <BorderDiv>
           <div className='flex justify-between items-center'>
             <h2 className='text-2xl'>Frete</h2>
-            <p className='text-base text-tertiary'>{selectedFreight && costBase ? `(+${formatCurrency(costBase * freight)})` : ''}</p>
+            <p className='text-base text-tertiary'>{selectedFreight && result['costBase'] && freight ? `(+${formatCurrency(result['costBase'] * freight)})` : ''}</p>
           </div>
           <SelectableChips chips={freights} chipText='region' chipNumber='fee' placeholder='Sem fretes cadastrados...' selectedChip={selectedFreight} setFunction={(value) => { updateReferenceInfo('freight', value)}} />
         </BorderDiv>
         <BorderDiv>
           <div className='flex justify-between items-center'>
             <h2 className='text-2xl'>Prospecção</h2>
-            <p className='text-base text-tertiary'>{selectedProspection && costBase ? `(+${formatCurrency(costBase * prospection)})` : ''}</p>
+            <p className='text-base text-tertiary'>{selectedProspection && result['costBase'] ? `(+${formatCurrency(result['costBase'] * prospection)})` : ''}</p>
           </div>
           <SelectableChips chips={prospections} chipText='title' chipNumber='tax' placeholder='Sem prospecções cadastradas...' selectedChip={selectedProspection} setFunction={(value) => { updateReferenceInfo('prospection', value) }} />
         </BorderDiv>

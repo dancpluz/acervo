@@ -4,7 +4,9 @@ import { FieldT, TableFieldT, AllFieldTypes, EnumFieldT } from '@/lib/fields';
 import { z } from "zod";
 import slugify from 'slugify';
 import { Timestamp } from "firebase/firestore";
-import { MarkupT, ProductT } from "./types";
+import { FactoryT, FreightT, ImageT, MarkupT, ProductT, ProspectionT } from "./types";
+import { ref, uploadBytes } from "firebase/storage";
+import { storage } from "./firebase";
 
 export const translationFields: { [key: string]: string } = {
   company_name: 'Nome/Razão Social',
@@ -263,4 +265,150 @@ export async function resolvePromises(data: any): Promise<any> {
   }
 
   return data;
+}
+
+type CostMarkupProps = {
+  cost: string,
+  quantity?: number,
+  selectedFactory?: FactoryT,
+  selectedFreight?: FreightT,
+  selectedMarkup?: MarkupT,
+  selectedProspection?: ProspectionT,
+  useDirectSale?: boolean
+}
+
+export function calculateCostMarkup({ cost, quantity, selectedFactory, selectedFreight, selectedMarkup, selectedProspection, useDirectSale }: CostMarkupProps) {
+  function multiplyCost(value: number) {
+    return unformatNumber(cost) * value;
+  }
+
+  const newQuantity = quantity === undefined ? 1 : quantity
+  const direct_sale = useDirectSale && selectedFactory?.direct_sale ? selectedFactory.direct_sale : 0;
+  const discount = selectedFactory?.discount ? selectedFactory.discount : 0;
+  const freight = selectedFreight?.fee ? unformatNumber(selectedFreight.fee as string, true) : 0;
+  const prospection = selectedProspection?.tax ? unformatNumber(selectedProspection.tax as string, true) : 0;
+  const costBase = cost && selectedMarkup ? (unformatNumber(cost) - multiplyCost(discount) + multiplyCost(direct_sale)) * unformatNumber(selectedMarkup['12x'] as string) : 0;
+  return selectedMarkup ? {
+    'costBase': costBase * newQuantity,
+    '12x': (costBase * (1 + freight + prospection)) * newQuantity,
+    '6x': ((costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['6x'] as string, true))) * newQuantity,
+    'cash': ((costBase * (1 + freight + prospection)) * (1 - unformatNumber(selectedMarkup['cash'] as string, true)) * newQuantity)
+  } : { 'costBase': 0, '12x': 0, '6x': 0, 'cash': 0 };
+}
+
+export async function uploadImageToFirestore(images: File[], path: string[]): Promise<ImageT | ''> {
+  if (images && images.length > 0) {
+    const imageId = path.join('/');
+    const storageRef = ref(storage, imageId);
+
+    // Load the image and crop it to 1:1 aspect ratio
+    const { blob, size } = await new Promise<{ blob: Blob; size: number }>((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        if (!e.target?.result) {
+          reject(new Error("Failed to read image data"));
+          return;
+        }
+
+        const img = new Image();
+        img.onload = () => {
+          const cropSize = Math.min(img.width, img.height); // Crop to the smaller dimension
+          const canvas = document.createElement("canvas");
+          canvas.width = cropSize;
+          canvas.height = cropSize;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Failed to create canvas context"));
+            return;
+          }
+
+          const offsetX = (img.width - cropSize) / 2;
+          const offsetY = (img.height - cropSize) / 2;
+
+          ctx.drawImage(img, offsetX, offsetY, cropSize, cropSize, 0, 0, cropSize, cropSize);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve({ blob, size: cropSize });
+            } else {
+              reject(new Error("Failed to create blob from canvas"));
+            }
+          }, "image/jpeg");
+        };
+
+        img.onerror = (err) => reject(err);
+        img.src = e.target.result as string;
+      };
+
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(images[0]);
+    });
+
+    // Upload the cropped image to Firebase
+    const upload = await uploadBytes(storageRef, blob).then(() => true).catch((error) => {
+      console.log(error);
+      return false;
+    });
+
+    if (upload) {
+      return {
+        path: imageId,
+        width: size,
+        height: size,
+      };
+    } else {
+      return '';
+    }
+  } else {
+    return '';
+  }
+}
+
+export async function imageToFileObject(image: ImageT): Promise<File> {
+  const response = await fetch(image.path);
+  const blob = await response.blob();
+
+  // Extract name from URL or give it a default name
+  const name = image.path.split('/').pop() || 'image.jpg';
+
+  // Create a File object
+  const fileObject = new File([blob], name, {
+    type: blob.type,
+    lastModified: Date.now(),
+  });
+
+  return fileObject
+}
+
+export function getSlideImageDimensions(width: number, height: number, maxImageDimension: { w: number, h: number }) {
+  const widthRatio = maxImageDimension.w / width;
+  const heightRatio = maxImageDimension.h / height;
+
+  const scale = Math.min(widthRatio, heightRatio);
+
+  return {
+    w: width * scale,
+    h: height * scale,
+  };
+};
+
+export function getInsertIndex<T extends { date: Date }>(array: T[], date: Date) {
+  const newDate = date.getTime();
+  let low = 0;
+  let high = array.length;
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    const midDate = array[mid].date.getTime();
+
+    if (midDate < newDate) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  return low;
 }

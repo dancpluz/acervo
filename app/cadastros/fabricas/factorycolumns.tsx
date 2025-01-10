@@ -6,7 +6,7 @@ import Chip from "@/components/Chip";
 import SortHeader from "@/components/SortHeader";
 import Image from "next/image";
 import Link from "next/link";
-import { fieldItems } from '@/lib/fields';
+import { fieldItems } from '@/lib/items';
 import { formatPercent } from '@/lib/utils';
 
 export const columns: ColumnDef<FactoryT>[] = [
@@ -86,7 +86,7 @@ export const columns: ColumnDef<FactoryT>[] = [
         <div className="flex justify-center">
           {
             row.getValue("link_table") ? 
-            <Link className='hover:opacity-60' target="_blank" href={row.getValue("link_table")}>
+            <Link className='transition-opacity hover:opacity-60' target="_blank" href={row.getValue("link_table")}>
               <Image alt={'Acessar Tabela'} src={'/icons/link.svg'} width={24} height={24} />
             </Link> : '-'
           }
@@ -103,7 +103,7 @@ export const columns: ColumnDef<FactoryT>[] = [
         <div className="flex justify-center">
           {
             row.getValue("link_catalog") ?
-              <Link className='hover:opacity-60' target="_blank" href={row.getValue("link_catalog")}>
+              <Link className='transition-opacity hover:opacity-60' target="_blank" href={row.getValue("link_catalog")}>
                 <Image alt={'Acessar Catálogo de Acabamentos'} src={'/icons/link.svg'} width={24} height={24} />
               </Link> : '-'
           }

@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateIndex } from '@/lib/dbWrite';
-import { UseFormReturn } from 'react-hook-form';
-import { entityTitles } from '@/lib/utils';
+import { entityTitles, uploadImageToFirestore } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import { errorToast } from '@/hooks/general';
 import { converters } from '@/lib/converters';
 import db from '@/lib/firebase';
 import { setDoc, doc, collection, updateDoc, getDoc } from 'firebase/firestore';
 import { useCRMContext } from '@/hooks/useCRMContext';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytes } from "firebase/storage";
 import { ProductT, VersionT } from '@/lib/types';
 
 export interface FormActionsT {
@@ -92,50 +89,19 @@ export default function useCRMFormActions(
 
             await updateIndex('product', values.num)
           }
-   
-          if (values.image.length > 0) {
-            const imageId = `products/${id}`
-            const storageRef = ref(storage, imageId);
-            const upload = await uploadBytes(storageRef, values.image[0]).then((snapshot) => {
-              return true;
-            }).catch((error) => {
-              console.log(error);
-              return false;
-            });
-            
-            if (upload) {
-              const dimensions = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
+          const finish = values.finish
 
-                reader.onload = (e) => {
-                  const img = new Image();
-                  img.onload = () => {
-                    resolve({ width: img.width, height: img.height });
-                  };
-                  img.onerror = (err) => {
-                    reject(err);
-                  };
-                  if (e.target?.result) {
-                    img.src = e.target.result as string;
-                  }
-                };
+          const [image, fabric_img, frame_img, extra_img] = await Promise.all([
+            uploadImageToFirestore(values.image, ['products', id]),
+            uploadImageToFirestore(finish.fabric_img, ['finish', `fabric_${id}`]),
+            uploadImageToFirestore(finish.frame_img, ['finish', `frame_${id}`]),
+            uploadImageToFirestore(finish.extra_img, ['finish', `extra_${id}`])
+          ]);
 
-                reader.onerror = (err) => {
-                  reject(err);
-                };
-
-                reader.readAsDataURL(values.image[0]);
-              });
-
-              values.image = { path: imageId, width: dimensions.width, height: dimensions.height };
-
-            } else {
-              values.image = '';
-            }
-          } else {
-            values.image = '';
-          }
-
+          values.image = image
+          values.finish.fabric_img = fabric_img
+          values.finish.frame_img = frame_img
+          values.finish.extra_img = extra_img
           values.factory = doc(db, 'factory', values.factory as string)
           values.freight = doc(db, 'config', 'markup_freight', 'freight', values.freight as string)
           values.markup = doc(db, 'config', 'markup_freight', 'markup', values.markup as string)
@@ -145,9 +111,21 @@ export default function useCRMFormActions(
           const proposalDoc = await getDoc(proposalRef)
           const proposalData = proposalDoc.data()
 
+          const defaultComplement = {
+            discount: 0,
+            freight: 0,
+            expiration: 5,
+            deadline: 90,
+            payment_method: '',
+            general_info: `Pedimos atenção a alguns pontos que antes do fechamento do pedido:
+1) Conferir com atenção as dimensões das peças; 
+2) Conferir com atenção os acabamentos, caso eles já tenham sido escolhidos;`,
+            info: ''
+          }
+
           const versions = proposalData && proposalData.versions.length > 0 ? proposalData.versions.map((version: VersionT) => {
             if (version.num === versionNum) {
-              version.complement = version.complement || { discount: 0, freight: 0, expiration: 0, deadline: 0, payment_method: '', general_info: '', info: '' }
+              version.complement = version.complement || defaultComplement
               if (data) {
                 const productIndex = version.products.findIndex((product: ProductT) => product.id === data.id);
                 if (productIndex !== -1) {

@@ -83,7 +83,7 @@ export default function ProposalView({ data }: { data: string }) {
       <Tabs className='flex flex-col relative grow overflow-hidden' defaultValue={versionNum.toString()} value={versionNum.toString()} onValueChange={(e) => setVersionNum(Number(e))}>
         {proposal && proposal.versions && proposal.versions.length > 0 ? 
           <>
-            <TabsList className='mt-0 mb-2 justify-between border-0'>
+            <TabsList className='mt-0 mb-2 gap-12 border-0'>
               {proposal.versions.map(({ num }) => (
                 <TabsTrigger className='px-0 data-[state=active]:font-normal data-[state=active]:text-foreground' key={num} value={num.toString()}>
                 <VersionOptions num={num} active={num === versionNum} />

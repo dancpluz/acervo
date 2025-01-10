@@ -7,8 +7,8 @@ import { FileDown, LoaderCircle } from 'lucide-react';
 import { useCRMContext } from "@/hooks/useCRMContext";
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { MarkupT, ProductT } from "@/lib/types";
-import { calculatePriceMarkup, formatCurrency, paymentEnum, groupProductsByAmbient, cn } from '@/lib/utils'
+import { FactoryT, FreightT, MarkupT, ProductT } from "@/lib/types";
+import { calculateCostMarkup, formatCurrency, paymentEnum, groupProductsByAmbient, cn } from '@/lib/utils'
 import { conformNumberToMask, symbolCostMask, dayMask } from "@/lib/masks";
 
 Font.register({
@@ -49,11 +49,11 @@ const tw = createTw({
 
 function PriceBox({ title, value, active=false, className }: { title: string, value: string, active?: boolean, className?: string }) {
   return ( 
-    <View style={tw('flex flex-row rounded-md border border-primary text-sm')}>
-      <View style={tw(cn('p-1 text-center border-r border-primary', className, active ? 'bg-primary text-background' : 'text-tertiary'))}>
+    <View style={tw('flex flex-row rounded-md border border-primary text-[9px]')}>
+      <View style={tw(cn('py-1 px-2 text-center border-r border-primary', className, active ? 'bg-primary text-background' : 'text-tertiary'))}>
         <Text>{title}</Text>
       </View>
-      <View style={tw(cn('p-1 text-center',className))}>
+      <View style={tw(cn('py-1 px-2  text-center',className))}>
         <Text>{value}</Text>
       </View>
     </View>
@@ -73,9 +73,10 @@ function ComplementBox({ title, value }: { title: string, value: string }) {
   )
 }
 
-function ProductSlideCard({ product, index }: { product: ProductT; index: number }) {
-  const { id, name, quantity, finish, image, cost, markup } = product
-  const price = calculatePriceMarkup(cost, markup as MarkupT, quantity)
+function ProductPDFCard({ product, index }: { product: ProductT; index: number }) {
+  const { name, quantity, finish, image, cost, markup, factory, freight } = product
+  const price = calculateCostMarkup({ cost: cost.toString(), quantity, selectedFactory: factory as FactoryT, selectedFreight: freight as FreightT, selectedMarkup: markup as MarkupT })
+  const { fabric_img, frame_img, extra_img } = finish
 
   return (
     <View style={tw('flex flex-row border border-secondary  gap-2 p-4 rounded-lg justify-between')}>
@@ -87,9 +88,29 @@ function ProductSlideCard({ product, index }: { product: ProductT; index: number
         }
       </View>
       <View style={tw('flex flex-col w-full')}>
-        <View style={tw('flex flex-col')}>
-          <Text style={tw('text-tertiary text-xs')}>Item {index + 1}</Text>
-          <Text style={tw('text-lg')}>{name}</Text>
+
+        <View style={tw('flex flex-row justify-between items-center gap-4')}>
+          <View style={tw('flex flex-col')}>
+            <Text style={tw('text-tertiary text-xs')}>Item {index + 1}</Text>
+            <Text style={tw('text-lg')}>{name}</Text>
+          </View>
+          <View style={tw('flex flex-row gap-2')}>
+            {frame_img && frame_img.path.includes("http") && 
+              <View style={tw('flex items-center justify-center border border-primary overflow-hidden rounded-xl h-8 min-w-8')}>
+                <Image style={tw("object-cover rounded-xl w-full h-full")} src={frame_img.path} />
+              </View>
+            }
+            {fabric_img && fabric_img.path.includes("http") &&
+              <View style={tw('flex items-center justify-center border border-primary overflow-hidden rounded-xl h-8 min-w-8')}>
+                <Image style={tw("object-cover rounded-xl w-full h-full")} src={fabric_img.path} />
+              </View>
+            }
+            {extra_img && extra_img.path.includes("http") &&
+              <View style={tw('flex items-center justify-center border border-primary overflow-hidden rounded-xl h-8 min-w-8')}>
+                <Image style={tw("object-cover rounded-xl w-full h-full")} src={extra_img.path} />
+              </View>
+            }
+          </View>
         </View>
         <View style={tw('flex flex-col gap-2')}>
           <View style={tw('flex flex-row gap-4 justify-between')}>
@@ -109,12 +130,14 @@ function ProductSlideCard({ product, index }: { product: ProductT; index: number
             </View>
           </View>
           <View style={tw('flex flex-row justify-between gap-2 items-end')}>
-            <Text style={tw('p-1 border border-primary rounded-md text-sm')}>
-              {quantity > 1 ? quantity + ' Unidades' : quantity + ' Unidade'}
-            </Text>
+            <View style={tw('flex border border-primary rounded-md flex-row p-1 justify-center items-center')}>
+              <Text style={tw('text-[9px]')}>
+                {quantity > 1 ? quantity + ' Unidades' : quantity + ' Unidade'}
+              </Text>
+            </View>
             <View style={tw('flex flex-row gap-2')}>
-              {Object.keys(price).map((key) => {
-                const translate = { markup12 : '12x', markup6: '6x', markupCash: 'à vista' }
+              {Object.keys(price).filter(key => key !== 'costBase').map((key) => {
+                const translate = { '12x' : '12x', '6x': '6x', 'cash': 'à vista' }
                 return ( 
                   <PriceBox key={key} title={translate[key]} value={formatCurrency(price[key])}/>
                 )
@@ -135,11 +158,12 @@ export default function ProposalPDF() {
   function ProposalDocument() {
     const { products, complement } = proposal?.versions.find(({num}) => num === versionNum)
     const ambients = groupProductsByAmbient(products)
-    const totalValues = getTotalValues()
+    const total = getTotalValues()
 
     const { freight, discount, deadline, expiration, payment_method, info, general_info } = complement
-    const total = totalValues.markupCash + freight
-    const totalDiscount = total - discount
+    const markup12 = total.markup12 + freight - discount
+    const markup6 = total.markup6 + freight - discount
+    const markupCash = total.markupCash + freight - discount
 
     return (
       <Document>
@@ -164,50 +188,48 @@ export default function ProposalPDF() {
               const productsAmbients = ambients[ambient]
               return (
                 <View key={ambient} style={tw('flex flex-col gap-2')}>
-                  {ambient !== 'Sem Categoria' && <Text style={tw('text-base')}>{ambient.toUpperCase()}</Text>}
+                  <Text style={tw('text-base')}>{ambient.toUpperCase()}</Text>
                   <View style={tw('flex flex-col gap-4')}>
                     {productsAmbients.filter(({ quantity, enabled }) => enabled && quantity > 0).map((product, i) => 
-                      <ProductSlideCard key={product.id} product={product} index={products.indexOf(product)} />
+                      <ProductPDFCard key={product.id} product={product} index={products.indexOf(product)} />
                     )}
                   </View>
                 </View>
               )
             })}
-            <View wrap={false} style={tw('flex gap-6')}>
-              <View style={tw('flex flex-col rounded-md border border-primary p-4 gap-3')}>
-                <View style={tw('flex flex-col gap-2')}>
-                  <Text style={tw('text-xl')}>VALOR DA PROPOSTA</Text>
+            <View wrap={false} style={tw('flex flex-col rounded-md border border-primary p-4 gap-3')}>
+              <View style={tw('flex flex-col gap-2')}>
+                <Text style={tw('text-xl')}>VALOR DA PROPOSTA</Text>
+                <View style={tw('flex flex-row justify-between')}>
+                  <View style={tw('flex flex-col min-w-[40%] gap-3')}>
+                    {freight && <PriceBox title={'frete'} value={conformNumberToMask(freight.toString().replace('.', ','), symbolCostMask('+'))} className='text-base' />}
+                    {discount && <PriceBox title={'desconto'} value={conformNumberToMask(discount.toString().replace('.', ','), symbolCostMask('-'))} className='text-base' />}
+                    <PriceBox title={'12x'} value={formatCurrency(markup12)} className='text-base' />
+                    <PriceBox title={'6x'} value={formatCurrency(markup6)} className='text-base' />
+                    <PriceBox title={'à vista'} value={formatCurrency(markupCash)} className='text-base' />
+                  </View>
                   <View style={tw('flex flex-col gap-3')}>
-                    <View style={tw('flex flex-row justify-between')}>
-                      <PriceBox title={'frete'} value={conformNumberToMask(freight.toString().replace('.', ','), symbolCostMask('+'))} className='text-base' />
-                      <PriceBox title={'total'} value={formatCurrency(total)} className='text-base' />
-                    </View>
-                    <View style={tw('flex flex-row justify-between')}>
-                      <PriceBox title={'desconto'} value={conformNumberToMask(discount.toString().replace('.', ','), symbolCostMask('-'))} className='text-base' />
-                      <PriceBox title={'total c/ desconto'} value={formatCurrency(totalDiscount)} active className='text-base' />
-                    </View>
-                    <View style={tw('flex flex-row justify-between')}>
-                      <ComplementBox title={'Forma de pagamento'} value={paymentEnum[payment_method]} />
-                      <ComplementBox title={'Prazo de entrega'} value={conformNumberToMask(deadline, dayMask)} />
-                      <ComplementBox title={'Validade da proposta'} value={conformNumberToMask(expiration, dayMask)} />
-                    </View>
+                    <ComplementBox title={'Forma de pagamento'} value={paymentEnum[payment_method]} />
+                    <ComplementBox title={'Prazo de entrega'} value={conformNumberToMask(deadline, dayMask)} />
+                    <ComplementBox title={'Validade da proposta'} value={conformNumberToMask(expiration, dayMask)} />
                   </View>
                 </View>
-                <View style={tw('flex flex-col')}>
-                  <Text style={tw('text-lg')}>INFORMAÇÕES GERAIS</Text>
-                  <Text style={tw('text-sm')}>{general_info}</Text>
-                </View>
-                <View style={tw('flex flex-col')}>
-                  <Text style={tw('text-lg')}>INFORMAÇÕES</Text>
-                  <Text style={tw('text-sm')}>{info}</Text>
-                </View>
-                <View style={tw('flex flex-col')}>
-                  <Text style={tw('text-lg')}>ASSINATURA</Text>
-                  <Text style={tw('text-sm')}>{`Atenciosamente,
-Departamento de Vendas`}</Text>
-                </View>
               </View>
-              <Image style={tw("w-[400px] h-auto")} src='/acervo-bg.png' />
+              {general_info && 
+              <View style={tw('flex flex-col')}>
+                <Text style={tw('text-lg')}>INFORMAÇÕES GERAIS</Text>
+                <Text style={tw('text-sm')}>{general_info}</Text>
+              </View>}
+              {info && 
+              <View style={tw('flex flex-col')}>
+                <Text style={tw('text-lg')}>INFORMAÇÕES</Text>
+                <Text style={tw('text-sm')}>{info}</Text>
+              </View>}
+              <View style={tw('flex flex-col')}>
+                <Text style={tw('text-lg')}>ASSINATURA</Text>
+                <Text style={tw('text-sm')}>{`Atenciosamente,
+Departamento de Vendas`}</Text>
+              </View>
             </View>
           </View>
         </Page>

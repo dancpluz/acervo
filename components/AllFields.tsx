@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ImageUp, Check, ChevronsUpDown, LoaderCircle, Pencil } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, unformatNumber } from "@/lib/utils";
 import { FieldT, EnumFieldT } from "@/lib/fields";
 import useGetEntities from '@/hooks/useGetEntities';
 import { converters } from '@/lib/converters';
@@ -43,6 +43,9 @@ import { Label } from './ui/label';
 import Image from "next/image";
 import { FileUploader, FileUploaderContent, FileUploaderItem, FileInput } from "@/components/ui/file-upload";
 import { DateTimePicker } from './ui/datetime-picker';
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { Checkbox } from './ui/checkbox';
+import { percentMask } from '@/lib/masks'
 
 export function SelectField({ path, customClass, obj, disabled }: { path?: string, customClass?: string, obj: EnumFieldT, disabled?: boolean }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
@@ -71,22 +74,34 @@ export function SelectField({ path, customClass, obj, disabled }: { path?: strin
   );
 }
 
-export function ReferenceField<EntityT>({ path, refPath, obj, customClass, person, hint, onSelect, disabled }: { path?: string, refPath: string, obj: FieldT, customClass?: string, person?: boolean, hint: string, onSelect?: any, disabled?: boolean }) {
+export function ReferenceField<EntityT>({ path, refPath, obj, customClass, person, hint, onSelect, addForm, disabled }: { path?: string, refPath: string, obj: FieldT, customClass?: string, person?: boolean, hint: string, onSelect?: any, addForm?: React.ReactNode, disabled?: boolean }) {
   
   const [data, loading, error] = useGetEntities<EntityT>(refPath, converters[obj.value]);
 
   const form = useFormContext();
   const fieldPath = path ? path + '.' + obj.value : obj.value;
 
-  
   return (
     <FormField
       control={form.control}
       name={fieldPath}
       render={({ field }) => (
         <FormItem className={customClass}>
-          <FormMessage />
-          <FormLabel>{obj.label}</FormLabel>
+          <div className='flex justify-between'>
+            <FormLabel className='relative'>{obj.label}
+              <FormMessage className='-right-5' />
+            </FormLabel>
+            {addForm &&
+              <Dialog>
+                <DialogTrigger asChild>
+                  <u className='text-sm text-primary cursor-pointer leading-none'>ADICIONAR {obj.label.replace('*','')}</u>
+                </DialogTrigger>
+                <DialogContent className='w-10/12 top-[30%] translate-y-[0%]'>
+                  {addForm}
+                </DialogContent>
+              </Dialog>
+            }
+          </div>
           <Popover open={disabled ? false : undefined}>
             <PopoverTrigger className={disabled ? 'cursor-default' : ''} asChild>
               <FormControl>
@@ -350,7 +365,7 @@ export function DateTimeField({ path, obj }: { path?: string, obj: FieldT }) {
   )
 }
 
-export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
+export function ImageField({ obj, path, small }: { obj: FieldT, path: string, small?: boolean }) {
   const form = useFormContext();
 
   const dropzone = {
@@ -368,20 +383,20 @@ export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
       control={form.control}
       name={fieldPath}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className='grow-0'>
           <FileUploader
             value={field.value}
             onValueChange={field.onChange}
             dropzoneOptions={dropzone}
             reSelect={true}
-            className='hover:border-dashed relative overflow-hidden aspect-square border rounded-md border-secondary'
+            className={cn('hover:border-dashed relative overflow-hidden aspect-square border rounded-md border-secondary', small ? 'size-16 rounded-2xl' : '')}
           >
-            <FileInput className='absolute flex static justify-center items-center size-full'>
-              <ImageUp className="size-8 text-primary" />
+            <FileInput className='absolute flex justify-center items-center size-full'>
+              <ImageUp className={cn("text-primary", small ? 'size-5' : 'size-8')} />
               <span className="sr-only">Envie uma imagem</span>
             </FileInput>
             {field.value && field.value.length > 0 && (
-              <FileUploaderContent className="absolute size-full top-1/2 p-2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <FileUploaderContent className={cn("absolute size-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2", small ? '' : 'p-2')}>
                 {field.value.length > 0 && 
                   <FileUploaderItem
                       index={0}
@@ -394,8 +409,8 @@ export function ImageField({ obj, path }: { obj: FieldT, path: string }) {
                         src={URL.createObjectURL(field.value[0])}
                         alt={field.value[0].name}
                         className="object-cover rounded-md h-full w-full"
-                        width={300}
-                        height={300}
+                        width={small ? 64 : 300}
+                        height={small ? 64 : 300}
                       />
                     </FileUploaderItem>
                   }
@@ -442,7 +457,27 @@ export function SelectOtherField({ path, customClass, obj, disabled }: { path?: 
   );
 }
 
-export function PriceField({ path, obj, onChange }: { path?: string, obj: FieldT, onChange: () => void }) {
+export function CheckboxField({ path, obj, disabled }: { path?: string, obj: FieldT, disabled?: boolean }) {
+  const form = useFormContext();
+  const fieldPath = path ? path + '.' + obj.value : obj.value;
+  return (
+    <FormField
+      control={form.control}
+      name={fieldPath}
+      render={({ field }) => (
+        <FormItem className='flex-row items-center'>
+          <FormMessage />
+          <FormControl>
+            <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={disabled} />
+          </FormControl>
+          <FormLabel>{obj.label}</FormLabel>
+        </FormItem>
+      )}
+    />
+  )
+}
+
+export function PriceField({ path, obj, markup12, setPercent }: { path?: string, obj: FieldT, markup12?: number, setPercent?: (event: React.ChangeEvent<HTMLInputElement>) => void }) {
   const fieldPath = path ? path + '.' + obj.value : obj.value;
   const form = useFormContext();
 
@@ -458,7 +493,12 @@ export function PriceField({ path, obj, onChange }: { path?: string, obj: FieldT
               <FormLabel className='py-1 px-2 flex items-center text-tertiary text-base text-center border-r border-primary'>
                 {obj.label}
               </FormLabel>
-              <Input className={'h-auto py-1 px-2 text-base min-w-16 border-0'} mask={obj.mask} placeholder={obj.placeholder} {...field} onChange={(e) => { onChange ? onChange : field.onChange(e)}} />
+              <Input className={'h-auto py-1 px-2 text-base min-w-16 border-0'} mask={obj.mask} placeholder={obj.placeholder} {...field} onChange={field.onChange} />
+              {setPercent && markup12 && 
+                <div className='border-primary border-l'>
+                  <Input value={Math.round((unformatNumber(field.value) / markup12) * 100).toString().replace('.',',')} className={'h-auto py-1 px-2 text-base max-w-48 border-0'} mask={percentMask} placeholder={'%'} onChange={setPercent} />
+                </div>
+              }
             </div>
           </FormControl>
         </FormItem>

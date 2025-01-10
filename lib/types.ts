@@ -149,9 +149,9 @@ export type FinishT = {
   frame: string;
   fabric: string;
   extra: string;
-  // fabric_img?: string;
-  // frame_img?: string;
-  // extra_img?: string;
+  fabric_img?: ImageT | '';
+  frame_img?: ImageT | '';
+  extra_img?: ImageT | '';
   link_finishes?: string;
   link_3d?: string;
 }
@@ -181,9 +181,11 @@ export type ProductT = {
 }
 
 export type ActionT = {
+  id: string;
+  done: boolean;
   date: Date | Timestamp;
   description?: string;
-  collaborator: CollaboratorT | DocumentReference;
+  collaborator: CollaboratorT | DocumentReference | string;
 }
 
 export type ComplementT = {

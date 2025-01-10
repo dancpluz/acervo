@@ -34,7 +34,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [tab, setTab] = useState<IconT>(path.split('/')[2]);
   
   return (
-    <div className="flex flex-col gap-4 px-20 py-10 h-full">
+    <div className="flex flex-col gap-4 px-20 py-10 h-screen">
       <Header page='Cadastros' tab={tab} />
       <Tabs className='flex-1' defaultValue={path.split('/')[2]} onValueChange={(value: IconT) => { setTab(value) }}>
         <CadastrosTabs />

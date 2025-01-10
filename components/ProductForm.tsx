@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { finishFields, productFields } from "@/lib/fields";
-import { formatFields, stringToSlug, unformatNumber, formatCurrency } from "@/lib/utils";
+import { formatFields, stringToSlug, unformatNumber, formatCurrency, calculateCostMarkup, imageToFileObject } from "@/lib/utils";
 import useCRMFormActions from "@/hooks/useCRMFormActions";
 import { ReferenceField, InputField, SelectOtherField, SelectField, ImageField } from "@/components/AllFields";
 import { Form } from "@/components/ui/form";
@@ -16,7 +16,7 @@ import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc } from 'firebase/firestore';
 import db from '@/lib/firebase';
 import { format } from 'date-fns';
-import { FactoryT, MarkupT, PersonT, ProductT } from "@/lib/types";
+import { FactoryT, MarkupT, PersonT, ProductT, FreightT } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
 import PriceBox from "@/components/PriceBox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -30,12 +30,12 @@ defaultValues['enabled'] = true;
 export default function ProductForm({ data, setPopupOpen } : { data?: any, setPopupOpen: React.Dispatch<React.SetStateAction<boolean>> }) {
   const [shard, loading, error] = useDocumentData(doc(db, 'shard', 'product'));
   
-  const [referenceInfo, setReferenceInfo] = useState<{ [key: string]: '' | FactoryT | MarkupT }>({ factory: '', markup: '' });
+  const [referenceInfo, setReferenceInfo] = useState<{ [key: string]: '' | FactoryT | MarkupT | FreightT }>({ factory: '', markup: '', freight: '' });
   
   if (data) {
     const values = Object.assign({},data)
     
-    const { factory, freight, markup, quantity,  cost, finish } = values as ProductT;
+    const { factory, freight, markup, quantity, cost, finish } = values as ProductT;
 
     defaultValues = values;
     defaultValues.factory = factory?.id || '';
@@ -57,39 +57,40 @@ export default function ProductForm({ data, setPopupOpen } : { data?: any, setPo
   })
 
   const setFunctions = async () => {
-    const { factory, markup, image } = data as ProductT;
+    const { factory, markup, image, freight } = data as ProductT;
     if (factory) {
       setReferenceInfo((prev) => ({...prev, factory: factory as FactoryT}));
     }
     if (markup) {
       setReferenceInfo((prev) => ({ ...prev, markup: markup as MarkupT}));
     }
+    if (freight) {
+      setReferenceInfo((prev) => ({ ...prev, freight: freight as FreightT}));
+    }
     if (image) {
-      const response = await fetch(image.path);
-      const blob = await response.blob();
+      form.setValue('image', [await imageToFileObject(image)])
+    }
+    const { fabric_img, frame_img, extra_img } = data.finish;
 
-      // Extract name from URL or give it a default name
-      const name = image.path.split('/').pop() || 'image.jpg';
-
-      // Create a File object
-      const fileObject = new File([blob], name, {
-        type: blob.type,
-        lastModified: Date.now(),
-      });
-
-      form.setValue('image', [fileObject])
+    if (fabric_img) {
+      form.setValue('finish.fabric_img', [await imageToFileObject(fabric_img)])
+    }
+    if (frame_img) {
+      form.setValue('finish.frame_img', [await imageToFileObject(frame_img)])
+    }
+    if (extra_img) {
+      form.setValue('finish.extra_img', [await imageToFileObject(extra_img)])
     }
   }
   
-  const selectedMarkup = referenceInfo.markup as MarkupT;
   const selectedFactory = referenceInfo.factory as FactoryT;
+  const selectedFreight = referenceInfo.freight as FreightT;
+  const selectedMarkup = referenceInfo.markup as MarkupT;
   
   const today = new Date();
   const id = data ? data.id : `${loading || !shard ? '' : shard.index + 1}${form.watch('category') ? '_' + stringToSlug(form.watch('category') || '') : ''}${form.watch('name') ? '_' + stringToSlug(form.watch('name') || '') : ''}${selectedFactory ? '_' + stringToSlug((selectedFactory.person as PersonT).label || '') : ''}_${format(today, "dd-MM-yyyy")}`;
-  
-  const markup12 = selectedMarkup && form.watch('cost') ? unformatNumber(selectedMarkup['12x'] as string) * unformatNumber(form.watch('cost')) : '';
-  const markup6 = selectedMarkup && form.watch('cost') ? Number(markup12) * (1 - unformatNumber(selectedMarkup['6x'] as string, true)) : '';
-  const markupCash = selectedMarkup && form.watch('cost') ? Number(markup12) * (1 - unformatNumber(selectedMarkup['cash'] as string, true)) : '';
+
+  const result = calculateCostMarkup({ cost: form.watch('cost'), selectedFactory, selectedFreight, selectedMarkup });
 
   const {
     productSubmit,
@@ -97,7 +98,11 @@ export default function ProductForm({ data, setPopupOpen } : { data?: any, setPo
     setSaveProduct,
   } = useCRMFormActions(id, setPopupOpen, data, setFunctions);
 
-  // const checkPaths = [['person', 'info', 'fantasy_name'], ['person', 'info', 'company_name'], ['person', 'info', 'cnpj'], ['person', 'info', 'info_email']]
+
+  // useEffect(() => {
+  //   console.log(referenceInfo)
+  //   console.log(unformatNumber())
+  // }, [referenceInfo]);
 
   useEffect(() => {
     if (!loading && shard && !data) {
@@ -119,8 +124,14 @@ export default function ProductForm({ data, setPopupOpen } : { data?: any, setPo
                 <InputField path='' obj={productFields.name} />
                 <SelectField path='' obj={productFields.ambient} />
               </FieldDiv>
-              <InputField path='finish' obj={finishFields.frame} />
-              <InputField path='finish' obj={finishFields.fabric} />
+              <div className='flex items-center gap-4'>
+                <InputField path='finish' obj={finishFields.frame} />
+                <ImageField path='finish' obj={finishFields.frame_img} small />
+              </div>
+              <div className='flex items-center gap-4'>
+                <InputField path='finish' obj={finishFields.fabric} />
+                <ImageField path='finish' obj={finishFields.fabric_img} small />
+              </div>
               <FieldDiv>
                 <InputField path='finish' obj={finishFields.width} cm />
                 <InputField path='finish' obj={finishFields.depth} cm />
@@ -129,7 +140,7 @@ export default function ProductForm({ data, setPopupOpen } : { data?: any, setPo
               <InputField path='' obj={productFields.observations} long />
               <FieldDiv>
                 <ReferenceField obj={productFields.factory} refPath='factory' onSelect={(e: FactoryT) => setReferenceInfo((prev) => ({...prev, factory: e}))} hint={'Ex. Punto'} person />
-                <ReferenceField obj={productFields.freight} refPath='config, markup_freight, freight' hint={'Ex. Punto'} />
+                <ReferenceField obj={productFields.freight} refPath='config, markup_freight, freight' onSelect={(e: FreightT ) => setReferenceInfo((prev) => ({...prev, freight: e}))} hint={'Ex. Punto'} />
               </FieldDiv>
               <FieldDiv>
                 <InputField path='' obj={productFields.cost} />
@@ -137,9 +148,9 @@ export default function ProductForm({ data, setPopupOpen } : { data?: any, setPo
               </FieldDiv>
               <Separator className='bg-alternate' orientation="horizontal" />
               <FieldDiv className='justify-between'>
-                <PriceBox className='text-xs p-[4px]' title='12x' text={formatCurrency(markup12 as number)} />
-                <PriceBox className='text-xs p-[4px]' title='6x' text={formatCurrency(markup6 as number)} />
-                <PriceBox className='text-xs p-[4px]' title='à vista' text={formatCurrency(markupCash as number)} />
+                <PriceBox className='text-xs p-[4px]' title='12x' text={formatCurrency(result['12x'] as number)} />
+                <PriceBox className='text-xs p-[4px]' title='6x' text={formatCurrency(result['6x'] as number)} />
+                <PriceBox className='text-xs p-[4px]' title='à vista' text={formatCurrency(result['cash'] as number)} />
               </FieldDiv>
             </div>
             <div className='flex flex-col gap-4 w-[40%]'>
@@ -147,7 +158,10 @@ export default function ProductForm({ data, setPopupOpen } : { data?: any, setPo
                 <InputField path='' obj={productFields.quantity} />
                 <SelectOtherField customClass='grow-0 min-w-52' path='' obj={productFields.category} />
               </FieldDiv>
-              <InputField customClass='grow-0' path='finish' obj={finishFields.extra} />
+              <div className='flex items-center gap-4'>
+                <InputField path='finish' obj={finishFields.extra} />
+                <ImageField path='finish' obj={finishFields.extra_img} small />
+              </div>
               <InputField customClass='grow-0' path='finish' obj={finishFields.designer} />
               <FieldDiv>
                 <InputField path='finish' obj={finishFields.link_finishes} />

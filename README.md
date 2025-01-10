@@ -1,11 +1,39 @@
-- [ ] Filtros e dados gerais de propostas
+10/01/2025
+
+- [x] Fotos Acabamentos
+  - [x] ProductForm
+  - [x] ProductCard
+  - [x] Slides
+  - [x] PDF
+- [x] Alinhamento fotos Slide - Slider
+- [x] Arrumar posição das tabs de versão
+- [ ] Atualizar proposal quando mexer nas versões
 - [ ] Ações
-- [ ] Fotos Acabamentos
+  - [x] Checklist
+  - [x] Data mudar de cor
+  - [ ] Arquivos
+  - [ ] Valores padrão
+  - [x] Form
+  - [x] Delete
+  - [x] Edit
+- [x] Desconto e frete porcentagem no complemento
+- [ ] Botões Valores x vezes
+- [x] Aparecer observações e links produtos
+- [x] Filtros Cadastros
+- [x] Frete e desconto nos produtos
+  - [x] ProductForm
+  - [x] ProductCard
+  - [x] Slides
+  - [x] PDF
+- [x] Filtros e tabela de propostas
 - [ ] Ordenar lista
-- [ ] Arquivo em ações
 - [ ] Toasts de confirmação
 - [ ] Ocultar todos
-- [ ] Adicionar entidades durante proposta
+- [x] Adicionar entidades durante proposta
+
+27/11/2024
+
+- [x] Calculadora de orçamento fix
 - [x] Apagar produto
 - [x] Editar produto
 - [x] Integrar imagens
@@ -21,11 +49,13 @@
 - [x] Slides proposta
 
 BACKLOG:
-
+- [ ] Guardar params ao mudar de pagina
+- [ ] Salvar configurações do slide
+- [ ] Kanban
 - [ ] API pra emitir nota fiscal
 - [ ] useMemo pra performance
 - [ ] Botões de ação: email, whatsapp
-- [ ] queryparams
+- [x] queryparams
 - [ ] Integração com o digisac
 - [ ] Importar em massa planilha
 - [ ] Melhorar botão venda direta

@@ -33,11 +33,16 @@ import { useRouter } from 'next/navigation';
 import useGetEntities from '@/hooks/useGetEntities';
 import { converters, ConverterKey } from '@/lib/converters';
 import { Skeleton } from "@/components/ui/skeleton"
+import { useQueryState } from 'nuqs'
+import { FilterKeys } from "@/lib/filters";
+import FilterSelect from "./FilterSelect";
 
 interface DataTableProps<TData, TValue> {
   entity: ConverterKey,
   columns: ColumnDef<TData, TValue>[]
   search: string
+  filters?: ReactElement
+  filterKeys? : FilterKeys[]
   children?: ReactElement
   link?: string
 }
@@ -46,6 +51,7 @@ export function DataTable<TData, TValue>({
   entity,
   columns,
   search,
+  filterKeys=[],
   children,
   link,
 }: DataTableProps<TData, TValue>) {
@@ -53,7 +59,7 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const router = useRouter();
   const found = entityTitles[entity];
-  const [data, loading, error] = useGetEntities<TData>(entity, converters[entity]);
+  const [data, loading, error, count] = useGetEntities<TData>(entity, converters[entity], filterKeys);
   
   const table = useReactTable({
     data,
@@ -70,14 +76,22 @@ export function DataTable<TData, TValue>({
     },
   })
 
+  //const [searchParam, setSearchParam] = useQueryState('buscar')
+  const [openRow, setOpenRow] = useQueryState('linha')
+
   return (
     <>
-      <div className='relative'>
+      <div className='relative flex justify-between gap-2'>
+        <div className="flex items-center gap-1">
+          {filterKeys.map(filterKey => <FilterSelect key={filterKey} filterKey={filterKey} />)}
+        </div>
         <Input
           placeholder={`Pesquisar ${found.plural}...`}
-          value={(table.getColumn(search)?.getFilterValue() as string) ?? ""}
-          onChange={(e) =>
+          //value={searchParam ? searchParam : undefined}
+          onChange={(e) => {
+            //setSearchParam(e.target.value)
             table.getColumn(search)?.setFilterValue(e.target.value)
+          }
           }
           containerClassName='justify-end'
           className="max-w-sm border-primary pr-10"
@@ -108,7 +122,7 @@ export function DataTable<TData, TValue>({
            children && data ?
           (
             table.getRowModel().rows.map((row) => (
-              <Collapsible key={row.id} asChild>
+              <Collapsible open={row.id === openRow} onOpenChange={() => row.id === openRow ? setOpenRow(null) : setOpenRow(row.id)} key={row.id} asChild>
                 <>
                   <CollapsibleTrigger className='cursor-pointer [&>svg]:[&>td]:data-[state=open]:rotate-90' asChild>
                     <TableRow className='relative hover:bg-secondary/10'>
@@ -175,7 +189,7 @@ export function DataTable<TData, TValue>({
         </TableBody>
       </Table>
       <div className='flex justify-between'>
-        {data ? data.length === 0 ? <p className="text-sm">{`Adicione um${found.sufix === 'a' ? 'a' : ''} nov${found.sufix} ${found.singular}!`}</p> : <p className="text-sm">{`${data.length} ${data.length > 1 ? `${found.plural} encontrad${found.sufix}s` : `${found.singular} encontrad${found.sufix}`}`}</p> : <p>Procurando {found.plural}</p>}
+        {!loading ? count === 0 ? <p className="text-sm">{`Adicione um${found.sufix === 'a' ? 'a' : ''} nov${found.sufix} ${found.singular}!`}</p> : <p className="text-sm">{`${count} ${count > 1 ? `${found.plural} encontrad${found.sufix}s` : `${found.singular} encontrad${found.sufix}`}`}</p> : <p>Procurando {found.plural}...</p>}
         <div className="flex items-center justify-end gap-2">
           <Button
             variant="outline"

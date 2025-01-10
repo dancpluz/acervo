@@ -1,7 +1,7 @@
 'use server'
 
 import db from "@/lib/firebase";
-import { collection, addDoc, deleteDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, deleteDoc, updateDoc, doc, serverTimestamp, getCountFromServer, query, where } from "firebase/firestore";
 import { revalidatePath } from 'next/cache';
 
 export async function addEntity(values: any, entity: string, entityValue?: string) {
@@ -70,5 +70,18 @@ export async function updateIndex(shardId: string, num: number) {
     await updateDoc(shardRef, { index: num })
   } catch(error) {
     console.log(error)
+  }
+}
+
+export async function getCountStatus(col: string, status?: string) {
+  try {
+    const colReference = collection(db, col);
+    const q = status ? query(colReference, where('status', '==', status)) : colReference;
+    const snapshot = await getCountFromServer(q);
+    const count = snapshot.data().count;
+    return count;
+  } catch (error) {
+    console.log(error)
+    return 0
   }
 }

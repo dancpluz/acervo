@@ -2,32 +2,39 @@ import Header from "@/components/Header";
 import { ChangeTab, StatusFilter } from "@/components/StatusButtons";
 import { columns } from "./proposalcolumns";
 import { DataTable } from "@/components/DataTable";
-import { Button } from "@/components/ui/button";
-import { CirclePlus } from "lucide-react";
-import ProposalForm, { ProposalDialog } from "@/components/ProposalForm";
-import { CRMPopup } from "@/components/AllPopups";
+import { ProposalDialog } from "@/components/ProposalForm";
+import { getCountStatus } from "@/lib/dbWrite";
 
-export default function CRM() {
+export const dynamic = 'force-dynamic'
+
+export default async function CRM({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined }
+}) {
+  const status = Number(searchParams.status);
+  const [all, lost, solicited, sent, revision, waiting, closed] = await Promise.all([undefined,'0','1','2','3','4','5'].map(s => getCountStatus('proposal', s)))
+
   return (
     <div className="flex flex-col gap-4 px-20 py-10 h-full">
       <Header page='CRM'>
         <div className='flex gap-2'>
-          <ChangeTab text='Propostas' count={33} route='/propostas' money={200000} active={true} />
-          <ChangeTab text='Pedidos' count={63} route='/pedidos' money={200000} active={false} />
+          <ChangeTab text='Propostas' count={all} route='/propostas' money={0} active={true} />
+          <ChangeTab text='Pedidos' count={0} route='/pedidos' money={0} active={false} />
         </div>
       </Header>
       <div className='flex gap-2 py-3'>
-        <StatusFilter text='Todos' count={33} route='/propostas' money={2000} active={true} />
-        <StatusFilter type='front' text='Solicitado' count={33} route='/propostas' money={2000} active={false} />
-        <StatusFilter type='both' text='Revisão' count={33} route='/propostas' money={2000} active={false} />
-        <StatusFilter type='both' text='Esperando' count={33} route='/propostas' money={2000} active={false} />
-        <StatusFilter type='both' text='Negociação' count={33} route='/propostas' money={2000} active={false} />
-        <StatusFilter type='back' text='Fechado' count={33} route='/propostas' money={2000} active={false} />
-        <StatusFilter type='lost' text='Perdido' count={33} route='/propostas' money={2000} active={false} />
+        <StatusFilter text='Todos' count={all} route='/propostas' money={0} active={!status && status !== 0} />
+        <StatusFilter type='front' text='Solicitado' count={solicited} route='/propostas?status=1' money={0} active={status >= 1} />
+        <StatusFilter type='both' text='Enviado' count={sent} route='/propostas?status=2' money={0} active={status >= 2} />
+        <StatusFilter type='both' text='Revisão' count={revision} route='/propostas?status=3' money={0} active={status >= 3} />
+        <StatusFilter type='both' text='Esperando' count={waiting} route='/propostas?status=4' money={0} active={status >= 4} />
+        <StatusFilter type='back' text='Fechado' count={closed} route='/propostas?status=5' money={0} active={status >= 5} />
+        <StatusFilter type='lost' text='Perdido' count={lost} route='/propostas?status=0' money={0} active={status === 0} />
       </div>
-      <DataTable entity={'proposal'} search={'name'} columns={columns} link={'/crm/propostas/'} />
+      <DataTable filterKeys={['status','priority', 'project_type', 'client_type']} entity={'proposal'} search={'name'} columns={columns} link={'/crm/propostas/'} />
       <div className="flex justify-between">
-      <ProposalDialog />
+        <ProposalDialog />
       </div>
     </div>
   )
